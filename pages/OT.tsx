@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Surgery, Patient } from '../types';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 import { 
     Scissors, Clock, User, Calendar, CheckCircle, Activity, Plus, 
     X, Save, Search, Monitor, MoreVertical, Trash2, Edit, AlertCircle,
@@ -388,12 +389,11 @@ const OT = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div>
                               <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Date of Session</label>
-                              <input 
-                                required 
-                                type="date" 
-                                className="w-full p-3 border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-teal-500 outline-none" 
-                                value={formData.date} 
-                                onChange={e=>setFormData({...formData, date:e.target.value})} 
+                              <CustomDatePicker
+                                required
+                                value={formData.date || ''}
+                                onChange={e => setFormData({...formData, date: e.target.value})}
+                                className="!p-2.5 !rounded-xl !font-bold"
                               />
                           </div>
                           <div>

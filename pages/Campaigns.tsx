@@ -8,6 +8,7 @@ import {
     Search, Award, HeartPulse, Building2, Activity
 } from 'lucide-react';
 import { Campaign, Employee } from '../types';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const Campaigns = () => {
     const { campaigns, addCampaign, updateCampaign, deleteCampaign, employees, surgeries, patients } = useData();
@@ -510,12 +511,11 @@ const Campaigns = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Date</label>
-                                        <input
+                                        <CustomDatePicker
                                             required
-                                            type="date"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 font-bold focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-                                            value={formData.date}
+                                            value={formData.date || ''}
                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                            className="!p-3.5 !rounded-2xl !bg-slate-50 !border-slate-200"
                                         />
                                     </div>
                                     <div className="space-y-1.5">

@@ -15,6 +15,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { downloadPDF, shareToWhatsApp } from '../services/exportService';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const Billing = () => {
     const {
@@ -264,10 +265,19 @@ const Billing = () => {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                         <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
-                            <Calendar size={16} className="text-slate-400 ml-2" />
-                            <input type="date" value={dateRange.start} onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))} className="text-sm text-slate-600 focus:outline-none w-28" />
+                            <CustomDatePicker
+                                value={dateRange.start}
+                                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                                className="!text-sm !py-0.5 !border-0 w-32"
+                                placeholder="Start Date"
+                            />
                             <span className="text-slate-300">-</span>
-                            <input type="date" value={dateRange.end} onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))} className="text-sm text-slate-600 focus:outline-none w-28" />
+                            <CustomDatePicker
+                                value={dateRange.end}
+                                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                className="!text-sm !py-0.5 !border-0 w-32"
+                                placeholder="End Date"
+                            />
                         </div>
                         <div className="flex gap-2">
                             {canManageMaster && <button onClick={() => setView('service_master')} className="bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2 justify-center"><Settings size={16} /> Master</button>}

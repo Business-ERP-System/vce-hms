@@ -294,7 +294,7 @@ const Reports = () => {
                         let totalTransactionsVolume = 0;
                         let activeQueue = room.currentLoad || 0;
 
-                        if (room.type === 'OPD') {
+                        if (room.type === 'OPD' || room.type === 'Camp') {
                             const matchingPatients = patients.filter(p => p.assignedRoom === room.roomNumber);
                             totalPatientsIntake = matchingPatients.length;
                             totalTransactionsVolume = matchingPatients.reduce((sum, p) => sum + (p.registrationFee || 0), 0);

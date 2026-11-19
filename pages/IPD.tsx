@@ -13,6 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { MOCK_EMPLOYEES } from '../constants';
 import { downloadPDF, shareToWhatsApp, shareToEmail } from '../services/exportService';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const IPD = () => {
     const {
@@ -491,11 +492,19 @@ const IPD = () => {
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 flex-1 w-full">
                             <div className="space-y-2">
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Start Date</label>
-                                <input type="date" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white transition-all outline-none" value={reportFilters.startDate} onChange={e => setReportFilters({ ...reportFilters, startDate: e.target.value })} />
+                                <CustomDatePicker
+                                    value={reportFilters.startDate}
+                                    onChange={e => setReportFilters({ ...reportFilters, startDate: e.target.value })}
+                                    className="!p-2.5 !rounded-xl !bg-slate-50 !font-bold"
+                                />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">End Date</label>
-                                <input type="date" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white transition-all outline-none" value={reportFilters.endDate} onChange={e => setReportFilters({ ...reportFilters, endDate: e.target.value })} />
+                                <CustomDatePicker
+                                    value={reportFilters.endDate}
+                                    onChange={e => setReportFilters({ ...reportFilters, endDate: e.target.value })}
+                                    className="!p-2.5 !rounded-xl !bg-slate-50 !font-bold"
+                                />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Bed Category</label>

@@ -155,7 +155,7 @@ interface DataContextType {
   deleteItemUnit: (id: string) => void;
 
   // Helpers
-  getRecommendedOPDRoom: (type: 'OPD' | 'Lab' | 'Diagnosis') => RoomMaster | undefined;
+  getRecommendedOPDRoom: (type: 'OPD' | 'Camp' | 'Lab' | 'Diagnosis') => RoomMaster | undefined;
   hasPermission: (module: string, action: keyof ActionPermission) => boolean;
 }
 
@@ -196,6 +196,7 @@ const INITIAL_WARDS: WardMaster[] = [
 const INITIAL_ROOMS: RoomMaster[] = [
   { id: 'R101', roomNumber: '101', name: 'OPD Room 1', type: 'OPD', currentLoad: 0 },
   { id: 'R102', roomNumber: '102', name: 'OPD Room 2', type: 'OPD', currentLoad: 0 },
+  { id: 'C101', roomNumber: 'C01', name: 'Camp Counter 1', type: 'Camp', currentLoad: 0 },
   { id: 'L101', roomNumber: 'L01', name: 'Lab Unit A', type: 'Lab', currentLoad: 0 },
   { id: 'D101', roomNumber: 'D01', name: 'Diagnosis Cabin', type: 'Diagnosis', currentLoad: 0 },
 ];
@@ -204,7 +205,28 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, currentUser, activeBranchId } = useAuth();
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const [patients, setPatients] = useState<Patient[]>(() => {
+    try {
+      const saved = localStorage.getItem('vce_patients');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load patients from localStorage:', e);
+    }
+    return MOCK_PATIENTS;
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('vce_patients', JSON.stringify(patients));
+    } catch (e) {
+      console.error('Failed to save patients to localStorage:', e);
+    }
+  }, [patients]);
   const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
   const [inventory, setInventory] = useState<InventoryItem[]>(MOCK_INVENTORY);
   const [beds, setBeds] = useState<Bed[]>(MOCK_BEDS);
@@ -246,7 +268,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [admissions, setAdmissions] = useState<Admission[]>([]);
 
   // Filtering Logic
-  const filteredPatients = React.useMemo(() => activeBranchId === 'consolidated' ? patients : patients.filter(x => x.branchId === activeBranchId), [patients, activeBranchId]);
+  const filteredPatients = React.useMemo(() => {
+    if (activeBranchId === 'consolidated') return patients;
+    return patients.filter(x => !x.branchId || x.branchId === activeBranchId);
+  }, [patients, activeBranchId]);
   const filteredAppointments = React.useMemo(() => activeBranchId === 'consolidated' ? appointments : appointments.filter(x => x.branchId === activeBranchId), [appointments, activeBranchId]);
   const filteredInventory = React.useMemo(() => activeBranchId === 'consolidated' ? inventory : inventory.filter(x => x.branchId === activeBranchId), [inventory, activeBranchId]);
   const filteredBeds = React.useMemo(() => activeBranchId === 'consolidated' ? beds : beds.filter(x => x.branchId === activeBranchId), [beds, activeBranchId]);
@@ -299,7 +324,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return !!modulePerms?.[action];
   }, [role, currentUser, employees, rolesPermissions]);
 
-  const addPatient = (p: Patient) => setPatients(prev => [p, ...prev]);
+  const addPatient = (p: Patient) => {
+    const branchToUse = p.branchId || (activeBranchId && activeBranchId !== 'consolidated' ? activeBranchId : 'BR001');
+    const patientWithBranch: Patient = {
+      ...p,
+      branchId: branchToUse,
+      createdAt: p.createdAt || new Date().toISOString()
+    };
+    setPatients(prev => [patientWithBranch, ...prev]);
+  };
   const updatePatient = (id: string, updates: Partial<Patient>) => setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   const deletePatient = (id: string) => setPatients(prev => prev.filter(p => p.id !== id));
 
@@ -506,7 +539,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
-  const getRecommendedOPDRoom = (type: 'OPD' | 'Lab' | 'Diagnosis') => {
+  const getRecommendedOPDRoom = (type: 'OPD' | 'Camp' | 'Lab' | 'Diagnosis') => {
     const typeRooms = rooms.filter(r => r.type === type);
     if (typeRooms.length === 0) return undefined;
     return typeRooms.reduce((prev, curr) => prev.currentLoad < curr.currentLoad ? prev : curr);

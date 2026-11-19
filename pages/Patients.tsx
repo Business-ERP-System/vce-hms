@@ -18,7 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const fuzzyMatch = (text: string, query: string): boolean => {
+const fuzzyMatch = (text?: string, query?: string): boolean => {
+  if (!text || !query) return false;
   const t = text.toLowerCase();
   const q = query.toLowerCase();
   if (t.includes(q)) return true;
@@ -43,8 +44,8 @@ const Patients = () => {
   const canExport = hasPermission('Patient List', 'export');
   const canView = hasPermission('Patient List', 'view');
 
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Patient; direction: 'asc' | 'desc' }>({
-    key: 'name', direction: 'asc'
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Patient | null; direction: 'asc' | 'desc' }>({
+    key: null, direction: 'desc'
   });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -57,25 +58,51 @@ const Patients = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleSort = (key: keyof Patient) => {
-    setSortConfig({ key, direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc' });
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
 
-  const filteredPatients = patients.filter(p => (
-    fuzzyMatch(p.name, searchTerm) || 
-    p.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.contact.includes(searchTerm) ||
-    (p.village && fuzzyMatch(p.village, searchTerm)) ||
-    (p.district && fuzzyMatch(p.district, searchTerm))
-  ) && (statusFilter === 'All' || p.status === statusFilter));
-
-  const sortedPatients = [...filteredPatients].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-      if (aValue === undefined || bValue === undefined) return 0;
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
+  const filteredPatients = patients.filter(p => {
+    if (!searchTerm.trim()) {
+      return statusFilter === 'All' || p.status === statusFilter;
+    }
+    const matchesSearch = 
+      fuzzyMatch(p.name, searchTerm) || 
+      (p.id && p.id.toLowerCase().includes(searchTerm.toLowerCase())) || 
+      (p.contact && p.contact.includes(searchTerm)) ||
+      (p.village && fuzzyMatch(p.village, searchTerm)) ||
+      (p.district && fuzzyMatch(p.district, searchTerm));
+    return matchesSearch && (statusFilter === 'All' || p.status === statusFilter);
   });
+
+  const sortedPatients = useMemo(() => {
+    return [...filteredPatients].sort((a, b) => {
+      // 1. If explicit column sort is requested by user
+      if (sortConfig.key) {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+        if (aValue === undefined || bValue === undefined) return 0;
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      }
+
+      // 2. Default: New registrations always shown at the top
+      if (a.createdAt && b.createdAt) {
+        const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        if (diff !== 0) return diff;
+      } else if (a.createdAt && !b.createdAt) {
+        return -1; // Newly registered patient always on top
+      } else if (!a.createdAt && b.createdAt) {
+        return 1;
+      }
+
+      // Fallback: Preserve array insertion order (DataContext prepends newly registered patients)
+      return 0;
+    });
+  }, [filteredPatients, sortConfig]);
 
   const confirmDelete = () => {
     if (patientToDelete) {
@@ -254,12 +281,32 @@ const Patients = () => {
             <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider border-b border-slate-200">
                     <tr>
-                        <th className="px-8 py-5 font-bold">Patient Identity (PID)</th>
-                        <th className="px-8 py-5 font-bold">Demographics</th>
+                        <th onClick={() => handleSort('name')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div className="flex items-center gap-1.5">
+                                <span>Patient Identity (PID)</span>
+                                <ArrowUpDown size={14} className={sortConfig.key === 'name' ? 'text-teal-600' : 'text-slate-400'} />
+                            </div>
+                        </th>
+                        <th onClick={() => handleSort('age')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div className="flex items-center gap-1.5">
+                                <span>Demographics</span>
+                                <ArrowUpDown size={14} className={sortConfig.key === 'age' ? 'text-teal-600' : 'text-slate-400'} />
+                            </div>
+                        </th>
                         <th className="px-8 py-5 font-bold">Contact & Location</th>
-                        <th className="px-8 py-5 font-bold">Classification</th>
+                        <th onClick={() => handleSort('patientType')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div className="flex items-center gap-1.5">
+                                <span>Classification</span>
+                                <ArrowUpDown size={14} className={sortConfig.key === 'patientType' ? 'text-teal-600' : 'text-slate-400'} />
+                            </div>
+                        </th>
                         <th className="px-8 py-5 font-bold">File Location</th>
-                        <th className="px-8 py-5 font-bold">Clinical Case</th>
+                        <th onClick={() => handleSort('status')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div className="flex items-center gap-1.5">
+                                <span>Clinical Case</span>
+                                <ArrowUpDown size={14} className={sortConfig.key === 'status' ? 'text-teal-600' : 'text-slate-400'} />
+                            </div>
+                        </th>
                         <th className="px-8 py-5 text-right font-bold">Actions</th>
                     </tr>
                 </thead>
@@ -272,7 +319,14 @@ const Patients = () => {
                                         {patient.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-slate-900 text-sm leading-tight">{patient.name}</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-slate-900 text-sm leading-tight">{patient.name}</span>
+                                            {patient.createdAt && (
+                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-teal-100 text-teal-800 tracking-wider uppercase">
+                                                    New
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="text-xs font-mono font-bold text-slate-400 mt-1 uppercase">ID: {patient.id}</div>
                                     </div>
                                 </div>
@@ -336,7 +390,7 @@ const Patients = () => {
                           </div>
                           <div className="flex items-center gap-4 text-sm text-slate-500 mt-1 font-medium">
                               <span className="flex items-center gap-1.5"><Tag size={14} className="text-teal-600"/> Patient ID: {selectedPatient.id}</span>
-                              <span className="flex items-center gap-1.5"><UserCheck size={14} className="text-teal-600"/> {selectedPatient.age} Years {selectedPatient.ageMonths || 0} Months / {selectedPatient.gender}</span>
+                              <span className="flex items-center gap-1.5"><UserCheck size={14} className="text-teal-600"/> {selectedPatient.age} Years {selectedPatient.ageMonths || 0} Months {selectedPatient.ageDays ? `${selectedPatient.ageDays} Days ` : ''}/ {selectedPatient.gender}</span>
                           </div>
                       </div>
                   </div>
@@ -388,7 +442,7 @@ const Patients = () => {
                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-slate-100 pb-2"><User size={16} className="text-teal-600"/> Patient Demographics</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <InfoBlock label="Full Name" value={selectedPatient.name} icon={User} />
-                                    <InfoBlock label="Age" value={`${selectedPatient.age} Years ${selectedPatient.ageMonths || 0} Months`} icon={Calendar} />
+                                    <InfoBlock label="Age" value={`${selectedPatient.age} Years ${selectedPatient.ageMonths || 0} Months${selectedPatient.ageDays ? ` ${selectedPatient.ageDays} Days` : ''}`} icon={Calendar} />
                                     <InfoBlock label="Gender" value={selectedPatient.gender} icon={Users} />
                                     <InfoBlock label="Contact Number" value={selectedPatient.contact} icon={Phone} />
                                     <InfoBlock label="Full Address" value={`${selectedPatient.village}, ${selectedPatient.district}, ${selectedPatient.state}, ${selectedPatient.country}`} icon={MapPin} isFull={true} />

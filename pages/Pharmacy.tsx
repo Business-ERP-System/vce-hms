@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { Search, ShoppingCart, Archive, TrendingDown, Printer, Truck, Package, Phone, Mail, RotateCcw, Eye, Pill, CheckCircle, AlertTriangle, DollarSign, BarChart3, Plus, FileText, Glasses, Receipt, X, Save, Trash2, PenTool, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, Supplier } from '../types';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const Pharmacy = () => {
     const {
@@ -846,11 +847,20 @@ const Pharmacy = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Mfg Date</label>
-                                            <input type="date" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-2 focus:ring-rose-500" value={newBatch.mfgDate} onChange={e => setNewBatch({ ...newBatch, mfgDate: e.target.value })} />
+                                            <CustomDatePicker
+                                                value={newBatch.mfgDate}
+                                                onChange={e => setNewBatch({ ...newBatch, mfgDate: e.target.value })}
+                                                className="!p-3 !rounded-2xl !bg-slate-50 !border-slate-200 !text-xs !font-black"
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1 text-rose-600">Expiry Date</label>
-                                            <input type="date" required className="w-full p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-black outline-none focus:ring-2 focus:ring-rose-500" value={newBatch.expiryDate} onChange={e => setNewBatch({ ...newBatch, expiryDate: e.target.value })} />
+                                            <CustomDatePicker
+                                                required
+                                                value={newBatch.expiryDate}
+                                                onChange={e => setNewBatch({ ...newBatch, expiryDate: e.target.value })}
+                                                className="!p-3 !rounded-2xl !bg-rose-50 !border-rose-200 !text-xs !font-black"
+                                            />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-3 gap-3">
