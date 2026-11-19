@@ -5,7 +5,7 @@ import {
     Activity, Upload, Printer, CheckCircle, Eye, Info, UserCheck,
     ShieldCheck, DollarSign, Stethoscope, Briefcase, Map as MapIcon,
     FlaskConical, Microscope, Users, Home, Archive, Mail, Tag,
-    ChevronRight, ArrowLeft, UserPlus, Plus, Trash2, Edit3, Check, X, Settings, Tent, ChevronDown, Globe
+    ChevronRight, ArrowLeft, UserPlus, Plus, Trash2, Edit3, Check, X, Settings, Tent, ChevronDown, Globe, Search, Hash
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,7 +17,7 @@ import { CustomDatePicker } from '../components/CustomDatePicker';
 import { BANGLADESH_DIVISIONS, BANGLADESH_DISTRICTS, BANGLADESH_UPAZILLAS } from '../data/bangladeshGeo';
 
 const Registration = () => {
-    const { addPatient, updatePatient, getRecommendedOPDRoom, rooms, addRoom, deleteRoom, updateRoom, addTransaction, currency, hasPermission, campaigns } = useData();
+    const { patients, addPatient, updatePatient, getRecommendedOPDRoom, rooms, addRoom, deleteRoom, updateRoom, addTransaction, currency, hasPermission, campaigns } = useData();
     const { activeBranchId } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -29,6 +29,7 @@ const Registration = () => {
 
     const handleResetForNewPatient = () => {
         setFormData({
+            uhid: '',
             name: '', dob: '', ageYrs: '', ageMns: '0', ageDays: '0', gender: '',
             paymentCategory: 'Pay', speciality: 'Ophthalmology', patientType: 'New Patient',
             allocation: '', mrLocation: '', nextOfKin: '',
@@ -39,6 +40,8 @@ const Registration = () => {
             passportNumber: '', passportCountry: '', passportIssueDate: '', passportExpiryDate: '',
             visaType: '', visaNumber: '', visaExpiryDate: ''
         });
+        setMatchedPatient(null);
+        setShowUhidSuggestions(false);
         setIsForeignPatient(false);
         setRegisteredPatient(null);
         setRegisteredRoom(null);
@@ -58,6 +61,7 @@ const Registration = () => {
     const [isForeignPatient, setIsForeignPatient] = useState(false);
 
     const [formData, setFormData] = useState({
+        uhid: '',
         name: '', dob: '', ageYrs: '', ageMns: '0', ageDays: '0', gender: '',
         paymentCategory: 'Pay', speciality: 'Ophthalmology', patientType: 'New Patient',
         allocation: '', mrLocation: '', nextOfKin: '',
@@ -68,6 +72,142 @@ const Registration = () => {
         passportNumber: '', passportCountry: '', passportIssueDate: '', passportExpiryDate: '',
         visaType: '', visaNumber: '', visaExpiryDate: ''
     });
+
+    const [matchedPatient, setMatchedPatient] = useState<Patient | null>(null);
+    const [showUhidSuggestions, setShowUhidSuggestions] = useState(false);
+    const [selectedUhidIndex, setSelectedUhidIndex] = useState(0);
+
+    const handleSelectExistingPatient = (p: Patient) => {
+        setMatchedPatient(p);
+        setShowUhidSuggestions(false);
+        setFormData(prev => ({
+            ...prev,
+            uhid: p.id,
+            name: p.name || prev.name,
+            dob: p.dob || prev.dob,
+            ageYrs: p.age ? p.age.toString() : prev.ageYrs,
+            ageMns: (p.ageMonths || 0).toString(),
+            ageDays: (p.ageDays || 0).toString(),
+            gender: p.gender || prev.gender,
+            paymentCategory: p.paymentCategory || prev.paymentCategory,
+            contact: p.contact || prev.contact,
+            altContact: p.altContact || prev.altContact,
+            email: p.email || prev.email,
+            village: p.village || prev.village,
+            upazilla: p.upazilla || prev.upazilla,
+            district: p.district || prev.district,
+            postCode: p.postCode || prev.postCode,
+            state: p.state || prev.state,
+            country: p.country || prev.country,
+            emergencyName: p.emergencyName || prev.emergencyName,
+            emergencyRelation: p.emergencyRelation || prev.emergencyRelation,
+            emergencyPhone: p.emergencyPhone || prev.emergencyPhone,
+            remarks: p.remarks || prev.remarks
+        }));
+    };
+
+    const handleUhidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setFormData(prev => ({ ...prev, uhid: val }));
+        setShowUhidSuggestions(true);
+        setSelectedUhidIndex(0);
+
+        if (!val.trim()) {
+            setMatchedPatient(null);
+            return;
+        }
+
+        const clean = val.trim().toLowerCase();
+        const found = patients.find(p => p.id.toLowerCase() === clean);
+        if (found) {
+            handleSelectExistingPatient(found);
+        } else {
+            setMatchedPatient(null);
+        }
+    };
+
+    const uhidMatches = useMemo(() => {
+        if (!formData.uhid || !formData.uhid.trim() || formData.patientType !== 'Returning / Old Patient') {
+            return [];
+        }
+        const q = formData.uhid.trim().toLowerCase();
+        const numOnly = q.replace(/\D/g, '');
+        return patients
+            .filter(p => {
+                const idLower = p.id.toLowerCase();
+                const idNum = p.id.replace(/\D/g, '');
+                return (
+                    idLower.includes(q) ||
+                    (numOnly.length >= 2 && idNum.includes(numOnly)) ||
+                    (p.name && p.name.toLowerCase().includes(q)) ||
+                    (p.contact && p.contact.includes(q))
+                );
+            })
+            .slice(0, 5);
+    }, [patients, formData.uhid, formData.patientType]);
+
+    const handleUhidKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (uhidMatches.length > 0) {
+                setShowUhidSuggestions(true);
+                setSelectedUhidIndex(prev => (prev < uhidMatches.length - 1 ? prev + 1 : 0));
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (uhidMatches.length > 0) {
+                setShowUhidSuggestions(true);
+                setSelectedUhidIndex(prev => (prev > 0 ? prev - 1 : uhidMatches.length - 1));
+            }
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            setShowUhidSuggestions(false);
+            setSelectedUhidIndex(-1);
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            let targetPatient: Patient | null = null;
+            if (uhidMatches.length > 0) {
+                targetPatient = (selectedUhidIndex >= 0 && selectedUhidIndex < uhidMatches.length)
+                    ? uhidMatches[selectedUhidIndex]
+                    : uhidMatches[0];
+            } else if (formData.uhid?.trim()) {
+                const clean = formData.uhid.trim().toLowerCase();
+                const cleanDigits = clean.replace(/\D/g, '');
+                targetPatient = patients.find(p =>
+                    p.id.toLowerCase() === clean ||
+                    (cleanDigits.length >= 3 && p.id.replace(/\D/g, '') === cleanDigits) ||
+                    (p.contact && p.contact === clean)
+                ) || null;
+            }
+
+            if (targetPatient) {
+                handleSelectExistingPatient(targetPatient);
+                setShowUhidSuggestions(false);
+                setSelectedUhidIndex(-1);
+            }
+
+            // Move focus to next form field
+            const form = (e.target as HTMLElement).closest('form');
+            if (form) {
+                const selector = 'input:not([disabled]):not([type="hidden"]):not([type="button"]):not([type="submit"]), select:not([disabled]), textarea:not([disabled]), button[type="submit"]';
+                const focusable = Array.from(form.querySelectorAll<HTMLElement>(selector)).filter(el => el.offsetParent !== null && !el.hasAttribute('disabled'));
+                const idx = focusable.indexOf(e.target as HTMLElement);
+                if (idx !== -1 && idx < focusable.length - 1) {
+                    focusable[idx + 1].focus();
+                }
+            }
+        }
+    };
 
     const isForeign = isForeignPatient || formData.patientType === 'Foreign Patient';
 
@@ -168,6 +308,7 @@ const Registration = () => {
         if (location.state?.patient) {
             const p = location.state.patient as Patient;
             setFormData({
+                uhid: p.id,
                 name: p.name, dob: p.dob || '', ageYrs: p.age.toString(), ageMns: (p.ageMonths || 0).toString(), ageDays: (p.ageDays || 0).toString(),
                 gender: p.gender || '', paymentCategory: p.paymentCategory || '', speciality: p.speciality,
                 patientType: p.patientType, allocation: p.allocation, mrLocation: p.mrLocation,
@@ -331,8 +472,13 @@ const Registration = () => {
             setFormData(prev => ({
                 ...prev,
                 patientType: value,
+                uhid: value === 'Returning / Old Patient' ? prev.uhid : '',
                 country: isF ? (prev.country === 'Bangladesh' ? '' : prev.country) : 'Bangladesh'
             }));
+            if (value !== 'Returning / Old Patient') {
+                setMatchedPatient(null);
+                setShowUhidSuggestions(false);
+            }
             return;
         }
 
@@ -470,7 +616,10 @@ const Registration = () => {
             }
         }
         const isEditMode = !!location.state?.patient;
-        const newId = location.state?.patient?.id || `PID-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+        const returningPatientId = (formData.patientType === 'Returning / Old Patient' && formData.uhid?.trim())
+            ? formData.uhid.trim()
+            : null;
+        const newId = returningPatientId || location.state?.patient?.id || `PID-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
         const branchToAssign = location.state?.patient?.branchId || ((activeBranchId && activeBranchId !== 'consolidated') ? activeBranchId : 'BR001');
         const room = rooms.find(r => r.id === selectedRoomId);
 
@@ -525,8 +674,23 @@ const Registration = () => {
             campaignId: formData.campaignId
         };
 
-        if (isEditMode) {
-            updatePatient(newId, newPatient);
+        const existingRecord = returningPatientId ? patients.find(p => p.id.toLowerCase() === returningPatientId.toLowerCase()) : null;
+
+        if (isEditMode || existingRecord) {
+            updatePatient(newId, {
+                ...newPatient,
+                visitHistory: [
+                    {
+                        date: new Date().toISOString().split('T')[0],
+                        department: serviceType,
+                        doctor: formData.assignedDoctor || 'OPD Doctor',
+                        diagnosis: formData.diagnosis || 'Re-visit / Consultation',
+                        room: room?.roomNumber,
+                        type: serviceType
+                    },
+                    ...(existingRecord?.visitHistory || location.state?.patient?.visitHistory || [])
+                ]
+            });
         } else {
             addPatient(newPatient);
         }
@@ -576,6 +740,9 @@ const Registration = () => {
             return;
         }
         if (target.tagName === 'TEXTAREA') {
+            return;
+        }
+        if (target instanceof HTMLInputElement && target.name === 'uhid') {
             return;
         }
 
@@ -1108,6 +1275,100 @@ const Registration = () => {
                                             </select>
                                         </div>
                                     </div>
+                                    {formData.patientType === 'Returning / Old Patient' && (
+                                        <div className="space-y-0.5 animate-in slide-in-from-top-2 duration-200 bg-teal-50/50 p-2 rounded-lg border border-teal-200">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-[15px] font-bold text-teal-900 flex items-center gap-1.5">
+                                                    <Hash size={16} className="text-teal-600" /> UHID / Patient ID <span className="text-red-500">*</span>
+                                                </label>
+                                                {matchedPatient ? (
+                                                    <span className="text-[12px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                        <CheckCircle size={12} className="text-emerald-600" /> Patient Found: {matchedPatient.name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[12px] text-slate-500">
+                                                        Enter UHID to retrieve existing patient record
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="relative">
+                                                <input
+                                                    required
+                                                    autoFocus
+                                                    name="uhid"
+                                                    placeholder="Enter UHID (e.g. PID-999244)"
+                                                    className="w-full pl-8 pr-20 py-1 bg-white border border-teal-300 focus:border-teal-600 rounded-md text-[16px] font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none uppercase placeholder:normal-case placeholder:font-normal"
+                                                    value={formData.uhid || ''}
+                                                    onChange={handleUhidChange}
+                                                    onKeyDown={handleUhidKeyDown}
+                                                    onFocus={() => {
+                                                        if (formData.uhid?.trim() && uhidMatches.length > 0 && !matchedPatient) {
+                                                            setShowUhidSuggestions(true);
+                                                        }
+                                                    }}
+                                                />
+                                                <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none" />
+                                                {matchedPatient && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setMatchedPatient(null);
+                                                            setSelectedUhidIndex(-1);
+                                                            setFormData(prev => ({ ...prev, uhid: '' }));
+                                                        }}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 hover:text-slate-700 bg-slate-100 px-2 py-0.5 rounded cursor-pointer"
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                )}
+
+                                                {/* Suggestions dropdown if searching */}
+                                                {showUhidSuggestions && uhidMatches.length > 0 && !matchedPatient && (
+                                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-teal-300 z-50 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150">
+                                                        <div className="px-3 py-1 bg-teal-50 text-[11px] font-bold uppercase text-teal-800 tracking-wider flex justify-between items-center">
+                                                            <span>Matching Patients (Hit Enter or Click to Auto-Fill)</span>
+                                                            <span className="text-[10px] text-teal-600 font-normal">↑↓ to navigate</span>
+                                                        </div>
+                                                        {uhidMatches.map((p, idx) => {
+                                                            const isSelected = idx === selectedUhidIndex;
+                                                            return (
+                                                                <button
+                                                                    key={p.id}
+                                                                    type="button"
+                                                                    onMouseEnter={() => setSelectedUhidIndex(idx)}
+                                                                    onMouseDown={(e) => e.preventDefault()}
+                                                                    onClick={() => {
+                                                                        handleSelectExistingPatient(p);
+                                                                        setSelectedUhidIndex(-1);
+                                                                    }}
+                                                                    className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${
+                                                                        isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
+                                                                    }`}
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-[14px] font-bold text-slate-900 flex items-center gap-2">
+                                                                            <span className="text-teal-700 font-mono">{p.id}</span>
+                                                                            <span>{p.name}</span>
+                                                                        </div>
+                                                                        <div className="text-[12px] text-slate-500">
+                                                                            {p.age} Yrs / {p.gender} • Phone: {p.contact || 'N/A'} • {p.village || ''}
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${
+                                                                        isSelected
+                                                                            ? 'bg-teal-600 text-white border-teal-600'
+                                                                            : 'text-teal-600 bg-white border-teal-200'
+                                                                    }`}>
+                                                                        Auto-Fill {isSelected ? '↵' : ''}
+                                                                    </span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                     {formData.patientType === 'Camp Referral' && (
                                         <div className="space-y-0.5 animate-in slide-in-from-left-2 duration-200">
                                             <label className="text-[15px] font-semibold text-slate-600">Select Campaign / Camp <span className="text-red-500">*</span></label>
