@@ -80,6 +80,9 @@ const Registration = () => {
     const handleSelectExistingPatient = (p: Patient) => {
         setMatchedPatient(p);
         setShowUhidSuggestions(false);
+        if (p.patientType === 'Foreign Patient' || p.passportNumber || (p.country && p.country !== 'Bangladesh')) {
+            setIsForeignPatient(true);
+        }
         setFormData(prev => ({
             ...prev,
             uhid: p.id,
@@ -217,7 +220,7 @@ const Registration = () => {
             setFormData(f => ({
                 ...f,
                 country: next ? (f.country === 'Bangladesh' ? '' : f.country) : 'Bangladesh',
-                patientType: next ? 'Foreign Patient' : 'New Patient'
+                patientType: 'New Patient'
             }));
             return next;
         });
@@ -467,13 +470,16 @@ const Registration = () => {
         }
 
         if (name === 'patientType') {
-            const isF = value === 'Foreign Patient';
-            setIsForeignPatient(isF);
+            if (value === 'Foreign Patient') {
+                setIsForeignPatient(true);
+            }
             setFormData(prev => ({
                 ...prev,
                 patientType: value,
                 uhid: value === 'Returning / Old Patient' ? prev.uhid : '',
-                country: isF ? (prev.country === 'Bangladesh' ? '' : prev.country) : 'Bangladesh'
+                country: (value === 'Foreign Patient' || isForeignPatient)
+                    ? (prev.country === 'Bangladesh' ? '' : prev.country)
+                    : 'Bangladesh'
             }));
             if (value !== 'Returning / Old Patient') {
                 setMatchedPatient(null);
@@ -601,7 +607,7 @@ const Registration = () => {
             alert("Please enter Sub-District (Upazilla).");
             return;
         }
-        if (isForeignPatient) {
+        if (isForeign) {
             if (!formData.passportNumber.trim()) {
                 alert("Please enter Passport Number for Foreign Patient.");
                 return;
@@ -1093,7 +1099,7 @@ const Registration = () => {
                             {/* Barcode & UHID */}
                             <div className="flex flex-col items-center sm:items-start">
                                 <div className="flex items-center gap-[2px] h-8 px-1 py-1 bg-white">
-                                    {[2,1,3,1,2,1,1,3,2,1,2,3,1,2,3,1,1,2,3,1,2,1,3,2,1,1,3,2,1,2,3,1,2].map((w, i) => (
+                                    {[2, 1, 3, 1, 2, 1, 1, 3, 2, 1, 2, 3, 1, 2, 3, 1, 1, 2, 3, 1, 2, 1, 3, 2, 1, 1, 3, 2, 1, 2, 3, 1, 2].map((w, i) => (
                                         <div key={i} className="bg-slate-900 h-full" style={{ width: `${w}px` }} />
                                     ))}
                                 </div>
@@ -1263,15 +1269,23 @@ const Registration = () => {
                                                 required
                                                 name="patientType"
                                                 className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
-                                                value={formData.patientType}
+                                                value={formData.patientType === 'Foreign Patient' ? 'New Patient' : formData.patientType}
                                                 onChange={handleInputChange}
                                             >
-                                                <option value="New Patient">New Patient</option>
-                                                <option value="Returning / Old Patient">Returning / Old Patient</option>
-                                                <option value="Referral">Referral</option>
-                                                <option value="Camp Referral">Camp Referral</option>
-                                                <option value="Corporate Account">Corporate Account</option>
-                                                <option value="Foreign Patient">Foreign Patient</option>
+                                                {isForeign ? (
+                                                    <>
+                                                        <option value="New Patient">New Patient</option>
+                                                        <option value="Returning / Old Patient">Returning / Old Patient</option>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <option value="New Patient">New Patient</option>
+                                                        <option value="Returning / Old Patient">Returning / Old Patient</option>
+                                                        <option value="Referral">Referral</option>
+                                                        <option value="Camp Referral">Camp Referral</option>
+                                                        <option value="Corporate Account">Corporate Account</option>
+                                                    </>
+                                                )}
                                             </select>
                                         </div>
                                     </div>
@@ -1341,9 +1355,8 @@ const Registration = () => {
                                                                         handleSelectExistingPatient(p);
                                                                         setSelectedUhidIndex(-1);
                                                                     }}
-                                                                    className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${
-                                                                        isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
-                                                                    }`}
+                                                                    className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
+                                                                        }`}
                                                                 >
                                                                     <div>
                                                                         <div className="text-[14px] font-bold text-slate-900 flex items-center gap-2">
@@ -1354,11 +1367,10 @@ const Registration = () => {
                                                                             {p.age} Yrs / {p.gender} • Phone: {p.contact || 'N/A'} • {p.village || ''}
                                                                         </div>
                                                                     </div>
-                                                                    <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${
-                                                                        isSelected
-                                                                            ? 'bg-teal-600 text-white border-teal-600'
-                                                                            : 'text-teal-600 bg-white border-teal-200'
-                                                                    }`}>
+                                                                    <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${isSelected
+                                                                        ? 'bg-teal-600 text-white border-teal-600'
+                                                                        : 'text-teal-600 bg-white border-teal-200'
+                                                                        }`}>
                                                                         Auto-Fill {isSelected ? '↵' : ''}
                                                                     </span>
                                                                 </button>
