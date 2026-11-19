@@ -3,6 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { Calendar, Clock, User, CheckCircle, XCircle, MoreVertical, ChevronLeft, ChevronRight, Plus, Grid, List, X, Save, Download } from 'lucide-react';
 import { Appointment } from '../types';
 import { MOCK_EMPLOYEES } from '../constants';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const Appointments = () => {
   const { appointments, patients, addAppointment, updateAppointment } = useData();
@@ -316,7 +317,11 @@ const Appointments = () => {
                       <div className="grid grid-cols-2 gap-4">
                           <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                              <input type="date" className="w-full p-2 border border-slate-200 rounded-lg text-sm" value={newAppt.date} onChange={(e) => setNewAppt({...newAppt, date: e.target.value})} required />
+                              <CustomDatePicker
+                                  value={newAppt.date}
+                                  onChange={(e) => setNewAppt({...newAppt, date: e.target.value})}
+                                  required
+                              />
                           </div>
                           <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Time</label>

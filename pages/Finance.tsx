@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { DollarSign, TrendingUp, TrendingDown, FileText, Download, Receipt, Calendar, Plus, X, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FinanceRecord } from '../types';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const Finance = () => {
   const { invoices, finance, addTransaction, formatCurrency, currency } = useData();
@@ -87,19 +88,18 @@ const Finance = () => {
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
-                <Calendar size={16} className="text-slate-400 ml-2" />
-                <input 
-                    type="date" 
+                <CustomDatePicker
                     value={dateRange.start}
                     onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
-                    className="text-sm text-slate-600 focus:outline-none w-28"
+                    className="!text-sm !py-0.5 !border-0 w-32"
+                    placeholder="Start Date"
                 />
                 <span className="text-slate-300">-</span>
-                <input 
-                    type="date" 
+                <CustomDatePicker
                     value={dateRange.end}
                     onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
-                    className="text-sm text-slate-600 focus:outline-none w-28"
+                    className="!text-sm !py-0.5 !border-0 w-32"
+                    placeholder="End Date"
                 />
             </div>
 

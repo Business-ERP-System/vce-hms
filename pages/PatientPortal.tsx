@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { Search, Download, ShieldCheck, Phone, FileText, Calendar, Lock, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { downloadPDF } from '../services/exportService';
 import { useNavigate } from 'react-router-dom';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 const PatientPortal = () => {
     const { labTests, invoices, patients } = useData();
@@ -92,10 +93,12 @@ const PatientPortal = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Bill Date</label>
-                                        <div className="relative">
-                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
-                                            <input required type="date" className="w-full pl-10 pr-2 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-indigo-600 outline-none transition-all" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
-                                        </div>
+                                        <CustomDatePicker
+                                            required
+                                            value={formData.date}
+                                            onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                            className="!py-3 !rounded-2xl !bg-slate-50 !border-slate-100 !text-xs !font-bold"
+                                        />
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Mobile No</label>

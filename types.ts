@@ -67,9 +67,11 @@ export interface Vitals {
 export interface Patient {
   id: string;
   branchId: string;
+  createdAt?: string;
   name: string;
   age: number;
   ageMonths?: number;
+  ageDays?: number;
   dob?: string;
   gender: 'Male' | 'Female' | 'Other';
   contact: string;
@@ -88,6 +90,9 @@ export interface Patient {
   allocation: string;
   mrLocation: string;
   nextOfKin: string;
+  emergencyName?: string;
+  emergencyRelation?: string;
+  emergencyPhone?: string;
   village: string;
   postOffice: string;
   postCode: string;
@@ -95,6 +100,13 @@ export interface Patient {
   district: string;
   state: string;
   country: string;
+  passportNumber?: string;
+  passportCountry?: string;
+  passportIssueDate?: string;
+  passportExpiryDate?: string;
+  visaType?: string;
+  visaNumber?: string;
+  visaExpiryDate?: string;
   remarks: string;
   registrationFee: number;
 
@@ -114,7 +126,7 @@ export interface RoomMaster {
   id: string;
   roomNumber: string;
   name: string;
-  type: 'OPD' | 'Lab' | 'Diagnosis';
+  type: 'OPD' | 'Camp' | 'Lab' | 'Diagnosis';
   currentLoad: number;
 }
 
