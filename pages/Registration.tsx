@@ -1368,8 +1368,8 @@ const Registration = () => {
                                                                         </div>
                                                                     </div>
                                                                     <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${isSelected
-                                                                            ? 'bg-teal-600 text-white border-teal-600'
-                                                                            : 'text-teal-600 bg-white border-teal-200'
+                                                                        ? 'bg-teal-600 text-white border-teal-600'
+                                                                        : 'text-teal-600 bg-white border-teal-200'
                                                                         }`}>
                                                                         Auto-Fill {isSelected ? '↵' : ''}
                                                                     </span>
