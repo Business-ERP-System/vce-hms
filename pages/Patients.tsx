@@ -11,12 +11,14 @@ import {
     CreditCard, Scissors, Bed as BedIcon, ArrowRight, FileJson, 
     FileSpreadsheet, FileCode, FileType, Phone, ExternalLink, MapPin, 
     Home, CreditCard as CardIcon, UserPlus, Info, Tag, Clipboard, Copy,
-    Users, Mail, Archive, User, Calendar, Map as MapIcon, Briefcase, Building2
+    Users, Mail, Archive, User, Calendar, Map as MapIcon, Briefcase, Building2,
+    Settings, RotateCcw
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { SettingsModal } from '../components/SettingsModal';
 
 const fuzzyMatch = (text?: string, query?: string): boolean => {
   if (!text || !query) return false;
@@ -37,6 +39,16 @@ const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setSearchFilter] = useState<string>('All');
   
+  // Column Filter States
+  const [activeFilterPopover, setActiveFilterPopover] = useState<string | null>(null);
+  const [colFilterPid, setColFilterPid] = useState('');
+  const [colFilterGender, setColFilterGender] = useState<'All' | 'Male' | 'Female'>('All');
+  const [colFilterAgeGroup, setColFilterAgeGroup] = useState<'All' | '<18' | '18-35' | '36-50' | '51+'>('All');
+  const [colFilterDistrict, setColFilterDistrict] = useState('All');
+  const [colFilterClass, setColFilterClass] = useState('All');
+  const [colFilterSpeciality, setColFilterSpeciality] = useState('All');
+  const [colFilterStatus, setColFilterStatus] = useState('All');
+
   const canAdd = hasPermission('Patient List', 'add');
   const canEdit = hasPermission('Patient List', 'edit');
   const canDelete = hasPermission('Patient List', 'delete');
@@ -56,6 +68,103 @@ const Patients = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Close popovers on click outside or escape key
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.column-filter-container')) {
+        setActiveFilterPopover(null);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveFilterPopover(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Status counts for segmented status filter tabs
+  const statusCounts = useMemo(() => {
+    return {
+      all: patients.length,
+      opd: patients.filter(p => p.status === 'OPD').length,
+      ipd: patients.filter(p => p.status === 'IPD').length,
+      discharged: patients.filter(p => p.status === 'Discharged').length,
+    };
+  }, [patients]);
+
+  // Dynamic Unique Options for Filters
+  const uniqueDistricts = useMemo(() => {
+    const set = new Set<string>();
+    patients.forEach(p => {
+      if (p.district) set.add(p.district);
+    });
+    return Array.from(set).sort();
+  }, [patients]);
+
+  const uniqueSpecialties = useMemo(() => {
+    const set = new Set<string>();
+    patients.forEach(p => {
+      if (p.speciality) set.add(p.speciality);
+    });
+    return Array.from(set).sort();
+  }, [patients]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchTerm.trim()) count++;
+    if (statusFilter !== 'All') count++;
+    if (colFilterPid.trim()) count++;
+    if (colFilterGender !== 'All') count++;
+    if (colFilterAgeGroup !== 'All') count++;
+    if (colFilterDistrict !== 'All') count++;
+    if (colFilterClass !== 'All') count++;
+    if (colFilterSpeciality !== 'All') count++;
+    if (colFilterStatus !== 'All') count++;
+    return count;
+  }, [searchTerm, statusFilter, colFilterPid, colFilterGender, colFilterAgeGroup, colFilterDistrict, colFilterClass, colFilterSpeciality, colFilterStatus]);
+
+  const resetAllFilters = () => {
+    setSearchTerm('');
+    setSearchFilter('All');
+    setColFilterPid('');
+    setColFilterGender('All');
+    setColFilterAgeGroup('All');
+    setColFilterDistrict('All');
+    setColFilterClass('All');
+    setColFilterSpeciality('All');
+    setColFilterStatus('All');
+  };
+
+  const handleExportPatientList = () => {
+    const headers = ['Patient ID', 'Name', 'Age', 'Gender', 'Contact', 'Status', 'Diagnosis', 'Doctor', 'Registration Fee'];
+    const rows = sortedPatients.map(p => [
+      p.id,
+      p.name,
+      `${p.age}Y`,
+      p.gender,
+      p.contact,
+      p.status,
+      p.diagnosis || 'N/A',
+      p.assignedDoctor || 'N/A',
+      p.registrationFee || 0
+    ]);
+    const csvContent = [headers, ...rows].map(e => e.map(val => `"${val}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Patient_Master_Registry_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleSort = (key: keyof Patient) => {
     setSortConfig(prev => ({
@@ -64,18 +173,82 @@ const Patients = () => {
     }));
   };
 
-  const filteredPatients = patients.filter(p => {
-    if (!searchTerm.trim()) {
-      return statusFilter === 'All' || p.status === statusFilter;
-    }
-    const matchesSearch = 
-      fuzzyMatch(p.name, searchTerm) || 
-      (p.id && p.id.toLowerCase().includes(searchTerm.toLowerCase())) || 
-      (p.contact && p.contact.includes(searchTerm)) ||
-      (p.village && fuzzyMatch(p.village, searchTerm)) ||
-      (p.district && fuzzyMatch(p.district, searchTerm));
-    return matchesSearch && (statusFilter === 'All' || p.status === statusFilter);
-  });
+  const filteredPatients = useMemo(() => {
+    return patients.filter(p => {
+      // 1. Global search
+      if (searchTerm.trim()) {
+        const q = searchTerm.trim().toLowerCase();
+        const matchesSearch = 
+          fuzzyMatch(p.name, q) || 
+          (p.id && p.id.toLowerCase().includes(q)) || 
+          (p.contact && p.contact.includes(q)) ||
+          (p.village && fuzzyMatch(p.village, q)) ||
+          (p.district && fuzzyMatch(p.district, q)) ||
+          (p.diagnosis && fuzzyMatch(p.diagnosis, q)) ||
+          (p.speciality && fuzzyMatch(p.speciality, q));
+        if (!matchesSearch) return false;
+      }
+
+      // 2. Global Status dropdown
+      if (statusFilter !== 'All' && p.status !== statusFilter) {
+        return false;
+      }
+
+      // 3. Column: PID / Name
+      if (colFilterPid.trim()) {
+        const qPid = colFilterPid.trim().toLowerCase();
+        const matchesPid = 
+          (p.id && p.id.toLowerCase().includes(qPid)) || 
+          (p.name && p.name.toLowerCase().includes(qPid));
+        if (!matchesPid) return false;
+      }
+
+      // 4. Column: Demographics (Gender)
+      if (colFilterGender !== 'All' && p.gender !== colFilterGender) {
+        return false;
+      }
+
+      // 5. Column: Demographics (Age Group)
+      if (colFilterAgeGroup !== 'All') {
+        const age = p.age || 0;
+        if (colFilterAgeGroup === '<18' && age >= 18) return false;
+        if (colFilterAgeGroup === '18-35' && (age < 18 || age > 35)) return false;
+        if (colFilterAgeGroup === '36-50' && (age < 36 || age > 50)) return false;
+        if (colFilterAgeGroup === '51+' && age < 51) return false;
+      }
+
+      // 6. Column: Contact & Location (District / Village)
+      if (colFilterDistrict !== 'All') {
+        const dist = (p.district || '').toLowerCase();
+        const vill = (p.village || '').toLowerCase();
+        const target = colFilterDistrict.toLowerCase();
+        if (!dist.includes(target) && !vill.includes(target)) return false;
+      }
+
+      // 7. Column: Classification (Type or Account)
+      if (colFilterClass !== 'All') {
+        const pt = (p.patientType || '').toLowerCase();
+        const pc = (p.paymentCategory || '').toLowerCase();
+        const target = colFilterClass.toLowerCase();
+        if (!pt.includes(target) && !pc.includes(target)) return false;
+      }
+
+      // 8. Column: File Location / Speciality
+      if (colFilterSpeciality !== 'All') {
+        const spec = (p.speciality || '').toLowerCase();
+        const loc = (p.mrLocation || '').toLowerCase();
+        const target = colFilterSpeciality.toLowerCase();
+        if (!spec.includes(target) && !loc.includes(target)) return false;
+      }
+
+      // 9. Column: Clinical Case Status
+      if (colFilterStatus !== 'All' && p.status !== colFilterStatus) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [patients, searchTerm, statusFilter, colFilterPid, colFilterGender, colFilterAgeGroup, colFilterDistrict, colFilterClass, colFilterSpeciality, colFilterStatus]);
 
   const sortedPatients = useMemo(() => {
     return [...filteredPatients].sort((a, b) => {
@@ -251,63 +424,711 @@ const Patients = () => {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-3.5 animate-in fade-in duration-300">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Patient Master Registry</h1>
-            <p className="text-sm text-slate-500 font-medium">Detailed access to all demographic and clinical hospital records.</p>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Patient Master Registry</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs">
+                {filteredPatients.length} Patients
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">Detailed access to all demographic and clinical hospital records.</p>
         </div>
-        <div className="flex gap-2">
-            {canExport && <button className="bg-white border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold hover:bg-slate-50 transition-colors"><Download size={18} /> Export List</button>}
-            {canAdd && <button onClick={() => navigate('/registration')} className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg transition-all"><Plus size={18} /> New Patient Entry</button>}
+        <div className="flex gap-2 items-center">
+            <button 
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="bg-white border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold hover:bg-slate-50 hover:text-teal-700 hover:border-teal-200 transition-colors shadow-2xs cursor-pointer"
+                title="System Settings (Hospital Info, Fees, PID Sequence, Rooms & Roles)"
+            >
+                <Settings size={16} className="text-slate-500" />
+                <span>Settings</span>
+            </button>
+            {canExport && (
+                <button 
+                    type="button"
+                    onClick={handleExportPatientList} 
+                    className="bg-white border border-slate-200 text-slate-600 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
+                    title="Export Patient Master Registry to CSV"
+                >
+                    <Download size={16} /> Export List
+                </button>
+            )}
+            {canAdd && (
+                <button 
+                    type="button"
+                    onClick={() => navigate('/registration')} 
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                    <Plus size={16} /> New Patient Entry
+                </button>
+            )}
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between z-20 relative">
-        <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input type="text" placeholder="Search by name, patient ID, phone or area..." className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-        </div>
-        <div className="flex gap-2">
-            <select value={statusFilter} onChange={(e) => setSearchFilter(e.target.value)} className="bg-white border border-slate-200 text-slate-700 py-2.5 px-4 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer transition-all">
-              <option value="All">All Case Statuses</option><option value="OPD">Out-Patient</option><option value="IPD">In-Patient</option><option value="Discharged">Discharged</option>
-            </select>
-            <button className="p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-500 transition-colors"><Filter size={20}/></button>
-        </div>
-      </div>
+      {/* Unified Table Container with Seamless Attractive Teal Top Controls */}
+      <div className="bg-white rounded-2xl shadow-md border border-slate-200 relative z-20">
+        {/* Top Teal Command Center: Search & Filter Options */}
+        <div className="bg-[#0d5c68] text-white px-5 py-3 rounded-t-2xl border-b border-[#083c44] flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
+          <div className="relative w-full lg:w-96 flex-shrink-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-200 w-4 h-4 pointer-events-none" />
+              <input 
+                type="text" 
+                placeholder="Search by PID, Name, Contact, Area, Doctor..." 
+                className="w-full pl-10 pr-9 py-2 rounded-xl bg-white/10 hover:bg-white/15 focus:bg-white text-white focus:text-slate-900 placeholder-teal-200 focus:placeholder-slate-400 text-xs font-semibold border border-white/20 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/50 shadow-inner transition-all" 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+              />
+              {searchTerm && (
+                <button 
+                  type="button" 
+                  onClick={() => setSearchTerm('')} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-200 hover:text-white cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+          </div>
+          <div className="flex flex-wrap gap-2 items-center justify-end w-full lg:w-auto">
+              {/* Quick Status Segmented Controls */}
+              <div className="inline-flex p-1 bg-black/25 backdrop-blur-md rounded-xl border border-white/15 text-xs font-bold">
+                  <button
+                      type="button"
+                      onClick={() => { setSearchFilter('All'); setColFilterStatus('All'); }}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                          statusFilter === 'All' && colFilterStatus === 'All'
+                              ? 'bg-white text-[#0d5c68] shadow-xs font-bold'
+                              : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                  >
+                      All ({statusCounts.all})
+                  </button>
+                  <button
+                      type="button"
+                      onClick={() => { setSearchFilter('OPD'); setColFilterStatus('OPD'); }}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                          statusFilter === 'OPD' || colFilterStatus === 'OPD'
+                              ? 'bg-emerald-500 text-white shadow-xs font-bold'
+                              : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                  >
+                      <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
+                      OPD ({statusCounts.opd})
+                  </button>
+                  <button
+                      type="button"
+                      onClick={() => { setSearchFilter('IPD'); setColFilterStatus('IPD'); }}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                          statusFilter === 'IPD' || colFilterStatus === 'IPD'
+                              ? 'bg-purple-500 text-white shadow-xs font-bold'
+                              : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                  >
+                      <span className="w-2 h-2 rounded-full bg-purple-300"></span>
+                      IPD ({statusCounts.ipd})
+                  </button>
+                  <button
+                      type="button"
+                      onClick={() => { setSearchFilter('Discharged'); setColFilterStatus('Discharged'); }}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                          statusFilter === 'Discharged' || colFilterStatus === 'Discharged'
+                              ? 'bg-slate-700 text-white shadow-xs font-bold'
+                              : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                  >
+                      Discharged ({statusCounts.discharged})
+                  </button>
+              </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative z-10">
-        <div className="overflow-x-auto">
+              {activeFilterCount > 0 && (
+                  <button 
+                      type="button"
+                      onClick={resetAllFilters}
+                      className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shadow-sm"
+                      title="Reset All Filters"
+                  >
+                      <RotateCcw size={12} />
+                      <span>Reset ({activeFilterCount})</span>
+                  </button>
+              )}
+          </div>
+        </div>
+
+        {/* Active Filter Chips Summary */}
+        {activeFilterCount > 0 && (
+          <div className="bg-teal-50/80 border-b border-teal-100 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs animate-in fade-in">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-bold text-teal-900 flex items-center gap-1">
+                <Filter size={12} className="text-teal-600" />
+                Active Filters ({activeFilterCount}):
+              </span>
+              {colFilterPid && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  PID/Name: "{colFilterPid}"
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterPid('')} />
+                </span>
+              )}
+              {colFilterGender !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  Gender: {colFilterGender}
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterGender('All')} />
+                </span>
+              )}
+              {colFilterAgeGroup !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  Age: {colFilterAgeGroup}
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterAgeGroup('All')} />
+                </span>
+              )}
+              {colFilterDistrict !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  District: {colFilterDistrict}
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterDistrict('All')} />
+                </span>
+              )}
+              {colFilterClass !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  Classification: {colFilterClass}
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterClass('All')} />
+                </span>
+              )}
+              {colFilterSpeciality !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  Specialty: {colFilterSpeciality}
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterSpeciality('All')} />
+                </span>
+              )}
+              {colFilterStatus !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white text-teal-800 border border-teal-200 rounded-full font-semibold shadow-2xs">
+                  Status: {colFilterStatus}
+                  <X size={12} className="cursor-pointer hover:text-rose-600 ml-0.5" onClick={() => setColFilterStatus('All')} />
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={resetAllFilters}
+              className="text-rose-600 hover:text-rose-700 font-bold hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <RotateCcw size={12} />
+              Reset All Filters
+            </button>
+          </div>
+        )}
+        <div className="overflow-x-auto min-h-[460px]">
             <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-50 text-slate-600 font-semibold text-xs uppercase tracking-wider border-b border-slate-200">
+                <thead className="bg-[#0d5c68] text-white font-bold text-xs uppercase tracking-wider border-b border-[#083e46] shadow-xs">
                     <tr>
-                        <th onClick={() => handleSort('name')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
-                            <div className="flex items-center gap-1.5">
-                                <span>Patient Identity (PID)</span>
-                                <ArrowUpDown size={14} className={sortConfig.key === 'name' ? 'text-teal-600' : 'text-slate-400'} />
+                        {/* 1. Patient Identity (PID) */}
+                        <th className="px-6 py-4 font-bold relative column-filter-container text-white">
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="uppercase tracking-wider text-white font-bold">Patient Identity (PID)</span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveFilterPopover(activeFilterPopover === 'pid' ? null : 'pid');
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                        colFilterPid.trim()
+                                            ? 'bg-cyan-400 text-teal-950 border-cyan-300 shadow-sm ring-2 ring-cyan-300/40 font-black'
+                                            : 'border-white/20 bg-white/10 text-teal-100 hover:text-white hover:bg-white/20 hover:border-white/40'
+                                    }`}
+                                    title="Filter Patient Identity"
+                                >
+                                    <Filter size={13} />
+                                </button>
                             </div>
+
+                            {/* PID Filter Popover */}
+                            {activeFilterPopover === 'pid' && (
+                                <div 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-full left-4 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 normal-case font-normal text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                                >
+                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <User size={14} className="text-teal-600" />
+                                            Filter PID / Name
+                                        </span>
+                                        {colFilterPid && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setColFilterPid('')}
+                                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="relative mb-3">
+                                        <Search size={13} className="text-slate-400 absolute left-2.5 top-2.5" />
+                                        <input
+                                            type="text"
+                                            value={colFilterPid}
+                                            onChange={(e) => setColFilterPid(e.target.value)}
+                                            placeholder="Type PID (e.g. PID-1) or Name..."
+                                            autoFocus
+                                            className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white"
+                                        />
+                                        {colFilterPid && (
+                                            <X 
+                                                size={13} 
+                                                className="text-slate-400 hover:text-slate-700 absolute right-2.5 top-2.5 cursor-pointer" 
+                                                onClick={() => setColFilterPid('')} 
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center justify-end pt-2 border-t border-slate-100 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveFilterPopover(null)}
+                                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1 rounded-lg cursor-pointer"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </th>
-                        <th onClick={() => handleSort('age')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
-                            <div className="flex items-center gap-1.5">
-                                <span>Demographics</span>
-                                <ArrowUpDown size={14} className={sortConfig.key === 'age' ? 'text-teal-600' : 'text-slate-400'} />
+
+                        {/* 2. Demographics */}
+                        <th className="px-6 py-4 font-bold relative column-filter-container text-white">
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="uppercase tracking-wider text-white font-bold">Demographics</span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveFilterPopover(activeFilterPopover === 'demographics' ? null : 'demographics');
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                        colFilterGender !== 'All' || colFilterAgeGroup !== 'All'
+                                            ? 'bg-cyan-400 text-teal-950 border-cyan-300 shadow-sm ring-2 ring-cyan-300/40 font-black'
+                                            : 'border-white/20 bg-white/10 text-teal-100 hover:text-white hover:bg-white/20 hover:border-white/40'
+                                    }`}
+                                    title="Filter Demographics"
+                                >
+                                    <Filter size={13} />
+                                </button>
                             </div>
+
+                            {/* Demographics Filter Popover */}
+                            {activeFilterPopover === 'demographics' && (
+                                <div 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-full left-4 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 normal-case font-normal text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                                >
+                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Users size={14} className="text-teal-600" />
+                                            Filter Demographics
+                                        </span>
+                                        {(colFilterGender !== 'All' || colFilterAgeGroup !== 'All') && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => { setColFilterGender('All'); setColFilterAgeGroup('All'); }}
+                                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Gender Selector */}
+                                    <div className="mb-3">
+                                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Gender</label>
+                                        <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+                                            {(['All', 'Male', 'Female'] as const).map(g => (
+                                                <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={() => setColFilterGender(g)}
+                                                    className={`py-1.5 rounded-lg text-center transition-all cursor-pointer ${
+                                                        colFilterGender === g 
+                                                            ? 'bg-white text-teal-800 shadow-xs font-bold' 
+                                                            : 'text-slate-600 hover:text-slate-900'
+                                                    }`}
+                                                >
+                                                    {g}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Age Bracket Selector */}
+                                    <div className="mb-3">
+                                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Age Group</label>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {(['All', '<18', '18-35', '36-50', '51+'] as const).map(ag => (
+                                                <button
+                                                    key={ag}
+                                                    type="button"
+                                                    onClick={() => setColFilterAgeGroup(ag)}
+                                                    className={`px-2 py-1.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                                                        colFilterAgeGroup === ag
+                                                            ? 'bg-teal-50 border-teal-500 text-teal-800 font-bold'
+                                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {ag === 'All' ? 'All Ages' : ag + ' Yrs'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-end pt-2 border-t border-slate-100 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveFilterPopover(null)}
+                                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1 rounded-lg cursor-pointer"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </th>
-                        <th className="px-8 py-5 font-bold">Contact & Location</th>
-                        <th onClick={() => handleSort('patientType')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
-                            <div className="flex items-center gap-1.5">
-                                <span>Classification</span>
-                                <ArrowUpDown size={14} className={sortConfig.key === 'patientType' ? 'text-teal-600' : 'text-slate-400'} />
+
+                        {/* 3. Contact & Location */}
+                        <th className="px-6 py-4 font-bold relative column-filter-container text-white">
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="uppercase tracking-wider text-white font-bold">Contact & Location</span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveFilterPopover(activeFilterPopover === 'location' ? null : 'location');
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                        colFilterDistrict !== 'All'
+                                            ? 'bg-cyan-400 text-teal-950 border-cyan-300 shadow-sm ring-2 ring-cyan-300/40 font-black'
+                                            : 'border-white/20 bg-white/10 text-teal-100 hover:text-white hover:bg-white/20 hover:border-white/40'
+                                    }`}
+                                    title="Filter Location / District"
+                                >
+                                    <Filter size={13} />
+                                </button>
                             </div>
+
+                            {/* Location Filter Popover */}
+                            {activeFilterPopover === 'location' && (
+                                <div 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-full left-4 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 normal-case font-normal text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                                >
+                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <MapPin size={14} className="text-teal-600" />
+                                            Filter District / Area
+                                        </span>
+                                        {colFilterDistrict !== 'All' && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setColFilterDistrict('All')}
+                                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setColFilterDistrict('All')}
+                                            className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                                                colFilterDistrict === 'All'
+                                                    ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                                                    : 'text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            All Districts & Areas
+                                        </button>
+                                        {uniqueDistricts.map(dist => (
+                                            <button
+                                                key={dist}
+                                                type="button"
+                                                onClick={() => setColFilterDistrict(dist)}
+                                                className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                                                    colFilterDistrict === dist
+                                                        ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                                                        : 'text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                <span>{dist}</span>
+                                                <span className="text-[10px] text-slate-400 font-mono">
+                                                    ({patients.filter(p => p.district === dist).length})
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-end pt-3 mt-2 border-t border-slate-100 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveFilterPopover(null)}
+                                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1 rounded-lg cursor-pointer"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </th>
-                        <th className="px-8 py-5 font-bold">File Location</th>
-                        <th onClick={() => handleSort('status')} className="px-8 py-5 font-bold cursor-pointer hover:bg-slate-100 transition-colors">
-                            <div className="flex items-center gap-1.5">
-                                <span>Clinical Case</span>
-                                <ArrowUpDown size={14} className={sortConfig.key === 'status' ? 'text-teal-600' : 'text-slate-400'} />
+
+                        {/* 4. Classification */}
+                        <th className="px-6 py-4 font-bold relative column-filter-container text-white">
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="uppercase tracking-wider text-white font-bold">Classification</span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveFilterPopover(activeFilterPopover === 'classification' ? null : 'classification');
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                        colFilterClass !== 'All'
+                                            ? 'bg-cyan-400 text-teal-950 border-cyan-300 shadow-sm ring-2 ring-cyan-300/40 font-black'
+                                            : 'border-white/20 bg-white/10 text-teal-100 hover:text-white hover:bg-white/20 hover:border-white/40'
+                                    }`}
+                                    title="Filter Classification"
+                                >
+                                    <Filter size={13} />
+                                </button>
                             </div>
+
+                            {/* Classification Filter Popover */}
+                            {activeFilterPopover === 'classification' && (
+                                <div 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-full left-4 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 normal-case font-normal text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                                >
+                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Tag size={14} className="text-teal-600" />
+                                            Filter Classification
+                                        </span>
+                                        {colFilterClass !== 'All' && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setColFilterClass('All')}
+                                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        {[
+                                            { label: 'All Classifications', val: 'All' },
+                                            { label: 'New Patient Registration', val: 'New' },
+                                            { label: 'Old / Re-visit Patient', val: 'Old' },
+                                            { label: 'Pay Account', val: 'Pay' },
+                                            { label: 'Free / Subsidized Account', val: 'Free' }
+                                        ].map(item => (
+                                            <button
+                                                key={item.val}
+                                                type="button"
+                                                onClick={() => setColFilterClass(item.val)}
+                                                className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                                                    colFilterClass === item.val
+                                                        ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                                                        : 'text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                {item.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-end pt-3 mt-2 border-t border-slate-100 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveFilterPopover(null)}
+                                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1 rounded-lg cursor-pointer"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </th>
-                        <th className="px-8 py-5 text-right font-bold">Actions</th>
+
+                        {/* 5. File Location */}
+                        <th className="px-6 py-4 font-bold relative column-filter-container text-white">
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="uppercase tracking-wider text-white font-bold">File Location</span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveFilterPopover(activeFilterPopover === 'file' ? null : 'file');
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                        colFilterSpeciality !== 'All'
+                                            ? 'bg-cyan-400 text-teal-950 border-cyan-300 shadow-sm ring-2 ring-cyan-300/40 font-black'
+                                            : 'border-white/20 bg-white/10 text-teal-100 hover:text-white hover:bg-white/20 hover:border-white/40'
+                                    }`}
+                                    title="Filter File Location / Specialty"
+                                >
+                                    <Filter size={13} />
+                                </button>
+                            </div>
+
+                            {/* File Location Filter Popover */}
+                            {activeFilterPopover === 'file' && (
+                                <div 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 normal-case font-normal text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                                >
+                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Archive size={14} className="text-teal-600" />
+                                            Filter Specialty & Location
+                                        </span>
+                                        {colFilterSpeciality !== 'All' && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setColFilterSpeciality('All')}
+                                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setColFilterSpeciality('All')}
+                                            className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                                                colFilterSpeciality === 'All'
+                                                    ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                                                    : 'text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            All Specialties & Files
+                                        </button>
+                                        {uniqueSpecialties.map(spec => (
+                                            <button
+                                                key={spec}
+                                                type="button"
+                                                onClick={() => setColFilterSpeciality(spec)}
+                                                className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                                                    colFilterSpeciality === spec
+                                                        ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                                                        : 'text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                <span>{spec}</span>
+                                                <span className="text-[10px] text-slate-400 font-mono">
+                                                    ({patients.filter(p => p.speciality === spec).length})
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-end pt-3 mt-2 border-t border-slate-100 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveFilterPopover(null)}
+                                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1 rounded-lg cursor-pointer"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </th>
+
+                        {/* 6. Clinical Case */}
+                        <th className="px-6 py-4 font-bold relative column-filter-container text-white">
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="uppercase tracking-wider text-white font-bold">Clinical Case</span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveFilterPopover(activeFilterPopover === 'clinical' ? null : 'clinical');
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                        colFilterStatus !== 'All'
+                                            ? 'bg-cyan-400 text-teal-950 border-cyan-300 shadow-sm ring-2 ring-cyan-300/40 font-black'
+                                            : 'border-white/20 bg-white/10 text-teal-100 hover:text-white hover:bg-white/20 hover:border-white/40'
+                                    }`}
+                                    title="Filter Clinical Case Status"
+                                >
+                                    <Filter size={13} />
+                                </button>
+                            </div>
+
+                            {/* Clinical Case Filter Popover */}
+                            {activeFilterPopover === 'clinical' && (
+                                <div 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 normal-case font-normal text-slate-800 animate-in fade-in zoom-in-95 duration-150"
+                                >
+                                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Activity size={14} className="text-teal-600" />
+                                            Filter Clinical Status
+                                        </span>
+                                        {colFilterStatus !== 'All' && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setColFilterStatus('All')}
+                                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        {[
+                                            { label: 'All Case Statuses', val: 'All', badge: 'bg-slate-100 text-slate-700', count: statusCounts.all },
+                                            { label: 'Out-Patient (OPD)', val: 'OPD', badge: 'bg-emerald-100 text-emerald-800', count: statusCounts.opd },
+                                            { label: 'In-Patient (IPD)', val: 'IPD', badge: 'bg-purple-100 text-purple-800', count: statusCounts.ipd },
+                                            { label: 'Discharged Record', val: 'Discharged', badge: 'bg-slate-100 text-slate-600', count: statusCounts.discharged },
+                                        ].map(item => (
+                                            <button
+                                                key={item.val}
+                                                type="button"
+                                                onClick={() => setColFilterStatus(item.val)}
+                                                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                                                    colFilterStatus === item.val
+                                                        ? 'bg-teal-50 text-teal-800 font-bold border border-teal-200'
+                                                        : 'text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                <span>{item.label}</span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.badge}`}>
+                                                    {item.count}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-end pt-3 mt-2 border-t border-slate-100 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveFilterPopover(null)}
+                                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-3 py-1 rounded-lg cursor-pointer"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </th>
+
+                        {/* 7. Actions */}
+                        <th className="px-6 py-4 text-right font-bold text-white">
+                            <span className="uppercase tracking-wider text-white font-bold">Actions</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -357,10 +1178,52 @@ const Patients = () => {
                                     patient.status === 'Discharged' ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'
                                 }`}>{patient.status}</span>
                             </td>
-                            <td className="px-8 py-5 text-right">
-                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                    {canEdit && <button onClick={(e) => { e.stopPropagation(); navigate('/registration', { state: { patient } }) }} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Modify Patient Data"><Edit size={16} /></button>}
-                                    {canDelete && <button onClick={(e) => { e.stopPropagation(); setPatientToDelete(patient.id); setIsDeleteModalOpen(true); }} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Wipe Clinical Record"><Trash2 size={16} /></button>}
+                            <td className="px-6 py-5 text-right">
+                                <div className="flex items-center justify-end gap-1.5 transition-all">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); openPatientDetails(patient); }}
+                                        className="p-1.5 text-teal-600 hover:text-white bg-teal-50 hover:bg-teal-600 border border-teal-200 rounded-lg transition-all shadow-xs cursor-pointer"
+                                        title="View Clinical Dossier"
+                                    >
+                                        <Eye size={15} />
+                                    </button>
+                                    {canEdit && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); navigate('/registration', { state: { patient } }); }}
+                                            className="p-1.5 text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 rounded-lg transition-all shadow-xs cursor-pointer"
+                                            title="Modify Patient Record"
+                                        >
+                                            <Edit size={15} />
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); navigate('/e-prescription', { state: { patientId: patient.id } }); }}
+                                        className="p-1.5 text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 border border-blue-200 rounded-lg transition-all shadow-xs cursor-pointer"
+                                        title="Create E-Prescription"
+                                    >
+                                        <FileText size={15} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); navigate('/billing', { state: { patient } }); }}
+                                        className="p-1.5 text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 rounded-lg transition-all shadow-xs cursor-pointer"
+                                        title="Patient Billing & Invoicing"
+                                    >
+                                        <CreditCard size={15} />
+                                    </button>
+                                    {canDelete && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); setPatientToDelete(patient.id); setIsDeleteModalOpen(true); }}
+                                            className="p-1.5 text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 rounded-lg transition-all shadow-xs cursor-pointer"
+                                            title="Delete Patient Record"
+                                        >
+                                            <Trash2 size={15} />
+                                        </button>
+                                    )}
                                 </div>
                             </td>
                         </tr>
@@ -444,6 +1307,8 @@ const Patients = () => {
                                     <InfoBlock label="Full Name" value={selectedPatient.name} icon={User} />
                                     <InfoBlock label="Age" value={`${selectedPatient.age} Years ${selectedPatient.ageMonths || 0} Months${selectedPatient.ageDays ? ` ${selectedPatient.ageDays} Days` : ''}`} icon={Calendar} />
                                     <InfoBlock label="Gender" value={selectedPatient.gender} icon={Users} />
+                                    <InfoBlock label="Marital Status" value={selectedPatient.maritalStatus || 'Not Recorded'} icon={UserCheck} />
+                                    <InfoBlock label="Blood Group" value={selectedPatient.bloodGroup || 'Not Recorded'} icon={Activity} />
                                     <InfoBlock label="Contact Number" value={selectedPatient.contact} icon={Phone} />
                                     <InfoBlock label="Full Address" value={`${selectedPatient.village}, ${selectedPatient.district}, ${selectedPatient.state}, ${selectedPatient.country}`} icon={MapPin} isFull={true} />
                                 </div>
@@ -670,6 +1535,12 @@ const Patients = () => {
           </div>
         </div>
       )}
+
+      {/* Global & Hospital Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 };
