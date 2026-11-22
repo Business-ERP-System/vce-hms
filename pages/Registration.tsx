@@ -657,14 +657,32 @@ const Registration = () => {
             if (value === 'Foreign Patient') {
                 setIsForeignPatient(true);
             }
-            setFormData(prev => ({
-                ...prev,
-                patientType: value,
-                uhid: value === 'Returning / Old Patient' ? prev.uhid : '',
-                country: (value === 'Foreign Patient' || isForeignPatient)
-                    ? (prev.country === 'Bangladesh' ? '' : prev.country)
-                    : 'Bangladesh'
-            }));
+            if (value === 'Camp Referral') {
+                setServiceType('Camp');
+                setSelectedRoomId('');
+                const activeCamps = campaigns.filter(c => c.status !== 'Completed');
+                setFormData(prev => ({
+                    ...prev,
+                    patientType: value,
+                    campaignId: prev.campaignId || (activeCamps.length > 0 ? activeCamps[0].id : ''),
+                    uhid: '',
+                    country: 'Bangladesh'
+                }));
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    patientType: value,
+                    campaignId: '',
+                    uhid: value === 'Returning / Old Patient' ? prev.uhid : '',
+                    country: (value === 'Foreign Patient' || isForeignPatient)
+                        ? (prev.country === 'Bangladesh' ? '' : prev.country)
+                        : 'Bangladesh'
+                }));
+                if (serviceType === 'Camp') {
+                    setServiceType('OPD');
+                    setSelectedRoomId('');
+                }
+            }
             if (value !== 'Returning / Old Patient') {
                 setMatchedPatient(null);
                 setShowUhidSuggestions(false);
@@ -776,7 +794,7 @@ const Registration = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedRoomId) {
-            alert("Please select a Target Room before saving.");
+            alert(serviceType === 'Camp' ? "Please select a Target Counter before saving." : "Please select a Target Room before saving.");
             return;
         }
         if (!formData.patientType) {
@@ -1390,8 +1408,23 @@ const Registration = () => {
                                         type="button"
                                         tabIndex={-1}
                                         onClick={() => {
-                                            setServiceType(type.id as any);
+                                            const newService = type.id as any;
+                                            setServiceType(newService);
                                             setSelectedRoomId('');
+                                            if (newService === 'Camp') {
+                                                const activeCamps = campaigns.filter(c => c.status !== 'Completed');
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    patientType: 'Camp Referral',
+                                                    campaignId: prev.campaignId || (activeCamps.length > 0 ? activeCamps[0].id : '')
+                                                }));
+                                            } else if (formData.patientType === 'Camp Referral') {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    patientType: 'New Patient',
+                                                    campaignId: ''
+                                                }));
+                                            }
                                             setTimeout(() => targetRoomRef.current?.focus(), 50);
                                         }}
                                         className={`flex items-center gap-1 px-2.5 py-1 rounded-md border text-[15px] transition-all ${serviceType === type.id
@@ -1408,12 +1441,12 @@ const Registration = () => {
 
                         <div className="hidden md:flex items-center gap-2 text-[16px] text-teal-50">
                             <span className="text-[14px] font-bold text-cyan-200 uppercase tracking-wider">Routing:</span>
-                            <span className="text-white font-semibold truncate max-w-xs">{rooms.find(r => r.id === selectedRoomId)?.name || 'Select a counter room'}</span>
+                            <span className="text-white font-semibold truncate max-w-xs">{rooms.find(r => r.id === selectedRoomId)?.name || (serviceType === 'Camp' ? 'Select a counter' : 'Select a counter room')}</span>
                         </div>
 
                         <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end mt-1 sm:mt-0 ml-auto">
                             <div className="flex items-center gap-1.5">
-                                <span className="text-[14px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">Target Room <span className="text-red-400">*</span></span>
+                                <span className="text-[14px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">{serviceType === 'Camp' ? 'Target Counter' : 'Target Room'} <span className="text-red-400">*</span></span>
                                 <div className="relative">
                                     <select
                                         ref={targetRoomRef}
@@ -1425,10 +1458,10 @@ const Registration = () => {
                                         value={selectedRoomId}
                                         onChange={(e) => setSelectedRoomId(e.target.value)}
                                     >
-                                        <option value="" className="text-slate-400 bg-white font-semibold py-1">Select Room</option>
+                                        <option value="" className="text-slate-400 bg-white font-semibold py-1">{serviceType === 'Camp' ? 'Select Counter' : 'Select Room'}</option>
                                         {rooms.filter(r => r.type === serviceType).map(r => (
                                             <option key={r.id} value={r.id} className="text-slate-900 bg-white font-semibold py-1">
-                                                {r.roomNumber} - {r.name}
+                                                {serviceType === 'Camp' ? `Counter ${r.roomNumber}` : r.roomNumber} - {r.name}
                                             </option>
                                         ))}
                                     </select>
@@ -1443,10 +1476,10 @@ const Registration = () => {
                                 tabIndex={-1}
                                 onClick={() => setShowRoomModal(true)}
                                 className="px-2 py-1 bg-white/15 hover:bg-white/25 text-white rounded-md text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-white/20"
-                                title="Manage Rooms"
+                                title={serviceType === 'Camp' ? "Manage Counters" : "Manage Rooms"}
                             >
                                 <Settings size={14} />
-                                <span className="hidden sm:inline">Rooms</span>
+                                <span className="hidden sm:inline">{serviceType === 'Camp' ? 'Counters' : 'Rooms'}</span>
                             </button>
                         </div>
                     </div>
