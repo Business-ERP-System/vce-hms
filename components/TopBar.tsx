@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Settings, User, ChevronDown, Command, Coins, LogOut, Globe, Clock, Shield } from 'lucide-react';
+import { Search, Bell, Settings, User, ChevronDown, Command, Coins, LogOut, Shield, Menu } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { UserRole } from '../types';
@@ -10,31 +10,27 @@ import { motion, AnimatePresence } from 'motion/react';
 interface TopBarProps {
   sidebarOpen: boolean;
   onOpenCommandPalette: () => void;
+  autoHide?: boolean;
+  onToggleMobileMenu?: () => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ sidebarOpen, onOpenCommandPalette }) => {
-  const { currentUser, role, activeBranchId, setBranch, switchRole, logout } = useAuth();
-  const { currency, toggleCurrency, branches } = useData();
+const TopBar: React.FC<TopBarProps> = ({
+  sidebarOpen,
+  onOpenCommandPalette,
+  autoHide = false,
+  onToggleMobileMenu
+}) => {
+  const { currentUser, role, switchRole, logout } = useAuth();
+  const { currency, toggleCurrency } = useData();
   const navigate = useNavigate();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isBranchOpen, setIsBranchOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const branchRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
-      }
-      if (branchRef.current && !branchRef.current.contains(event.target as Node)) {
-        setIsBranchOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -47,81 +43,55 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarOpen, onOpenCommandPalette }) =>
     navigate('/');
   };
 
-  const currentBranchName = activeBranchId === 'consolidated'
-    ? 'Consolidated View'
-    : branches.find(b => b.id === activeBranchId)?.name || 'Main Branch';
-
   return (
     <div
-      className={`fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-40 flex items-center justify-between px-10 transition-all duration-300 print:hidden ${sidebarOpen ? 'left-[280px]' : 'left-[88px]'
+      className={`fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-6 md:px-8 lg:px-10 transition-all duration-300 print:hidden ${autoHide
+        ? 'left-0'
+        : (sidebarOpen ? 'left-0 md:left-[88px] lg:left-[280px]' : 'left-0 md:left-[88px]')
         }`}
     >
-      <div className="flex items-center gap-8 w-full max-w-2xl">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-1 min-w-0 mr-3">
+        {/* Mobile Hamburger Menu Button */}
+        <button
+          type="button"
+          onClick={onToggleMobileMenu}
+          className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl md:hidden transition-all flex-shrink-0 cursor-pointer"
+          title="Open Navigation Menu"
+        >
+          <Menu size={20} />
+        </button>
+
         {/* Global Search / Command Trigger */}
         <button
           onClick={onOpenCommandPalette}
-          className="flex items-center gap-3 w-full max-w-md px-5 py-2 bg-slate-100/50 border border-slate-200/80 rounded-[1.2rem] text-slate-400 hover:bg-white hover:border-teal-400 hover:shadow-[0_12px_24px_-8px_rgba(20,184,166,0.15)] hover:text-teal-700 transition-all group"
+          className="flex items-center gap-2 sm:gap-3 w-full max-w-[180px] sm:max-w-xs md:max-w-sm px-3 sm:px-4 py-2 bg-slate-100/50 border border-slate-200/80 rounded-[1.2rem] text-slate-400 hover:bg-white hover:border-teal-400 hover:shadow-[0_12px_24px_-8px_rgba(20,184,166,0.15)] hover:text-teal-700 transition-all group flex-shrink-0"
         >
-          <Search className="w-4 h-4" />
-          <span className="text-sm font-bold tracking-tight">Search anything...</span>
-          <div className="ml-auto flex items-center gap-1.5">
-            <kbd className="hidden md:inline-flex items-center h-5 px-2 text-xs font-black bg-white border border-slate-200 rounded-lg text-slate-400 shadow-sm">⌘ K</kbd>
+          <Search className="w-4 h-4 flex-shrink-0" />
+          <span className="text-xs sm:text-sm font-bold tracking-tight truncate">Search anything...</span>
+          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+            <kbd className="hidden sm:inline-flex items-center h-5 px-1.5 sm:px-2 text-[10px] sm:text-xs font-black bg-white border border-slate-200 rounded-lg text-slate-400 shadow-sm">⌘ K</kbd>
           </div>
         </button>
 
-        <div className="hidden xl:flex items-center gap-6 text-slate-400">
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-teal-500" />
-            <span className="text-xs font-black uppercase tracking-widest">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
-
-          {/* Branch Switcher */}
-          <div className="relative" ref={branchRef}>
-            <button
-              onClick={() => (role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN) && setIsBranchOpen(!isBranchOpen)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${(role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN)
-                  ? 'hover:bg-slate-100/50 cursor-pointer text-slate-600'
-                  : 'cursor-default'
-                }`}
-            >
-              <Globe size={14} className={activeBranchId === 'consolidated' ? 'text-indigo-500' : 'text-blue-500'} />
-              <span className="text-xs font-black uppercase tracking-widest">{currentBranchName}</span>
-              {(role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN) && <ChevronDown size={10} className={`transition-transform duration-300 ${isBranchOpen ? 'rotate-180' : ''}`} />}
-            </button>
-
-            <AnimatePresence>
-              {isBranchOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50"
-                >
-                  <p className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">Select Operations Center</p>
-
-                  {role === UserRole.SUPER_ADMIN && (
-                    <button
-                      onClick={() => { setBranch('consolidated'); setIsBranchOpen(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-black uppercase tracking-widest hover:bg-slate-50 flex items-center justify-between ${activeBranchId === 'consolidated' ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
-                    >
-                      <span>Consolidated Reports</span>
-                      {activeBranchId === 'consolidated' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>}
-                    </button>
-                  )}
-
-                  {branches.map(b => (
-                    <button
-                      key={b.id}
-                      onClick={() => { setBranch(b.id); setIsBranchOpen(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-black uppercase tracking-widest hover:bg-slate-50 flex items-center justify-between ${activeBranchId === b.id ? 'text-teal-600 bg-teal-50/50' : 'text-slate-600'}`}
-                    >
-                      <span className="truncate max-w-[180px]">{b.name}</span>
-                      {activeBranchId === b.id && <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+        {/* Running Broadcast Message Ticker: Business ERP System */}
+        <div className="flex items-center flex-1 min-w-[200px] max-w-2xl mx-2 overflow-hidden select-none">
+          <div className="w-full h-10 flex items-center gap-2.5 px-4 py-1.5 bg-gradient-to-r from-teal-50/90 via-emerald-50/70 to-cyan-50/90 border border-teal-300/80 rounded-2xl shadow-xs hover:border-teal-400 transition-colors">
+            <span className="flex h-2.5 w-2.5 relative flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-600"></span>
+            </span>
+            <div className="overflow-hidden flex-1 relative flex items-center">
+              <marquee
+                behavior="scroll"
+                direction="left"
+                scrollamount="5"
+                className="text-[15px] md:text-[16px] font-black uppercase tracking-wider text-teal-900 leading-none cursor-default"
+                onMouseEnter={(e: any) => e.target.stop && e.target.stop()}
+                onMouseLeave={(e: any) => e.target.start && e.target.start()}
+              >
+                Business ERP System &nbsp;&bull;&nbsp; Business ERP System &nbsp;&bull;&nbsp; Business ERP System
+              </marquee>
+            </div>
           </div>
         </div>
       </div>

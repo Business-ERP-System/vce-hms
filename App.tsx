@@ -40,11 +40,22 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  const [autoHide, setAutoHide] = useState(() => {
+    const saved = localStorage.getItem('sidebarAutoHide');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('sidebarOpen', JSON.stringify(sidebarOpen));
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    localStorage.setItem('sidebarAutoHide', JSON.stringify(autoHide));
+  }, [autoHide]);
 
   if (!isAuthenticated) {
     return (
@@ -61,14 +72,28 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+          autoHide={autoHide}
+          setAutoHide={setAutoHide}
+          mobileOpen={mobileSidebarOpen}
+          setMobileOpen={setMobileSidebarOpen}
+        />
 
-        <TopBar sidebarOpen={sidebarOpen} onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
+        <TopBar
+          sidebarOpen={sidebarOpen}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          autoHide={autoHide}
+          onToggleMobileMenu={() => setMobileSidebarOpen(prev => !prev)}
+        />
 
         <CommandPalette isOpen={commandPaletteOpen} setIsOpen={setCommandPaletteOpen} />
 
         <div
-          className={`transition-all duration-300 ease-in-out pt-20 px-6 md:px-8 lg:px-10 pb-8 min-h-screen print:ml-0 print:p-0 ${sidebarOpen ? 'ml-[280px]' : 'ml-[88px]'
+          className={`transition-all duration-300 ease-in-out pt-18 md:pt-20 px-2 sm:px-4 md:px-6 lg:px-10 pb-8 min-h-screen print:ml-0 print:p-0 ${autoHide
+            ? 'ml-0 md:ml-4'
+            : (sidebarOpen ? 'ml-0 md:ml-[88px] lg:ml-[280px]' : 'ml-0 md:ml-[88px]')
             }`}
         >
           <Routes>

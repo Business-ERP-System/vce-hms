@@ -66,6 +66,7 @@ interface DataContextType {
   addPatient: (patient: Patient) => void;
   updatePatient: (id: string, updates: Partial<Patient>) => void;
   deletePatient: (id: string) => void;
+  resetToDefaultPatients?: () => void;
   addBed: (bed: Bed) => void;
   updateBed: (id: string, updates: Partial<Bed>) => void;
   deleteBed: (id: string) => void;
@@ -203,12 +204,15 @@ const INITIAL_ROOMS: RoomMaster[] = [
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+const PATIENTS_STORAGE_VERSION = 'v4_bangladesh_hospital_unique';
+
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, currentUser, activeBranchId } = useAuth();
   const [patients, setPatients] = useState<Patient[]>(() => {
     try {
+      const savedVersion = localStorage.getItem('vce_patients_version');
       const saved = localStorage.getItem('vce_patients');
-      if (saved) {
+      if (saved && savedVersion === PATIENTS_STORAGE_VERSION) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed;
@@ -217,8 +221,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('Failed to load patients from localStorage:', e);
     }
+    // Auto-migrate to updated unique hospital patient master registry
+    try {
+      localStorage.setItem('vce_patients_version', PATIENTS_STORAGE_VERSION);
+      localStorage.setItem('vce_patients', JSON.stringify(MOCK_PATIENTS));
+    } catch { }
     return MOCK_PATIENTS;
   });
+
+  const resetToDefaultPatients = () => {
+    try {
+      localStorage.setItem('vce_patients_version', PATIENTS_STORAGE_VERSION);
+      localStorage.setItem('vce_patients', JSON.stringify(MOCK_PATIENTS));
+      setPatients(MOCK_PATIENTS);
+    } catch (e) {
+      console.error('Failed to reset patients:', e);
+    }
+  };
 
   React.useEffect(() => {
     try {
@@ -556,7 +575,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       rolesPermissions, bedCategories, availableRoles,
       shops, itemGroups, itemCategories, itemUnits, attendance, leaves, payroll, biometricMachines, companies, branches,
       currency, toggleCurrency, formatCurrency,
-      addPatient, updatePatient, deletePatient, addBed, updateBed, deleteBed, addWard, updateWard, deleteWard, addFloor, updateFloor, deleteFloor, addRoom, updateRoom, deleteRoom,
+      addPatient, updatePatient, deletePatient, resetToDefaultPatients, addBed, updateBed, deleteBed, addWard, updateWard, deleteWard, addFloor, updateFloor, deleteFloor, addRoom, updateRoom, deleteRoom,
       addLabTest, updateLabTest, addLabTestDefinition, updateLabTestDefinition, addTransaction, addInvoice, updateInvoice, deleteInvoice, addPrescription, addBillingItem, updateBillingItem, deleteBillingItem,
       addEmployee, updateEmployee, deleteEmployee, addRole, deleteRole, updateRolePermissions, updateEmployeeCustomPermissions,
       addSurgery, updateSurgery, deleteSurgery, addAmbulance, updateAmbulance, deleteAmbulance, addCampaign, updateCampaign, deleteCampaign, updateInventory, addInventoryItem, addSupplier, addPurchaseOrder, addAppointment, updateAppointment,

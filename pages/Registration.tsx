@@ -5,20 +5,178 @@ import {
     Activity, Upload, Printer, CheckCircle, Eye, Info, UserCheck,
     ShieldCheck, DollarSign, Stethoscope, Briefcase, Map as MapIcon,
     FlaskConical, Microscope, Users, Home, Archive, Mail, Tag,
-    ChevronRight, ArrowLeft, UserPlus, Plus, Trash2, Edit3, Check, X, Settings, Tent, ChevronDown, Globe, Search, Hash
+    ChevronRight, ArrowLeft, UserPlus, Plus, Trash2, Edit3, Check, X, Settings, Tent, ChevronDown, Globe, Search, Hash,
+    ShieldAlert, SlidersHorizontal, Building2, Lock, CheckCircle2, RefreshCw, AlertTriangle
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Patient, PreviousVisionHistory, RoomMaster } from '../types';
+import { Patient, PreviousVisionHistory, RoomMaster, UserRole } from '../types';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MOCK_EMPLOYEES } from '../constants';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { BANGLADESH_DIVISIONS, BANGLADESH_DISTRICTS, BANGLADESH_UPAZILLAS } from '../data/bangladeshGeo';
 
+const getNextSequencePid = (patientList: Patient[]): string => {
+    let max = 0;
+    try {
+        const stored = localStorage.getItem('vce_pid_seq6');
+        if (stored) {
+            const parsed = parseInt(stored, 10);
+            if (!isNaN(parsed) && parsed > max) {
+                max = parsed;
+            }
+        }
+    } catch { }
+
+    if (patientList && Array.isArray(patientList)) {
+        patientList.forEach(p => {
+            if (p.id) {
+                const match = p.id.match(/^PID-0*(\d+)$/i);
+                if (match) {
+                    const n = parseInt(match[1], 10);
+                    // Filter out legacy random numbers (e.g. 851541 or 999244)
+                    if (!isNaN(n) && n > max && n < 100000) {
+                        max = n;
+                    }
+                }
+            }
+        });
+    }
+
+    const nextNum = max + 1;
+    return `PID-${String(nextNum).padStart(6, '0')}`;
+};
+
 const Registration = () => {
     const { patients, addPatient, updatePatient, getRecommendedOPDRoom, rooms, addRoom, deleteRoom, updateRoom, addTransaction, currency, hasPermission, campaigns } = useData();
-    const { activeBranchId } = useAuth();
+    const { activeBranchId, role } = useAuth();
+    const isAuthorizedToEdit = role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN || hasPermission('Patient Registration', 'edit') || hasPermission('System Settings', 'edit');
+
+    // Registration Settings States
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showAccessDeniedModal, setShowAccessDeniedModal] = useState(false);
+    const [settingsTab, setSettingsTab] = useState<'general' | 'rooms' | 'slip'>('general');
+    const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+
+    const [defaultRegFee, setDefaultRegFee] = useState<string>(() => {
+        return localStorage.getItem('vce_default_reg_fee') || '100';
+    });
+
+    const [hospitalInfo, setHospitalInfo] = useState({
+        name: localStorage.getItem('vce_hospital_name') || 'Visionary Care HMS',
+        tagline: localStorage.getItem('vce_hospital_tagline') || 'Specialist Ophthalmology & Microsurgery Center',
+        address: localStorage.getItem('vce_hospital_address') || 'Main Campus - Dhaka',
+        hotline: localStorage.getItem('vce_hospital_hotline') || '+880 1800-000000',
+        notice: localStorage.getItem('vce_hospital_notice') || '• Please wait in the waiting lounge near your assigned room.\n• Keep this slip handy during preliminary vision testing & consultation.'
+    });
+
+    useEffect(() => {
+        const syncHospitalInfo = () => {
+            setHospitalInfo({
+                name: localStorage.getItem('vce_hospital_name') || 'Visionary Care HMS',
+                tagline: localStorage.getItem('vce_hospital_tagline') || 'Specialist Ophthalmology & Microsurgery Center',
+                address: localStorage.getItem('vce_hospital_address') || 'Main Campus - Dhaka',
+                hotline: localStorage.getItem('vce_hospital_hotline') || '+880 1800-000000',
+                notice: localStorage.getItem('vce_hospital_notice') || '• Please wait in the waiting lounge near your assigned room.\n• Keep this slip handy during preliminary vision testing & consultation.'
+            });
+        };
+        window.addEventListener('vce_hospital_info_updated', syncHospitalInfo);
+        window.addEventListener('storage', syncHospitalInfo);
+        return () => {
+            window.removeEventListener('vce_hospital_info_updated', syncHospitalInfo);
+            window.removeEventListener('storage', syncHospitalInfo);
+        };
+    }, []);
+
+    const [modalFee, setModalFee] = useState(defaultRegFee);
+    const [modalNextPid, setModalNextPid] = useState<string>('');
+    const [modalHospital, setModalHospital] = useState({ ...hospitalInfo });
+    const [settingsRoomDept, setSettingsRoomDept] = useState<'OPD' | 'Camp' | 'Lab' | 'Diagnosis'>('OPD');
+    const [settingsNewRoomNum, setSettingsNewRoomNum] = useState('');
+    const [settingsNewRoomName, setSettingsNewRoomName] = useState('');
+
+    const handleOpenSettings = () => {
+        if (isAuthorizedToEdit) {
+            let max = 0;
+            try {
+                const stored = localStorage.getItem('vce_pid_seq6');
+                if (stored) {
+                    const parsed = parseInt(stored, 10);
+                    if (!isNaN(parsed) && parsed > max) max = parsed;
+                }
+            } catch { }
+            if (patients && Array.isArray(patients)) {
+                patients.forEach(p => {
+                    if (p.id) {
+                        const match = p.id.match(/^PID-0*(\d+)$/i);
+                        if (match) {
+                            const n = parseInt(match[1], 10);
+                            if (!isNaN(n) && n > max && n < 100000) max = n;
+                        }
+                    }
+                });
+            }
+            const nextPidNum = max + 1;
+            setModalNextPid(String(nextPidNum));
+            setModalFee(defaultRegFee);
+            setModalHospital({ ...hospitalInfo });
+            setSettingsSuccess(null);
+            setShowSettingsModal(true);
+        } else {
+            setShowAccessDeniedModal(true);
+        }
+    };
+
+    const handleSaveGeneralSettings = (e: React.FormEvent) => {
+        e.preventDefault();
+        const cleanFee = modalFee.trim() || '100';
+        localStorage.setItem('vce_default_reg_fee', cleanFee);
+        setDefaultRegFee(cleanFee);
+        setFormData(prev => ({ ...prev, registrationFee: cleanFee }));
+
+        const parsedPid = parseInt(modalNextPid, 10);
+        if (!isNaN(parsedPid) && parsedPid > 0) {
+            localStorage.setItem('vce_pid_seq6', String(parsedPid - 1));
+            const newPid = `PID-${String(parsedPid).padStart(6, '0')}`;
+            setAutoGeneratedId(newPid);
+        }
+
+        setSettingsSuccess('Registration fee & PID sequence updated successfully!');
+        setTimeout(() => setSettingsSuccess(null), 3500);
+    };
+
+    const handleSaveSlipSettings = (e: React.FormEvent) => {
+        e.preventDefault();
+        localStorage.setItem('vce_hospital_name', modalHospital.name);
+        localStorage.setItem('vce_hospital_tagline', modalHospital.tagline);
+        localStorage.setItem('vce_hospital_address', modalHospital.address);
+        localStorage.setItem('vce_hospital_hotline', modalHospital.hotline);
+        localStorage.setItem('vce_hospital_notice', modalHospital.notice);
+        setHospitalInfo({ ...modalHospital });
+        window.dispatchEvent(new CustomEvent('vce_hospital_info_updated', { detail: modalHospital }));
+        window.dispatchEvent(new Event('storage'));
+        setSettingsSuccess('Slip & Header information saved successfully!');
+        setTimeout(() => setSettingsSuccess(null), 3500);
+    };
+
+    const handleAddSettingsRoom = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!settingsNewRoomNum.trim() || !settingsNewRoomName.trim()) return;
+        const newRoom: RoomMaster = {
+            id: `R-${Date.now()}`,
+            roomNumber: settingsNewRoomNum.trim(),
+            name: settingsNewRoomName.trim(),
+            type: settingsRoomDept,
+            currentLoad: 0
+        };
+        addRoom(newRoom);
+        setSettingsNewRoomNum('');
+        setSettingsNewRoomName('');
+        setSettingsSuccess(`Room ${newRoom.roomNumber} (${newRoom.name}) created for ${settingsRoomDept}!`);
+        setTimeout(() => setSettingsSuccess(null), 3000);
+    };
+
     const navigate = useNavigate();
     const location = useLocation();
     const [isSuccess, setIsSuccess] = useState(false);
@@ -27,16 +185,21 @@ const Registration = () => {
     const [registeredToken, setRegisteredToken] = useState<string>('');
     const [registrationTimestamp, setRegistrationTimestamp] = useState<string>('');
 
+    const [autoGeneratedId, setAutoGeneratedId] = useState<string>(() => {
+        return location.state?.patient?.id || getNextSequencePid(patients);
+    });
+
     const handleResetForNewPatient = () => {
+        setAutoGeneratedId(getNextSequencePid(patients));
         setFormData({
             uhid: '',
-            name: '', dob: '', ageYrs: '', ageMns: '0', ageDays: '0', gender: '',
+            name: '', dob: '', ageYrs: '', ageMns: '0', ageDays: '0', gender: '', bloodGroup: '', maritalStatus: '',
             paymentCategory: 'Pay', speciality: 'Ophthalmology', patientType: 'New Patient',
             allocation: '', mrLocation: '', nextOfKin: '',
             emergencyName: '', emergencyRelation: '', emergencyPhone: '',
             village: '', postOffice: '', postCode: '', upazilla: '', district: '',
             state: '', country: 'Bangladesh', contact: '', altContact: '', email: '',
-            remarks: '', registrationFee: '100', diagnosis: '', assignedDoctor: '', campaignId: '',
+            remarks: '', registrationFee: localStorage.getItem('vce_default_reg_fee') || '100', diagnosis: '', assignedDoctor: '', campaignId: '',
             passportNumber: '', passportCountry: '', passportIssueDate: '', passportExpiryDate: '',
             visaType: '', visaNumber: '', visaExpiryDate: ''
         });
@@ -62,13 +225,13 @@ const Registration = () => {
 
     const [formData, setFormData] = useState({
         uhid: '',
-        name: '', dob: '', ageYrs: '', ageMns: '0', ageDays: '0', gender: '',
+        name: '', dob: '', ageYrs: '', ageMns: '0', ageDays: '0', gender: '', bloodGroup: '', maritalStatus: '',
         paymentCategory: 'Pay', speciality: 'Ophthalmology', patientType: 'New Patient',
         allocation: '', mrLocation: '', nextOfKin: '',
         emergencyName: '', emergencyRelation: '', emergencyPhone: '',
         village: '', postOffice: '', postCode: '', upazilla: '', district: '',
         state: '', country: 'Bangladesh', contact: '', altContact: '', email: '',
-        remarks: '', registrationFee: '100', diagnosis: '', assignedDoctor: '', campaignId: '',
+        remarks: '', registrationFee: localStorage.getItem('vce_default_reg_fee') || '100', diagnosis: '', assignedDoctor: '', campaignId: '',
         passportNumber: '', passportCountry: '', passportIssueDate: '', passportExpiryDate: '',
         visaType: '', visaNumber: '', visaExpiryDate: ''
     });
@@ -92,6 +255,8 @@ const Registration = () => {
             ageMns: (p.ageMonths || 0).toString(),
             ageDays: (p.ageDays || 0).toString(),
             gender: p.gender || prev.gender,
+            bloodGroup: p.bloodGroup || prev.bloodGroup || '',
+            maritalStatus: p.maritalStatus || prev.maritalStatus || '',
             paymentCategory: p.paymentCategory || prev.paymentCategory,
             contact: p.contact || prev.contact,
             altContact: p.altContact || prev.altContact,
@@ -121,7 +286,7 @@ const Registration = () => {
         }
 
         const clean = val.trim().toLowerCase();
-        const found = patients.find(p => p.id.toLowerCase() === clean);
+        const found = patients.find(p => p.id.toLowerCase() === clean || (clean && p.id.replace(/\D/g, '') === clean));
         if (found) {
             handleSelectExistingPatient(found);
         } else {
@@ -141,7 +306,7 @@ const Registration = () => {
                 const idNum = p.id.replace(/\D/g, '');
                 return (
                     idLower.includes(q) ||
-                    (numOnly.length >= 2 && idNum.includes(numOnly)) ||
+                    (numOnly.length >= 1 && (idNum === numOnly || (numOnly.length >= 2 && idNum.includes(numOnly)))) ||
                     (p.name && p.name.toLowerCase().includes(q)) ||
                     (p.contact && p.contact.includes(q))
                 );
@@ -188,7 +353,7 @@ const Registration = () => {
                 const cleanDigits = clean.replace(/\D/g, '');
                 targetPatient = patients.find(p =>
                     p.id.toLowerCase() === clean ||
-                    (cleanDigits.length >= 3 && p.id.replace(/\D/g, '') === cleanDigits) ||
+                    (cleanDigits && p.id.replace(/\D/g, '') === cleanDigits) ||
                     (p.contact && p.contact === clean)
                 ) || null;
             }
@@ -213,6 +378,9 @@ const Registration = () => {
     };
 
     const isForeign = isForeignPatient || formData.patientType === 'Foreign Patient';
+    const currentUhid = (formData.patientType === 'Returning / Old Patient')
+        ? (formData.uhid?.trim() || '')
+        : (location.state?.patient?.id || autoGeneratedId);
 
     const handleToggleForeign = () => {
         setIsForeignPatient(prev => {
@@ -228,6 +396,22 @@ const Registration = () => {
 
     const [selectedRoomId, setSelectedRoomId] = useState<string>('');
     const targetRoomRef = useRef<HTMLSelectElement>(null);
+
+    const currentTokenNumber = useMemo(() => {
+        const activeRoom = selectedRoomId
+            ? rooms.find(r => r.id === selectedRoomId)
+            : (rooms.find(r => r.type === serviceType) || null);
+        const currentLoad = activeRoom?.currentLoad || 0;
+        return `${serviceType.toUpperCase()}-${String(currentLoad + 1).padStart(3, '0')}`;
+    }, [selectedRoomId, rooms, serviceType]);
+
+    const systemDate = useMemo(() => {
+        const now = new Date();
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = now.getFullYear();
+        return `${d}-${m}-${y}`;
+    }, []);
 
     // Auto-focus Target Room when registration form opens
     useEffect(() => {
@@ -313,7 +497,7 @@ const Registration = () => {
             setFormData({
                 uhid: p.id,
                 name: p.name, dob: p.dob || '', ageYrs: p.age.toString(), ageMns: (p.ageMonths || 0).toString(), ageDays: (p.ageDays || 0).toString(),
-                gender: p.gender || '', paymentCategory: p.paymentCategory || '', speciality: p.speciality,
+                gender: p.gender || '', bloodGroup: p.bloodGroup || '', maritalStatus: p.maritalStatus || '', paymentCategory: p.paymentCategory || '', speciality: p.speciality,
                 patientType: p.patientType, allocation: p.allocation, mrLocation: p.mrLocation,
                 nextOfKin: p.nextOfKin || '',
                 emergencyName: p.emergencyName || p.nextOfKin || '',
@@ -625,7 +809,7 @@ const Registration = () => {
         const returningPatientId = (formData.patientType === 'Returning / Old Patient' && formData.uhid?.trim())
             ? formData.uhid.trim()
             : null;
-        const newId = returningPatientId || location.state?.patient?.id || `PID-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+        const newId = returningPatientId || location.state?.patient?.id || autoGeneratedId;
         const branchToAssign = location.state?.patient?.branchId || ((activeBranchId && activeBranchId !== 'consolidated') ? activeBranchId : 'BR001');
         const room = rooms.find(r => r.id === selectedRoomId);
 
@@ -643,6 +827,8 @@ const Registration = () => {
             ageDays: parseInt(formData.ageDays || '0') || 0,
             dob: formData.dob,
             gender: (formData.gender as any) || 'Other',
+            bloodGroup: formData.bloodGroup || '',
+            maritalStatus: formData.maritalStatus || '',
             contact: formData.contact,
             altContact: formData.altContact,
             email: formData.email,
@@ -699,6 +885,12 @@ const Registration = () => {
             });
         } else {
             addPatient(newPatient);
+            try {
+                const num = parseInt(newId.replace(/\D/g, ''), 10);
+                if (!isNaN(num) && num < 100000) {
+                    localStorage.setItem('vce_pid_seq6', num.toString());
+                }
+            } catch { }
         }
         if (newPatient.registrationFee > 0) {
             addTransaction({
@@ -733,6 +925,7 @@ const Registration = () => {
         setRegisteredRoom(activeRoom || null);
         setRegisteredToken(token);
         setRegistrationTimestamp(timestamp);
+        setAutoGeneratedId(getNextSequencePid([...patients, newPatient]));
         setIsSuccess(true);
     };
 
@@ -807,7 +1000,7 @@ const Registration = () => {
     const renderResidentialAddress = (isInsideColumn: boolean) => (
         <div className="bg-white rounded-lg shadow-xs border border-slate-200/90 p-2.5 md:p-3 space-y-2 animate-in fade-in duration-200">
             <h3 className="font-bold text-slate-900 text-[16px] flex items-center gap-1.5 border-b border-slate-100 pb-1.5 mb-0.5">
-                <Home size={18} className="text-emerald-600" /> Residential Address Details
+                <Home size={18} className="text-emerald-600" /> {isForeign ? 'Present Address Details' : 'Residential Address Details'}
             </h3>
             <div className={`grid grid-cols-1 ${isInsideColumn ? 'sm:grid-cols-2' : 'md:grid-cols-3'} gap-2`}>
                 <div className="space-y-0.5">
@@ -935,13 +1128,13 @@ const Registration = () => {
                                 </div>
                                 <div>
                                     <h1 className="text-xl font-extrabold uppercase tracking-tight text-slate-900 leading-none">
-                                        Visionary Care Eye Hospital
+                                        {hospitalInfo.name}
                                     </h1>
                                     <p className="text-xs font-semibold text-teal-700 tracking-wide mt-1 uppercase">
-                                        Specialist Ophthalmology & Microsurgery Center
+                                        {hospitalInfo.tagline}
                                     </p>
                                     <p className="text-[11px] text-slate-500 mt-0.5">
-                                        North Wing, Chittagong, Bangladesh • Hotline: +880 1800-000000 • visionarycare.health
+                                        {hospitalInfo.address} • Hotline: {hospitalInfo.hotline}
                                     </p>
                                 </div>
                             </div>
@@ -1005,7 +1198,7 @@ const Registration = () => {
                             <div>
                                 <span className="text-[11px] font-bold uppercase text-slate-400 block">Age & Gender</span>
                                 <span className="font-bold text-slate-800">
-                                    {registeredPatient.age} Yrs {registeredPatient.ageMonths || 0} Mos {registeredPatient.ageDays ? `${registeredPatient.ageDays} Days ` : ''}/ {registeredPatient.gender || 'Not specified'}
+                                    {registeredPatient.age} Yrs {registeredPatient.ageMonths || 0} Mos {registeredPatient.ageDays ? `${registeredPatient.ageDays} Days ` : ''}/ {registeredPatient.gender || 'Not specified'}{registeredPatient.bloodGroup ? ` • Blood: ${registeredPatient.bloodGroup}` : ''}{registeredPatient.maritalStatus ? ` • ${registeredPatient.maritalStatus}` : ''}
                                 </span>
                             </div>
                             <div>
@@ -1111,8 +1304,9 @@ const Registration = () => {
                             {/* Patient Instructions */}
                             <div className="text-[11px] text-slate-500 max-w-sm text-center sm:text-left space-y-0.5">
                                 <p className="font-semibold text-slate-700">Notice for Patient:</p>
-                                <p>• Please wait in the waiting lounge near your assigned room.</p>
-                                <p>• Keep this slip handy during preliminary vision testing & consultation.</p>
+                                {hospitalInfo.notice.split('\n').map((line, idx) => (
+                                    <p key={idx}>{line}</p>
+                                ))}
                             </div>
 
                             {/* Signatures */}
@@ -1129,7 +1323,7 @@ const Registration = () => {
                         </div>
 
                         <div className="mt-2.5 text-center border-t border-slate-100 pt-2 text-[10px] text-slate-400 font-medium">
-                            Visionary Care Eye Hospital • Computer Generated Patient Registration & Queue Token • Valid for Visit Date
+                            {hospitalInfo.name} • Computer Generated Patient Registration & Queue Token • Valid for Visit Date
                         </div>
                     </div>
                 </div>
@@ -1150,6 +1344,16 @@ const Registration = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={handleOpenSettings}
+                            className="px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-all text-[15px] border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-teal-700 hover:border-teal-300 shadow-xs cursor-pointer"
+                            title="Registration Settings (Authorized Users Only)"
+                        >
+                            <Settings size={16} className="text-teal-600" />
+                            <span>Settings</span>
+                        </button>
                         <button
                             type="button"
                             tabIndex={-1}
@@ -1207,7 +1411,7 @@ const Registration = () => {
                             <span className="text-white font-semibold truncate max-w-xs">{rooms.find(r => r.id === selectedRoomId)?.name || 'Select a counter room'}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-auto">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end mt-1 sm:mt-0 ml-auto">
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[14px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">Target Room <span className="text-red-400">*</span></span>
                                 <div className="relative">
@@ -1254,130 +1458,186 @@ const Registration = () => {
                         {/* Left Column: Personal Profile (+ Residential Address when Foreign Patient) */}
                         <div className="space-y-2.5">
                             <div className="bg-white rounded-lg shadow-xs border border-slate-200/90 p-2.5 md:p-3 space-y-2">
-                                <h3 className="font-bold text-slate-900 text-[16px] flex items-center gap-1.5 border-b border-slate-100 pb-1.5 mb-0.5">
-                                    <UserCheck size={18} className="text-teal-600" /> Patient Information
+                                <h3 className="font-bold text-slate-900 text-[16px] flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-1.5 mb-0.5">
+                                    <span className="flex items-center gap-1.5">
+                                        <UserCheck size={18} className="text-teal-600" /> Patient Information
+                                    </span>
+                                    {currentUhid ? (
+                                        <span className="text-teal-700 font-mono font-bold text-[15px] select-all">
+                                            ({currentUhid})
+                                        </span>
+                                    ) : (
+                                        <span className="text-slate-400 font-normal text-[13px]">
+                                            (Pending UHID)
+                                        </span>
+                                    )}
                                 </h3>
                                 <div className="grid grid-cols-1 gap-2">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                        <div className="space-y-0.5">
-                                            <label className="text-[15px] font-semibold text-slate-600">Full Legal Name <span className="text-red-500">*</span></label>
-                                            <input required name="name" className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none transition-all" value={formData.name} onChange={handleInputChange} placeholder="Enter full name as per ID" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
-                                            <select
-                                                required
-                                                name="patientType"
-                                                className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
-                                                value={formData.patientType === 'Foreign Patient' ? 'New Patient' : formData.patientType}
-                                                onChange={handleInputChange}
-                                            >
-                                                {isForeign ? (
-                                                    <>
-                                                        <option value="New Patient">New Patient</option>
-                                                        <option value="Returning / Old Patient">Returning / Old Patient</option>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <option value="New Patient">New Patient</option>
-                                                        <option value="Returning / Old Patient">Returning / Old Patient</option>
-                                                        <option value="Referral">Referral</option>
-                                                        <option value="Camp Referral">Camp Referral</option>
-                                                        <option value="Corporate Account">Corporate Account</option>
-                                                    </>
-                                                )}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    {formData.patientType === 'Returning / Old Patient' && (
-                                        <div className="space-y-0.5 animate-in slide-in-from-top-2 duration-200 bg-teal-50/50 p-2 rounded-lg border border-teal-200">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[15px] font-bold text-teal-900 flex items-center gap-1.5">
-                                                    <Hash size={16} className="text-teal-600" /> UHID / Patient ID <span className="text-red-500">*</span>
-                                                </label>
-                                                {matchedPatient ? (
-                                                    <span className="text-[12px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                                        <CheckCircle size={12} className="text-emerald-600" /> Patient Found: {matchedPatient.name}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[12px] text-slate-500">
-                                                        Enter UHID to retrieve existing patient record
-                                                    </span>
-                                                )}
+                                    {formData.patientType === 'Returning / Old Patient' ? (
+                                        <>
+                                            {/* Row 1: Patient Category (1st) and UHID / Patient ID (2nd, after Patient Category on same row, NOT below) */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                <div className="space-y-0.5">
+                                                    <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
+                                                    <select
+                                                        required
+                                                        name="patientType"
+                                                        className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
+                                                        value={formData.patientType === 'Foreign Patient' ? 'New Patient' : formData.patientType}
+                                                        onChange={handleInputChange}
+                                                    >
+                                                        {isForeign ? (
+                                                            <>
+                                                                <option value="New Patient">New Patient</option>
+                                                                <option value="Returning / Old Patient">Returning / Old Patient</option>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <option value="New Patient">New Patient</option>
+                                                                <option value="Returning / Old Patient">Returning / Old Patient</option>
+                                                                <option value="Referral">Referral</option>
+                                                                <option value="Camp Referral">Camp Referral</option>
+                                                                <option value="Corporate Account">Corporate Account</option>
+                                                            </>
+                                                        )}
+                                                    </select>
+                                                </div>
+
+                                                <div className="space-y-0.5 animate-in slide-in-from-right-2 duration-200">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-[15px] font-bold text-teal-900 flex items-center gap-1.5">
+                                                            <Hash size={16} className="text-teal-600" /> UHID / Patient ID <span className="text-red-500">*</span>
+                                                        </label>
+                                                        {matchedPatient ? (
+                                                            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                                <CheckCircle size={11} className="text-emerald-600" /> Patient Found: {matchedPatient.name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[11px] text-slate-500 truncate">
+                                                                Enter UHID to auto-fill
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="relative">
+                                                        <input
+                                                            required
+                                                            autoFocus
+                                                            name="uhid"
+                                                            placeholder="Enter UHID (e.g. PID-000001)"
+                                                            className="w-full pl-8 pr-16 py-1 bg-white border border-teal-300 focus:border-teal-600 rounded-md text-[16px] font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none uppercase placeholder:normal-case placeholder:font-normal"
+                                                            value={formData.uhid || ''}
+                                                            onChange={handleUhidChange}
+                                                            onKeyDown={handleUhidKeyDown}
+                                                            onFocus={() => {
+                                                                if (formData.uhid?.trim() && uhidMatches.length > 0 && !matchedPatient) {
+                                                                    setShowUhidSuggestions(true);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none" />
+                                                        {matchedPatient && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setMatchedPatient(null);
+                                                                    setSelectedUhidIndex(-1);
+                                                                    setFormData(prev => ({ ...prev, uhid: '' }));
+                                                                }}
+                                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 hover:text-slate-700 bg-slate-100 px-2 py-0.5 rounded cursor-pointer"
+                                                            >
+                                                                Clear
+                                                            </button>
+                                                        )}
+
+                                                        {/* Suggestions dropdown if searching */}
+                                                        {showUhidSuggestions && uhidMatches.length > 0 && !matchedPatient && (
+                                                            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-teal-300 z-50 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150">
+                                                                <div className="px-3 py-1 bg-teal-50 text-[11px] font-bold uppercase text-teal-800 tracking-wider flex justify-between items-center">
+                                                                    <span>Matching Patients (Hit Enter or Click to Auto-Fill)</span>
+                                                                    <span className="text-[10px] text-teal-600 font-normal">↑↓ to navigate</span>
+                                                                </div>
+                                                                {uhidMatches.map((p, idx) => {
+                                                                    const isSelected = idx === selectedUhidIndex;
+                                                                    return (
+                                                                        <button
+                                                                            key={p.id}
+                                                                            type="button"
+                                                                            onMouseEnter={() => setSelectedUhidIndex(idx)}
+                                                                            onMouseDown={(e) => e.preventDefault()}
+                                                                            onClick={() => {
+                                                                                handleSelectExistingPatient(p);
+                                                                                setSelectedUhidIndex(-1);
+                                                                            }}
+                                                                            className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
+                                                                                }`}
+                                                                        >
+                                                                            <div>
+                                                                                <div className="text-[14px] font-bold text-slate-900 flex items-center gap-2">
+                                                                                    <span className="text-teal-700 font-mono">{p.id}</span>
+                                                                                    <span>{p.name}</span>
+                                                                                </div>
+                                                                                <div className="text-[12px] text-slate-500">
+                                                                                    {p.age} Yrs / {p.gender} • Phone: {p.contact || 'N/A'} • {p.village || ''}
+                                                                                </div>
+                                                                            </div>
+                                                                            <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${isSelected
+                                                                                ? 'bg-teal-600 text-white border-teal-600'
+                                                                                : 'text-teal-600 bg-white border-teal-200'
+                                                                                }`}>
+                                                                                Auto-Fill {isSelected ? '↵' : ''}
+                                                                            </span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="relative">
+
+                                            {/* Row 2: Full Legal Name Below Row 1 */}
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Full Legal Name <span className="text-red-500">*</span></label>
                                                 <input
                                                     required
-                                                    autoFocus
-                                                    name="uhid"
-                                                    placeholder="Enter UHID (e.g. PID-999244)"
-                                                    className="w-full pl-8 pr-20 py-1 bg-white border border-teal-300 focus:border-teal-600 rounded-md text-[16px] font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none uppercase placeholder:normal-case placeholder:font-normal"
-                                                    value={formData.uhid || ''}
-                                                    onChange={handleUhidChange}
-                                                    onKeyDown={handleUhidKeyDown}
-                                                    onFocus={() => {
-                                                        if (formData.uhid?.trim() && uhidMatches.length > 0 && !matchedPatient) {
-                                                            setShowUhidSuggestions(true);
-                                                        }
-                                                    }}
+                                                    name="name"
+                                                    className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
+                                                    value={formData.name}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Enter full name as per ID"
                                                 />
-                                                <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none" />
-                                                {matchedPatient && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setMatchedPatient(null);
-                                                            setSelectedUhidIndex(-1);
-                                                            setFormData(prev => ({ ...prev, uhid: '' }));
-                                                        }}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 hover:text-slate-700 bg-slate-100 px-2 py-0.5 rounded cursor-pointer"
-                                                    >
-                                                        Clear
-                                                    </button>
-                                                )}
-
-                                                {/* Suggestions dropdown if searching */}
-                                                {showUhidSuggestions && uhidMatches.length > 0 && !matchedPatient && (
-                                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-teal-300 z-50 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150">
-                                                        <div className="px-3 py-1 bg-teal-50 text-[11px] font-bold uppercase text-teal-800 tracking-wider flex justify-between items-center">
-                                                            <span>Matching Patients (Hit Enter or Click to Auto-Fill)</span>
-                                                            <span className="text-[10px] text-teal-600 font-normal">↑↓ to navigate</span>
-                                                        </div>
-                                                        {uhidMatches.map((p, idx) => {
-                                                            const isSelected = idx === selectedUhidIndex;
-                                                            return (
-                                                                <button
-                                                                    key={p.id}
-                                                                    type="button"
-                                                                    onMouseEnter={() => setSelectedUhidIndex(idx)}
-                                                                    onMouseDown={(e) => e.preventDefault()}
-                                                                    onClick={() => {
-                                                                        handleSelectExistingPatient(p);
-                                                                        setSelectedUhidIndex(-1);
-                                                                    }}
-                                                                    className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
-                                                                        }`}
-                                                                >
-                                                                    <div>
-                                                                        <div className="text-[14px] font-bold text-slate-900 flex items-center gap-2">
-                                                                            <span className="text-teal-700 font-mono">{p.id}</span>
-                                                                            <span>{p.name}</span>
-                                                                        </div>
-                                                                        <div className="text-[12px] text-slate-500">
-                                                                            {p.age} Yrs / {p.gender} • Phone: {p.contact || 'N/A'} • {p.village || ''}
-                                                                        </div>
-                                                                    </div>
-                                                                    <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${isSelected
-                                                                        ? 'bg-teal-600 text-white border-teal-600'
-                                                                        : 'text-teal-600 bg-white border-teal-200'
-                                                                        }`}>
-                                                                        Auto-Fill {isSelected ? '↵' : ''}
-                                                                    </span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
+                                                <select
+                                                    required
+                                                    name="patientType"
+                                                    className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
+                                                    value={formData.patientType === 'Foreign Patient' ? 'New Patient' : formData.patientType}
+                                                    onChange={handleInputChange}
+                                                >
+                                                    {isForeign ? (
+                                                        <>
+                                                            <option value="New Patient">New Patient</option>
+                                                            <option value="Returning / Old Patient">Returning / Old Patient</option>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <option value="New Patient">New Patient</option>
+                                                            <option value="Returning / Old Patient">Returning / Old Patient</option>
+                                                            <option value="Referral">Referral</option>
+                                                            <option value="Camp Referral">Camp Referral</option>
+                                                            <option value="Corporate Account">Corporate Account</option>
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Full Legal Name <span className="text-red-500">*</span></label>
+                                                <input required name="name" className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none transition-all" value={formData.name} onChange={handleInputChange} placeholder="Enter full name as per ID" />
                                             </div>
                                         </div>
                                     )}
@@ -1450,8 +1710,8 @@ const Registration = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="grid grid-cols-2 gap-1.5">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-3 gap-1.5">
                                                 <div className="space-y-0.5">
                                                     <label className="text-[15px] font-semibold text-slate-600">Years <span className="text-red-500">*</span></label>
                                                     <input required name="ageYrs" type="number" min="0" max="150" placeholder="Years" className="w-full px-2 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.ageYrs} onChange={handleInputChange} />
@@ -1459,6 +1719,10 @@ const Registration = () => {
                                                 <div className="space-y-0.5">
                                                     <label className="text-[15px] font-semibold text-slate-600">Months</label>
                                                     <input name="ageMns" type="number" min="0" max="11" placeholder="Months" className="w-full px-2 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.ageMns} onChange={handleInputChange} />
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <label className="text-[15px] font-semibold text-slate-600">Day</label>
+                                                    <input name="ageDays" type="number" min="0" max="31" placeholder="Day" className="w-full px-2 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.ageDays} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                             <div className="space-y-0.5">
@@ -1472,9 +1736,9 @@ const Registration = () => {
                                             </div>
                                         </div>
                                     )}
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <div className="space-y-0.5">
-                                            <label className="text-[15px] font-semibold text-slate-600">Gender <span className="text-red-500">*</span></label>
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Gender <span className="text-red-500">*</span></label>
                                             <select required name="gender" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.gender} onChange={handleInputChange}>
                                                 <option value="">Select Gender</option>
                                                 <option value="Male">Male</option>
@@ -1483,7 +1747,36 @@ const Registration = () => {
                                             </select>
                                         </div>
                                         <div className="space-y-0.5">
-                                            <label className="text-[15px] font-semibold text-slate-600">Payment Category <span className="text-red-500">*</span></label>
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Marital Status</label>
+                                            <select name="maritalStatus" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.maritalStatus} onChange={handleInputChange}>
+                                                <option value="">Select Marital Status</option>
+                                                <option value="Single">Single</option>
+                                                <option value="Married">Married</option>
+                                                <option value="Widowed">Widowed</option>
+                                                <option value="Divorced">Divorced</option>
+                                                <option value="Separated">Separated</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Blood Group</label>
+                                            <select name="bloodGroup" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.bloodGroup} onChange={handleInputChange}>
+                                                <option value="">Select Blood Group</option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                                <option value="Unknown">Unknown</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Payment Category <span className="text-red-500">*</span></label>
                                             <select required name="paymentCategory" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.paymentCategory} onChange={handleInputChange}>
                                                 <option value="Pay">Regular Fee</option>
                                                 <option value="Free">Charity</option>
@@ -1506,11 +1799,11 @@ const Registration = () => {
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-0.5">
                                         <label className="text-[15px] font-semibold text-slate-600">Primary Phone Number <span className="text-red-500">*</span></label>
-                                        <input required name="contact" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.contact} onChange={handleInputChange} placeholder="Primary mobile" />
+                                        <input required name="contact" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.contact} onChange={handleInputChange} placeholder="01805567271" />
                                     </div>
                                     <div className="space-y-0.5">
                                         <label className="text-[15px] font-semibold text-slate-600">Secondary Phone Number</label>
-                                        <input name="altContact" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.altContact} onChange={handleInputChange} placeholder="Alternative mobile" />
+                                        <input name="altContact" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.altContact} onChange={handleInputChange} placeholder="01805567271" />
                                     </div>
                                 </div>
                                 <div className="space-y-0.5">
@@ -1649,7 +1942,7 @@ const Registration = () => {
                                                 className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
                                                 value={formData.emergencyPhone}
                                                 onChange={handleInputChange}
-                                                placeholder="Emergency mobile"
+                                                placeholder="01805567271"
                                             />
                                         </div>
                                     </div>
@@ -1665,7 +1958,7 @@ const Registration = () => {
                 {/* Registration Payment & Actions */}
                 <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-cyan-800 text-white py-2 px-4 md:px-5 border-t border-teal-900/30 relative overflow-hidden flex flex-wrap gap-4 items-center justify-between">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-                    <div className="relative z-10 flex items-center gap-4 flex-1 min-w-[200px]">
+                    <div className="relative z-10 flex flex-wrap items-center gap-4 sm:gap-6 flex-1 min-w-[200px]">
                         <div className="flex items-center gap-2">
                             <span className="text-[14px] font-black uppercase tracking-wider text-teal-200">Registration Fee:</span>
                             <div className="flex items-center">
@@ -1679,8 +1972,25 @@ const Registration = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* Current Token Number Display (After Registration Fee) */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[14px] font-black uppercase tracking-wider text-teal-200">Token Number:</span>
+                            <span className="bg-black/20 border border-white/20 rounded px-2.5 py-0.5 text-[16px] font-mono font-bold text-cyan-200 tracking-wider shadow-inner">
+                                {currentTokenNumber}
+                            </span>
+                        </div>
+
+                        {/* Current System Date Display (After Token Number) */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[14px] font-black uppercase tracking-wider text-teal-200">Date:</span>
+                            <span className="bg-black/20 border border-white/20 rounded px-2.5 py-0.5 text-[16px] font-mono font-bold text-cyan-200 tracking-wider shadow-inner flex items-center gap-1.5">
+                                <Calendar size={14} className="text-cyan-300" />
+                                {systemDate}
+                            </span>
+                        </div>
                     </div>
-                    <div className="relative z-10 flex items-center gap-2">
+                    <div className="relative z-10 flex items-center gap-2 w-full sm:w-auto justify-end">
                         <button
                             type="button"
                             onClick={() => navigate('/patients')}
@@ -1803,6 +2113,397 @@ const Registration = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Access Denied Modal */}
+            {showAccessDeniedModal && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden p-6 text-center space-y-4">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shadow-xs">
+                            <ShieldAlert size={30} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Access Restricted</h3>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Administrator authorization required to configure registration settings.
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-600 border border-slate-200/80 text-left space-y-1.5">
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-slate-500">Your Current Role:</span>
+                                <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">{role || 'User'}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-slate-500">Required Role:</span>
+                                <span className="font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">Admin / SuperAdmin</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 pt-1">
+                                Contact your system administrator to adjust registration fees, PID counter sequences, routing counters, or slip headers.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowAccessDeniedModal(false)}
+                            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                        >
+                            Understood
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Registration Settings Modal */}
+            {showSettingsModal && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in">
+                    <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden my-6">
+                        {/* Modal Header */}
+                        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 via-white to-slate-50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl border border-teal-100 shadow-xs">
+                                    <Settings size={22} />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-slate-900 text-[16px] sm:text-[18px]">Registration Configuration & Settings</h3>
+                                        <span className="bg-teal-100 text-teal-800 text-[11px] font-extrabold px-2 py-0.5 rounded-full border border-teal-200">
+                                            {role}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-medium">Manage default registration fees, PID sequence, counter routing & slip headers</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowSettingsModal(false)}
+                                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Success Notification Alert */}
+                        {settingsSuccess && (
+                            <div className="mx-4 sm:mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-2 text-xs font-bold animate-in fade-in">
+                                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                                <span>{settingsSuccess}</span>
+                            </div>
+                        )}
+
+                        {/* Settings Tabs */}
+                        <div className="flex border-b border-slate-200 px-4 sm:px-6 pt-2 bg-slate-50/70 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setSettingsTab('general')}
+                                className={`pb-2.5 px-3 font-bold text-xs sm:text-sm flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${settingsTab === 'general'
+                                    ? 'border-teal-600 text-teal-700 bg-white rounded-t-lg -mb-px'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                                    }`}
+                            >
+                                <SlidersHorizontal size={14} />
+                                <span>General & Fees</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSettingsTab('rooms')}
+                                className={`pb-2.5 px-3 font-bold text-xs sm:text-sm flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${settingsTab === 'rooms'
+                                    ? 'border-teal-600 text-teal-700 bg-white rounded-t-lg -mb-px'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                                    }`}
+                            >
+                                <Building2 size={14} />
+                                <span>Counter Rooms ({rooms.length})</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSettingsTab('slip')}
+                                className={`pb-2.5 px-3 font-bold text-xs sm:text-sm flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${settingsTab === 'slip'
+                                    ? 'border-teal-600 text-teal-700 bg-white rounded-t-lg -mb-px'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                                    }`}
+                            >
+                                <Printer size={14} />
+                                <span>Slip & Print Header</span>
+                            </button>
+                        </div>
+
+                        {/* Tab Content */}
+                        <div className="p-4 sm:p-6 max-h-[65vh] overflow-y-auto">
+                            {settingsTab === 'general' && (
+                                <form onSubmit={handleSaveGeneralSettings} className="space-y-5">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Default Fee */}
+                                        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2">
+                                            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                                                <DollarSign size={16} className="text-teal-600" />
+                                                <span>Default Registration Fee</span>
+                                            </div>
+                                            <p className="text-[12px] text-slate-500">
+                                                Amount charged to new patients upon OPD registration.
+                                            </p>
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <span className="font-bold text-slate-700 bg-slate-200 px-3 py-2 rounded-lg text-sm">{currency}</span>
+                                                <input
+                                                    type="number"
+                                                    required
+                                                    min="0"
+                                                    value={modalFee}
+                                                    onChange={(e) => setModalFee(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                                                    placeholder="100"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* PID Sequence Adjustment */}
+                                        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2">
+                                            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                                                <Hash size={16} className="text-teal-600" />
+                                                <span>Next PID Sequence Counter</span>
+                                            </div>
+                                            <p className="text-[12px] text-slate-500">
+                                                Next auto-generated PID will be: <span className="font-mono font-bold text-teal-700">PID-{String(parseInt(modalNextPid, 10) || 1).padStart(6, '0')}</span>
+                                            </p>
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <span className="font-mono font-bold text-slate-700 bg-slate-200 px-3 py-2 rounded-lg text-sm">PID-</span>
+                                                <input
+                                                    type="number"
+                                                    required
+                                                    min="1"
+                                                    value={modalNextPid}
+                                                    onChange={(e) => setModalNextPid(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white font-mono"
+                                                    placeholder="1"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <div className="flex justify-end pt-3 border-t border-slate-100">
+                                        <button
+                                            type="submit"
+                                            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md cursor-pointer active:scale-95"
+                                        >
+                                            <Save size={15} /> Save General Settings
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+
+                            {settingsTab === 'rooms' && (
+                                <div className="space-y-5">
+                                    {/* Filter / Dept Tabs */}
+                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                                            {(['OPD', 'Camp', 'Lab', 'Diagnosis'] as const).map(dept => (
+                                                <button
+                                                    key={dept}
+                                                    type="button"
+                                                    onClick={() => setSettingsRoomDept(dept)}
+                                                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${settingsRoomDept === dept
+                                                        ? 'bg-teal-600 text-white shadow-xs'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                        }`}
+                                                >
+                                                    {dept.toUpperCase()}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <span className="text-xs text-slate-400 font-medium">
+                                            Showing {rooms.filter(r => r.type === settingsRoomDept).length} counter(s)
+                                        </span>
+                                    </div>
+
+                                    {/* Rooms List */}
+                                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                        {rooms.filter(r => r.type === settingsRoomDept).map(room => (
+                                            <div key={room.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl hover:border-slate-300 transition-all">
+                                                {editingRoomId === room.id ? (
+                                                    <div className="flex items-center gap-2 flex-1 mr-3">
+                                                        <input
+                                                            type="text"
+                                                            value={editingRoomNumber}
+                                                            onChange={(e) => setEditingRoomNumber(e.target.value)}
+                                                            className="w-20 px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                                            placeholder="No."
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            value={editingRoomName}
+                                                            onChange={(e) => setEditingRoomName(e.target.value)}
+                                                            className="flex-1 px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                                            placeholder="Room Name"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="w-12 h-7 bg-teal-50 border border-teal-200 text-teal-700 rounded-md flex items-center justify-center font-bold text-xs font-mono">
+                                                            {room.roomNumber}
+                                                        </span>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-slate-800">{room.name}</p>
+                                                            <p className="text-[11px] text-slate-400">Current load: {room.currentLoad || 0} patient(s)</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-center gap-1.5">
+                                                    {editingRoomId === room.id ? (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleSaveEditRoom(room.id)}
+                                                                className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 border border-emerald-200 transition-all cursor-pointer"
+                                                                title="Save"
+                                                            >
+                                                                <Check size={14} />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setEditingRoomId(null)}
+                                                                className="p-1.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer"
+                                                                title="Cancel"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleStartEditRoom(room)}
+                                                                className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 border border-indigo-200 transition-all cursor-pointer"
+                                                                title="Edit Room"
+                                                            >
+                                                                <Edit3 size={13} />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteRoom(room.id)}
+                                                                className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer"
+                                                                title="Delete Room"
+                                                            >
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {rooms.filter(r => r.type === settingsRoomDept).length === 0 && (
+                                            <p className="text-xs text-slate-400 italic text-center py-4">No rooms configured for {settingsRoomDept}.</p>
+                                        )}
+                                    </div>
+
+                                    {/* Add New Room Form */}
+                                    <form onSubmit={handleAddSettingsRoom} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                                            Add New Counter Room to <span className="text-teal-700">{settingsRoomDept}</span>
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <input
+                                                required
+                                                type="text"
+                                                placeholder="Room No (e.g. 105)"
+                                                value={settingsNewRoomNum}
+                                                onChange={(e) => setSettingsNewRoomNum(e.target.value)}
+                                                className="w-24 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                            />
+                                            <input
+                                                required
+                                                type="text"
+                                                placeholder="Counter Name (e.g. Consultation Booth 5)"
+                                                value={settingsNewRoomName}
+                                                onChange={(e) => setSettingsNewRoomName(e.target.value)}
+                                                className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                            />
+                                            <button
+                                                type="submit"
+                                                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                                            >
+                                                <Plus size={14} /> Add
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
+
+                            {settingsTab === 'slip' && (
+                                <form onSubmit={handleSaveSlipSettings} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-700">Hospital Legal Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={modalHospital.name}
+                                            onChange={(e) => setModalHospital(prev => ({ ...prev, name: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                                            placeholder="Visionary Care Eye Hospital"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-700">Speciality / Tagline</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={modalHospital.tagline}
+                                            onChange={(e) => setModalHospital(prev => ({ ...prev, tagline: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                                            placeholder="Specialist Ophthalmology & Microsurgery Center"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-700">Campus / Address</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={modalHospital.address}
+                                                onChange={(e) => setModalHospital(prev => ({ ...prev, address: e.target.value }))}
+                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                                                placeholder="North Wing, Chittagong, Bangladesh"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-700">Hotline / Contact</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={modalHospital.hotline}
+                                                onChange={(e) => setModalHospital(prev => ({ ...prev, hotline: e.target.value }))}
+                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                                                placeholder="+880 1800-000000"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-700">Patient Instructions / Slip Notice</label>
+                                        <textarea
+                                            rows={3}
+                                            value={modalHospital.notice}
+                                            onChange={(e) => setModalHospital(prev => ({ ...prev, notice: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                                            placeholder="Notice displayed at the bottom of the registration slip..."
+                                        />
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <div className="flex justify-end pt-3 border-t border-slate-100">
+                                        <button
+                                            type="submit"
+                                            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md cursor-pointer active:scale-95"
+                                        >
+                                            <Save size={15} /> Save Header & Slip Information
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

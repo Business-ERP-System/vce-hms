@@ -231,8 +231,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             {/* Dropdown Calendar Popup */}
             {isOpen && (
                 <div
-                    className="absolute top-full left-0 mt-1 z-50 bg-white rounded-lg shadow-2xl border border-slate-200 w-[280px] sm:w-[300px] overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150"
-                    style={{ minWidth: '280px' }}
+                    className="absolute top-full left-0 mt-1 z-50 bg-white rounded-lg shadow-2xl border border-slate-200 w-[280px] sm:w-[300px] max-w-[calc(100vw-2rem)] overflow-hidden select-none animate-in fade-in zoom-in-95 duration-150"
                 >
                     {/* Header Banner - Matches Image with #009647 Vibrant Green */}
                     <div className="bg-[#009647] text-white px-3 py-2.5 flex items-center justify-between">
@@ -358,13 +357,12 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                                             type="button"
                                             tabIndex={-1}
                                             onClick={() => handleSelectDay(dayNum)}
-                                            className={`h-8 w-full flex items-center justify-center text-[14px] rounded transition-all cursor-pointer ${
-                                                sel
-                                                    ? 'bg-[#009647] text-white font-bold shadow-sm'
-                                                    : tod
+                                            className={`h-8 w-full flex items-center justify-center text-[14px] rounded transition-all cursor-pointer ${sel
+                                                ? 'bg-[#009647] text-white font-bold shadow-sm'
+                                                : tod
                                                     ? 'text-[#009647] font-bold border border-[#009647] hover:bg-emerald-50'
                                                     : 'text-slate-800 font-medium hover:bg-slate-100 hover:text-slate-900'
-                                            }`}
+                                                }`}
                                         >
                                             {dayNum}
                                         </button>

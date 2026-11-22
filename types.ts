@@ -74,6 +74,8 @@ export interface Patient {
   ageDays?: number;
   dob?: string;
   gender: 'Male' | 'Female' | 'Other';
+  bloodGroup?: string;
+  maritalStatus?: string;
   contact: string;
   altContact?: string;
   email?: string;
