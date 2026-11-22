@@ -91,7 +91,7 @@ const App: React.FC = () => {
         <CommandPalette isOpen={commandPaletteOpen} setIsOpen={setCommandPaletteOpen} />
 
         <div
-          className={`transition-all duration-300 ease-in-out pt-18 md:pt-20 px-2 sm:px-4 md:px-6 lg:px-10 pb-8 min-h-screen print:ml-0 print:p-0 ${autoHide
+          className={`transition-all duration-300 ease-in-out pt-15 md:pt-16 px-2 sm:px-4 md:px-6 lg:px-10 pb-8 min-h-screen print:ml-0 print:p-0 ${autoHide
             ? 'ml-0 md:ml-4'
             : (sidebarOpen ? 'ml-0 md:ml-[88px] lg:ml-[280px]' : 'ml-0 md:ml-[88px]')
             }`}

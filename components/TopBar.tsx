@@ -45,17 +45,17 @@ const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <div
-      className={`fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-6 md:px-8 lg:px-10 transition-all duration-300 print:hidden ${autoHide
+      className={`fixed top-0 right-0 h-14 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-6 md:px-8 lg:px-10 transition-all duration-300 print:hidden ${autoHide
         ? 'left-0'
         : (sidebarOpen ? 'left-0 md:left-[88px] lg:left-[280px]' : 'left-0 md:left-[88px]')
         }`}
     >
-      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-1 min-w-0 mr-3">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-1 min-w-0 mr-4">
         {/* Mobile Hamburger Menu Button */}
         <button
           type="button"
           onClick={onToggleMobileMenu}
-          className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl md:hidden transition-all flex-shrink-0 cursor-pointer"
+          className="p-1.5 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl md:hidden transition-all flex-shrink-0 cursor-pointer"
           title="Open Navigation Menu"
         >
           <Menu size={20} />
@@ -64,7 +64,7 @@ const TopBar: React.FC<TopBarProps> = ({
         {/* Global Search / Command Trigger */}
         <button
           onClick={onOpenCommandPalette}
-          className="flex items-center gap-2 sm:gap-3 w-full max-w-[180px] sm:max-w-xs md:max-w-sm px-3 sm:px-4 py-2 bg-slate-100/50 border border-slate-200/80 rounded-[1.2rem] text-slate-400 hover:bg-white hover:border-teal-400 hover:shadow-[0_12px_24px_-8px_rgba(20,184,166,0.15)] hover:text-teal-700 transition-all group flex-shrink-0"
+          className="flex items-center gap-2 sm:gap-3 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-3 sm:px-4 py-1.5 bg-slate-100/50 border border-slate-200/80 rounded-[1rem] text-slate-400 hover:bg-white hover:border-teal-400 hover:shadow-[0_12px_24px_-8px_rgba(20,184,166,0.15)] hover:text-teal-700 transition-all group flex-shrink-0"
         >
           <Search className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs sm:text-sm font-bold tracking-tight truncate">Search anything...</span>
@@ -72,49 +72,27 @@ const TopBar: React.FC<TopBarProps> = ({
             <kbd className="hidden sm:inline-flex items-center h-5 px-1.5 sm:px-2 text-[10px] sm:text-xs font-black bg-white border border-slate-200 rounded-lg text-slate-400 shadow-sm">⌘ K</kbd>
           </div>
         </button>
-
-        {/* Running Broadcast Message Ticker: Business ERP System */}
-        <div className="flex items-center flex-1 min-w-[200px] max-w-2xl mx-2 overflow-hidden select-none">
-          <div className="w-full h-10 flex items-center gap-2.5 px-4 py-1.5 bg-gradient-to-r from-teal-50/90 via-emerald-50/70 to-cyan-50/90 border border-teal-300/80 rounded-2xl shadow-xs hover:border-teal-400 transition-colors">
-            <span className="flex h-2.5 w-2.5 relative flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-600"></span>
-            </span>
-            <div className="overflow-hidden flex-1 relative flex items-center">
-              <marquee
-                behavior="scroll"
-                direction="left"
-                scrollamount="5"
-                className="text-[15px] md:text-[16px] font-black uppercase tracking-wider text-teal-900 leading-none cursor-default"
-                onMouseEnter={(e: any) => e.target.stop && e.target.stop()}
-                onMouseLeave={(e: any) => e.target.start && e.target.start()}
-              >
-                Business ERP System &nbsp;&bull;&nbsp; Business ERP System &nbsp;&bull;&nbsp; Business ERP System
-              </marquee>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
           {/* Currency Toggle */}
           <button
             onClick={toggleCurrency}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-xs font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
             title="Switch Currency"
           >
             <Coins size={14} className="text-amber-500" />
             {currency}
           </button>
 
-          <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all relative group">
+          <button className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all relative group">
             <Bell className="w-5 h-5 group-hover:shake" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white animate-pulse"></span>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white animate-pulse"></span>
           </button>
         </div>
 
-        <div className="h-8 w-px bg-slate-100 mx-2"></div>
+        <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
         {/* Profile & Role Switcher */}
         <div className="relative" ref={dropdownRef}>
