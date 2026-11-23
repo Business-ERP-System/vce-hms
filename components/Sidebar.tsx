@@ -14,6 +14,7 @@ interface SidebarProps {
   setAutoHide?: (autoHide: boolean) => void;
   mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
+  onHoverChange?: (hovered: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -22,7 +23,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   autoHide = false,
   setAutoHide,
   mobileOpen = false,
-  setMobileOpen
+  setMobileOpen,
+  onHoverChange
 }) => {
   const { role, currentUser, logout } = useAuth();
   const { hasPermission } = useData();
@@ -30,6 +32,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  const setHoveredState = (hovered: boolean) => {
+    setIsHovered(hovered);
+    onHoverChange?.(hovered);
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -50,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       hoverTimeoutRef.current = null;
     }
     if (autoHide) {
-      setIsHovered(true);
+      setHoveredState(true);
     }
   };
 
@@ -58,14 +65,14 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (isMobile) return;
     if (autoHide) {
       hoverTimeoutRef.current = setTimeout(() => {
-        setIsHovered(false);
-      }, 180);
+        setHoveredState(false);
+      }, 200);
     }
   };
 
   useEffect(() => {
     if (!autoHide) {
-      setIsHovered(false);
+      setHoveredState(false);
     }
     return () => {
       if (hoverTimeoutRef.current) {
@@ -97,7 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               }
             : {
                 x: 0,
-                width: isExpanded ? 280 : (isSlimEdge ? 16 : 88)
+                width: isExpanded ? 260 : (isSlimEdge ? 20 : 80)
               }
         }
         transition={{ duration: 0.25, ease: 'easeInOut' }}
@@ -121,8 +128,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       ) : (
         <>
           {/* Header */}
-          <div className="h-14 flex items-center justify-between px-3 bg-slate-50/60 border-b border-slate-100 flex-shrink-0 relative">
-            <div className={`flex items-center gap-2.5 ${!isExpanded && 'justify-center w-full'}`}>
+          <div className="h-14 flex items-center justify-between px-2.5 bg-slate-50/60 border-b border-slate-100 flex-shrink-0 relative">
+            <div className={`flex items-center gap-2 min-w-0 ${!isExpanded ? 'justify-center w-full' : 'flex-1 mr-1'}`}>
               <div
                 className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20 cursor-pointer hover:scale-105 transition-transform flex-shrink-0"
                 onClick={() => {
@@ -137,8 +144,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
               {isExpanded && (
                 <div className="flex flex-col min-w-0">
-                  <span className="font-black text-sm tracking-tighter uppercase leading-none text-slate-900 truncate">{APP_NAME}</span>
-                  <span className="text-[10px] font-black tracking-[0.2em] text-teal-600 uppercase mt-0.5 truncate">Enterprise ERP</span>
+                  <span className="font-black text-[13px] tracking-tight uppercase leading-none text-slate-900 truncate">Visionary Care</span>
+                  <span className="text-[9px] font-black tracking-[0.16em] text-teal-600 uppercase mt-0.5 truncate">HMS ERP</span>
                 </div>
               )}
             </div>
@@ -153,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <X size={18} />
               </button>
             ) : isExpanded ? (
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {setAutoHide && (
                   <button
                     type="button"
@@ -161,21 +168,21 @@ const Sidebar: React.FC<SidebarProps> = ({
                       e.stopPropagation();
                       setAutoHide(!autoHide);
                     }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all border cursor-pointer shrink-0 ${
                       autoHide
                         ? 'bg-teal-50 text-teal-700 border-teal-300 shadow-2xs ring-1 ring-teal-200'
                         : 'bg-white text-slate-500 border-slate-200 hover:text-slate-800 hover:bg-slate-50'
                     }`}
-                    title={autoHide ? "Auto Hide is ON (Hides when mouse leaves, opens when cursor goes to left side). Click to turn OFF." : "Click to enable Auto Hide (Automatically opens on hover)"}
+                    title={autoHide ? "Auto-Hide is ON (Hides when mouse leaves, opens when hovering left). Click to turn OFF." : "Click to enable Auto-Hide (Automatically opens on hover)"}
                   >
-                    <span className={`w-2 h-2 rounded-full ${autoHide ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`}></span>
-                    <span>Auto Hide</span>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${autoHide ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`}></span>
+                    <span className="whitespace-nowrap font-bold">Auto-Hide</span>
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => setIsOpen(!isOpen)}
-                  className="text-slate-400 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+                  className="text-slate-400 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-all cursor-pointer shrink-0"
                   title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
                 >
                   <ChevronLeft size={16} />

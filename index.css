@@ -8,11 +8,15 @@
 }
 
 /* Global resets and base styles */
+html,
 body {
+  overflow-x: hidden;
+  max-width: 100vw;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc; /* slate-50 */
+  background-color: #f8fafc;
+  /* slate-50 */
 }
 
 .font-display {
@@ -78,7 +82,7 @@ body {
 
 /* Gradient Backgrounds */
 .bg-mesh-gradient {
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.15) 0, transparent 50%),
     radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.15) 0, transparent 50%),
     radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%);
@@ -155,9 +159,14 @@ body {
   }
 
   #printable-rx .flex,
-  #printable-slip .flex { display: flex !important; }
+  #printable-slip .flex {
+    display: flex !important;
+  }
+
   #printable-rx .grid,
-  #printable-slip .grid { display: grid !important; }
+  #printable-slip .grid {
+    display: grid !important;
+  }
 
   .print-no-break {
     break-inside: avoid !important;

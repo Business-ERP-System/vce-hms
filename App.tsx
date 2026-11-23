@@ -31,6 +31,7 @@ import Login from './pages/Login';
 import PatientPortal from './pages/PatientPortal';
 import BranchManagement from './pages/BranchManagement';
 import SuperControl from './pages/SuperControl';
+import KeyboardNavigationHandler from './components/KeyboardNavigationHandler';
 
 const App: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -48,6 +49,7 @@ const App: React.FC = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('sidebarOpen', JSON.stringify(sidebarOpen));
@@ -69,8 +71,11 @@ const App: React.FC = () => {
     );
   }
 
+  const isSidebarExpanded = autoHide ? sidebarHovered : sidebarOpen;
+
   return (
     <Router>
+      <KeyboardNavigationHandler />
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
         <Sidebar
           isOpen={sidebarOpen}
@@ -79,6 +84,7 @@ const App: React.FC = () => {
           setAutoHide={setAutoHide}
           mobileOpen={mobileSidebarOpen}
           setMobileOpen={setMobileSidebarOpen}
+          onHoverChange={setSidebarHovered}
         />
 
         <TopBar
@@ -86,14 +92,15 @@ const App: React.FC = () => {
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           autoHide={autoHide}
           onToggleMobileMenu={() => setMobileSidebarOpen(prev => !prev)}
+          sidebarHovered={sidebarHovered}
         />
 
         <CommandPalette isOpen={commandPaletteOpen} setIsOpen={setCommandPaletteOpen} />
 
         <div
-          className={`transition-all duration-300 ease-in-out pt-15 md:pt-16 px-2 sm:px-4 md:px-6 lg:px-10 pb-8 min-h-screen print:ml-0 print:p-0 ${autoHide
-            ? 'ml-0 md:ml-4'
-            : (sidebarOpen ? 'ml-0 md:ml-[88px] lg:ml-[280px]' : 'ml-0 md:ml-[88px]')
+          className={`transition-all duration-300 ease-in-out pt-15 md:pt-16 px-2 sm:px-3 md:px-4 lg:px-4 xl:px-5 pb-8 min-h-screen max-w-full overflow-x-hidden print:ml-0 print:p-0 ${isSidebarExpanded
+            ? 'ml-0 md:ml-[80px] lg:ml-[260px]'
+            : (autoHide ? 'ml-0 md:ml-4' : 'ml-0 md:ml-[80px]')
             }`}
         >
           <Routes>

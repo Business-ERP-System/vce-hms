@@ -48,6 +48,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     const [editingRoomNumber, setEditingRoomNumber] = useState('');
     const [editingRoomName, setEditingRoomName] = useState('');
 
+    // Close Settings modal on Escape key
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
     // Re-initialize state whenever modal opens
     useEffect(() => {
         if (isOpen) {

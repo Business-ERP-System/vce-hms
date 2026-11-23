@@ -12,13 +12,15 @@ interface TopBarProps {
   onOpenCommandPalette: () => void;
   autoHide?: boolean;
   onToggleMobileMenu?: () => void;
+  sidebarHovered?: boolean;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
   sidebarOpen,
   onOpenCommandPalette,
   autoHide = false,
-  onToggleMobileMenu
+  onToggleMobileMenu,
+  sidebarHovered = false
 }) => {
   const { currentUser, role, switchRole, logout } = useAuth();
   const { currency, toggleCurrency } = useData();
@@ -43,12 +45,15 @@ const TopBar: React.FC<TopBarProps> = ({
     navigate('/');
   };
 
+  const isSidebarExpanded = autoHide ? sidebarHovered : sidebarOpen;
+
   return (
     <div
-      className={`fixed top-0 right-0 h-14 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-6 md:px-8 lg:px-10 transition-all duration-300 print:hidden ${autoHide
-        ? 'left-0'
-        : (sidebarOpen ? 'left-0 md:left-[88px] lg:left-[280px]' : 'left-0 md:left-[88px]')
-        }`}
+      className={`fixed top-0 right-0 h-14 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-4 md:px-5 lg:px-6 transition-all duration-300 print:hidden ${
+        isSidebarExpanded
+          ? 'left-0 md:left-[80px] lg:left-[260px]'
+          : (autoHide ? 'left-0' : 'left-0 md:left-[80px]')
+      }`}
     >
       <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-1 min-w-0 mr-4">
         {/* Mobile Hamburger Menu Button */}
@@ -76,6 +81,17 @@ const TopBar: React.FC<TopBarProps> = ({
 
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">
+          {/* Keyboard Shortcuts Help */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1', bubbles: true }))}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+            title="Keyboard Shortcuts Guide (F1 or ?)"
+          >
+            <Command size={13} className="text-teal-600" />
+            <span className="font-mono text-[11px] font-bold">F1</span>
+          </button>
+
           {/* Currency Toggle */}
           <button
             onClick={toggleCurrency}
