@@ -6,7 +6,7 @@ import {
     ShieldCheck, DollarSign, Stethoscope, Briefcase, Map as MapIcon,
     FlaskConical, Microscope, Users, Home, Archive, Mail, Tag,
     ChevronRight, ArrowLeft, UserPlus, Plus, Trash2, Edit3, Check, X, Settings, Tent, ChevronDown, Globe, Search, Hash,
-    ShieldAlert, SlidersHorizontal, Building2, Lock, CheckCircle2, RefreshCw, AlertTriangle, Share2
+    ShieldAlert, SlidersHorizontal, Building2, Lock, CheckCircle2, RefreshCw, AlertTriangle, Share2, Sparkles
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';

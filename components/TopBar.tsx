@@ -49,11 +49,10 @@ const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <div
-      className={`fixed top-0 right-0 h-14 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-4 md:px-5 lg:px-6 transition-all duration-300 print:hidden ${
-        isSidebarExpanded
-          ? 'left-0 md:left-[80px] lg:left-[260px]'
-          : (autoHide ? 'left-0' : 'left-0 md:left-[80px]')
-      }`}
+      className={`fixed top-0 right-0 h-14 bg-white/80 backdrop-blur-2xl border-b border-slate-200/50 z-30 flex items-center justify-between px-3 sm:px-4 md:px-5 lg:px-6 transition-all duration-300 print:hidden ${isSidebarExpanded
+        ? 'left-0 md:left-[80px] lg:left-[260px]'
+        : (autoHide ? 'left-0' : 'left-0 md:left-[80px]')
+        }`}
     >
       <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-1 min-w-0 mr-4">
         {/* Mobile Hamburger Menu Button */}
