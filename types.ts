@@ -122,6 +122,8 @@ export interface Patient {
   familyHistory?: string;
   documents?: { name: string; date: string; type: string }[];
   campaignId?: string;
+  referredBy?: string;
+  corporateName?: string;
 }
 
 export interface RoomMaster {

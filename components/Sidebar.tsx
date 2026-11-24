@@ -225,6 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       <NavLink
                         key={item.name}
                         to={item.path}
+                        end
                         onClick={() => {
                           if (isMobile) setMobileOpen?.(false);
                         }}

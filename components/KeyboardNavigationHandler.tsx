@@ -52,10 +52,10 @@ export const KeyboardNavigationHandler: React.FC = () => {
           navigate(-1);
         } else {
           // Safe fallback navigation
-          if (location.pathname === '/registration') {
+          if (location.pathname === '/patients/register' || location.pathname === '/registration') {
             navigate('/patients');
           } else if (location.pathname !== '/' && location.pathname !== '/dashboard') {
-            navigate('/');
+            navigate('/dashboard');
           }
         }
         return;
@@ -91,7 +91,7 @@ export const KeyboardNavigationHandler: React.FC = () => {
       // 4. Function Keys Navigation (F2 - F10)
       if (e.key === 'F2' || (e.altKey && e.key.toLowerCase() === 'n')) {
         e.preventDefault();
-        navigate('/registration');
+        navigate('/patients/register');
         return;
       }
 
@@ -140,7 +140,7 @@ export const KeyboardNavigationHandler: React.FC = () => {
       // 5. Alt + H or Alt + D -> Dashboard
       if (e.altKey && (e.key.toLowerCase() === 'h' || e.key.toLowerCase() === 'd')) {
         e.preventDefault();
-        navigate('/');
+        navigate('/dashboard');
         return;
       }
     };
