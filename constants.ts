@@ -842,14 +842,14 @@ export const MENU_GROUPS = [
   {
     group: "Main",
     items: [
-      { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+      { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     ]
   },
   {
     group: "Front Office",
     items: [
       { name: 'Patient List', icon: Users, path: '/patients' },
-      { name: 'Patient Registration', icon: UserPlus, path: '/registration' },
+      { name: 'Patient Registration', icon: UserPlus, path: '/patients/register' },
       { name: 'Appointments', icon: Calendar, path: '/appointments' },
     ]
   },

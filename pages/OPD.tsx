@@ -152,7 +152,7 @@ const OPD = () => {
                         <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-teal-50 text-teal-700' : 'text-slate-400 hover:text-slate-600'}`}><List size={18} /></button>
                         <button onClick={() => setViewMode('tiles')} className={`p-2 rounded-md ${viewMode === 'tiles' ? 'bg-teal-50 text-teal-700' : 'text-slate-400 hover:text-slate-600'}`}><Grid size={18} /></button>
                     </div>
-                    <button onClick={() => navigate('/registration')} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 shadow-sm">
+                    <button onClick={() => navigate('/patients/register')} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 shadow-sm">
                         <Plus size={16} /> Register Patient
                     </button>
                 </div>
@@ -250,7 +250,7 @@ const OPD = () => {
                                                     <FileText size={16} />
                                                 </button>
 
-                                                <button onClick={(e) => { e.stopPropagation(); navigate('/registration', { state: { patient } }) }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit Info">
+                                                <button onClick={(e) => { e.stopPropagation(); navigate('/patients/register', { state: { patient } }) }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit Info">
                                                     <Edit size={16} />
                                                 </button>
 

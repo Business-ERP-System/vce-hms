@@ -83,16 +83,30 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
     const [paperSize, setPaperSize] = useState<PaperSizeType>(defaultPaperSize);
     const [photoSize, setPhotoSize] = useState<'Full page' | 'Half page' | 'Card slip'>('Full page');
     const [pageMargins, setPageMargins] = useState<'Normal' | 'Narrow' | 'Minimum' | 'None'>('Normal');
-    const [fit, setFit] = useState<'Fill page' | 'Fit to page' | 'Actual size'>('Fit to page');
+    const [fit, setFit] = useState<'Fill page' | 'Fit to page' | 'Actual size'>('Actual size');
     const [showMoreSettings, setShowMoreSettings] = useState(false);
     const [copies, setCopies] = useState<number>(1);
     const [includeBackground, setIncludeBackground] = useState<boolean>(true);
 
-    // Zoom and preview viewport sizing
+    // Zoom and preview viewport sizing (defaults to 100% actual size)
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 600, height: 600 });
-    const [zoomMode, setZoomMode] = useState<'fit' | 'custom'>('fit');
-    const [customZoom, setCustomZoom] = useState<number>(1);
+    const [zoomMode, setZoomMode] = useState<'fit' | 'custom'>('custom');
+    const [customZoom, setCustomZoom] = useState<number>(1.0);
+
+    // Reset zoom to 100% (Actual size) every time preview modal opens
+    useEffect(() => {
+        if (!isOpen) return;
+        setZoomMode('custom');
+        setCustomZoom(1.0);
+        setFit('Actual size');
+        const timer = setTimeout(() => {
+            if (containerRef.current) {
+                containerRef.current.scrollTop = 0;
+            }
+        }, 60);
+        return () => clearTimeout(timer);
+    }, [isOpen]);
 
     // Measure preview viewport on mount/resize
     useEffect(() => {
@@ -107,21 +121,6 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
             }
         };
 
-        // Delay slightly for modal animation to settle
-        useEffect(() => {
-            if (!isOpen) return;
-
-            // Escape key to close print modal
-            const handleKeyDown = (e: KeyboardEvent) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onClose();
-                }
-            };
-            window.addEventListener('keydown', handleKeyDown);
-            return () => window.removeEventListener('keydown', handleKeyDown);
-        }, [isOpen, onClose]);
         const timer = setTimeout(updateSize, 50);
 
         window.addEventListener('resize', updateSize);
@@ -130,6 +129,21 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
             window.removeEventListener('resize', updateSize);
         };
     }, [isOpen]);
+
+    // Escape key to close print modal
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -162,11 +176,13 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
 
     const handleFitReset = () => {
         setZoomMode('fit');
+        setFit('Fit to page');
     };
 
     const handleActualSize = () => {
         setZoomMode('custom');
         setCustomZoom(1.0);
+        setFit('Actual size');
     };
 
     const getPageSizeRule = (size: PaperSizeType, orient: 'Portrait' | 'Landscape') => {
@@ -252,19 +268,19 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-2 sm:p-4 animate-in fade-in duration-200">
-            <div className="bg-[#323639] rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col md:flex-row overflow-hidden border border-slate-700">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-1.5 sm:p-3 animate-in fade-in duration-200">
+            <div className="bg-[#323639] rounded-2xl shadow-2xl w-[98vw] max-w-[1560px] h-[96vh] flex flex-col md:flex-row overflow-hidden border border-slate-700">
 
-                {/* Left Side: Chrome-Style Live Document Preview */}
+                {/* Left Side: Chrome-Style Live Document Preview (Enlarged) */}
                 <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#525659]">
                     {/* Dark Preview Toolbar */}
-                    <div className="flex justify-between items-center px-4 py-2 bg-[#323639] text-white border-b border-black/30 shrink-0">
+                    <div className="flex justify-between items-center px-3.5 py-1.5 bg-[#323639] text-white border-b border-black/30 shrink-0">
                         <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 shrink-0">Print Preview</span>
-                            <span className="text-[11px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded truncate">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 shrink-0">Print Preview</span>
+                            <span className="text-[10px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded truncate">
                                 {paperSize} • {orientation}
                             </span>
-                            <span className="text-xs text-slate-400 truncate hidden lg:inline max-w-[260px]">
+                            <span className="text-xs text-slate-400 truncate hidden lg:inline max-w-[320px]">
                                 {documentTitle}
                             </span>
                         </div>
@@ -277,9 +293,9 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                                 className="p-1 text-slate-300 hover:text-white hover:bg-white/10 rounded transition-colors cursor-pointer"
                                 title="Zoom Out"
                             >
-                                <ZoomOut size={14} />
+                                <ZoomOut size={13} />
                             </button>
-                            <span className="text-[11px] font-mono font-bold text-slate-200 min-w-[42px] text-center select-none">
+                            <span className="text-[11px] font-mono font-bold text-slate-200 min-w-[38px] text-center select-none">
                                 {Math.round(effectiveScale * 100)}%
                             </span>
                             <button
@@ -288,13 +304,13 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                                 className="p-1 text-slate-300 hover:text-white hover:bg-white/10 rounded transition-colors cursor-pointer"
                                 title="Zoom In"
                             >
-                                <ZoomIn size={14} />
+                                <ZoomIn size={13} />
                             </button>
-                            <div className="w-px h-3.5 bg-white/20 mx-1" />
+                            <div className="w-px h-3 bg-white/20 mx-1" />
                             <button
                                 type="button"
                                 onClick={handleFitReset}
-                                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${zoomMode === 'fit' ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${zoomMode === 'fit' ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                                 title="Fit whole sheet in window"
                             >
                                 Fit Page
@@ -302,7 +318,7 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                             <button
                                 type="button"
                                 onClick={handleActualSize}
-                                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${zoomMode === 'custom' && customZoom === 1 ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${zoomMode === 'custom' && customZoom === 1 ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
                                 title="100% Actual size"
                             >
                                 100%
@@ -310,10 +326,10 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Virtual Sheet Desktop (Fixes flex centering scroll bug with m-auto) */}
+                    {/* Virtual Sheet Desktop (Canvas area) */}
                     <div
                         ref={containerRef}
-                        className="flex-1 overflow-auto p-4 sm:p-6 flex custom-scrollbar relative"
+                        className="flex-1 overflow-auto p-3 sm:p-5 flex custom-scrollbar relative"
                     >
                         {/* Outer wrapper has EXACT rendered pixel bounding box */}
                         <div
@@ -342,80 +358,80 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                     </div>
 
                     {/* Bottom Status Bar */}
-                    <div className="px-4 py-1.5 bg-[#323639] border-t border-black/30 flex justify-between items-center text-[11px] text-slate-400 shrink-0">
+                    <div className="px-4 py-1 bg-[#323639] border-t border-black/30 flex justify-between items-center text-[10px] text-slate-400 shrink-0">
                         <span>Sheet: <strong className="text-slate-200">{paperSize}</strong> ({paperDimensionsText[paperSize]})</span>
                         <span>1 of 1 Page</span>
                         <span className="hidden sm:inline">Margins: <strong className="text-slate-200">{pageMargins}</strong></span>
                     </div>
                 </div>
 
-                {/* Right Side: Windows-Style Print Settings Panel */}
-                <div className="w-full md:w-80 lg:w-88 bg-white border-l border-slate-200 flex flex-col h-full shrink-0">
+                {/* Right Side: Standard Compact Print Settings Panel (Slim & Structured) */}
+                <div className="w-full md:w-[280px] lg:w-[290px] bg-white border-l border-slate-200 flex flex-col h-full shrink-0">
                     {/* Settings Panel Content (Scrollable) */}
-                    <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-3 custom-scrollbar">
                         {/* Title Bar */}
                         <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <Printer size={20} className="text-teal-600" /> Print Settings
+                            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                                <Printer size={16} className="text-teal-600" /> Print Settings
                             </h2>
                             <button
                                 onClick={onClose}
-                                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-                                title="Close dialog"
+                                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                                title="Close dialog (Esc)"
                             >
-                                <X size={20} />
+                                <X size={16} />
                             </button>
                         </div>
 
                         {/* 1. Printer Destination */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 block">Printer</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[11px] font-semibold text-slate-700 block">Printer</label>
                             <div className="relative">
                                 <select
                                     value={printer}
                                     onChange={(e) => setPrinter(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="Microsoft Print to PDF">Microsoft Print to PDF</option>
                                     <option value="Default System Printer">Default System Printer</option>
                                     <option value="Save as PDF">Save as PDF</option>
                                     <option value="POS Thermal Printer (80mm)">POS Thermal Receipt Printer</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2.5 top-2 text-slate-400 pointer-events-none" />
                             </div>
                             <button
                                 type="button"
                                 onClick={() => alert("To add a physical printer, configure it in Windows Settings > Bluetooth & Devices > Printers & Scanners.")}
-                                className="text-xs text-teal-600 hover:text-teal-800 font-semibold flex items-center gap-1 mt-1 cursor-pointer"
+                                className="text-[10px] text-teal-600 hover:text-teal-800 font-semibold flex items-center gap-0.5 mt-0.5 cursor-pointer"
                             >
-                                <Plus size={14} /> Add a printer
+                                <Plus size={12} /> Add a printer
                             </button>
                         </div>
 
                         {/* 2. Orientation */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 block">Orientation</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[11px] font-semibold text-slate-700 block">Orientation</label>
                             <div className="relative">
                                 <select
                                     value={orientation}
                                     onChange={(e) => setOrientation(e.target.value as any)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="Portrait">Portrait (Vertical)</option>
                                     <option value="Landscape">Landscape (Horizontal)</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2.5 top-2 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
 
-                        {/* 3. Paper Size (All Requested Standard Sizes) */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 block">Paper size</label>
+                        {/* 3. Paper Size */}
+                        <div className="space-y-0.5">
+                            <label className="text-[11px] font-semibold text-slate-700 block">Paper size</label>
                             <div className="relative">
                                 <select
                                     value={paperSize}
                                     onChange={(e) => setPaperSize(e.target.value as PaperSizeType)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="Letter">Letter (8.50" × 11.00")</option>
                                     <option value="Tabloid">Tabloid (11.00" × 17.00")</option>
@@ -429,51 +445,51 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                                     <option value="JIS B5">JIS B5 (7.17" × 10.12")</option>
                                     <option value="80mm">80mm POS Roll (Thermal Slip)</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2.5 top-2 text-slate-400 pointer-events-none" />
                             </div>
-                            <span className="text-[11px] text-slate-500 block font-medium">
+                            <span className="text-[10px] text-slate-400 block font-medium">
                                 {paperDimensionsText[paperSize]}
                             </span>
                         </div>
 
                         {/* 4. Photo size / Output Layout */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 block">Photo size</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[11px] font-semibold text-slate-700 block">Photo size</label>
                             <div className="relative">
                                 <select
                                     value={photoSize}
                                     onChange={(e) => setPhotoSize(e.target.value as any)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="Full page">Full page</option>
                                     <option value="Half page">Half page (Compact)</option>
                                     <option value="Card slip">Card slip</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2.5 top-2 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* 5. Page Margins */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 block">Page Margins</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[11px] font-semibold text-slate-700 block">Page Margins</label>
                             <div className="relative">
                                 <select
                                     value={pageMargins}
                                     onChange={(e) => setPageMargins(e.target.value as any)}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="Normal">Normal (8mm)</option>
                                     <option value="Narrow">Narrow (4mm)</option>
                                     <option value="Minimum">Minimum (2mm)</option>
                                     <option value="None">None (0mm)</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2.5 top-2 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* 6. Fit */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 block">Fit</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[11px] font-semibold text-slate-700 block">Fit</label>
                             <div className="relative">
                                 <select
                                     value={fit}
@@ -487,67 +503,67 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                                             setCustomZoom(1.0);
                                         }
                                     }}
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-teal-500 focus:bg-white transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="Fit to page">Fit to page (Full view)</option>
                                     <option value="Fill page">Fill page (Expanded)</option>
                                     <option value="Actual size">Actual size (100%)</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2.5 top-2 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* More settings toggle */}
-                        <div className="pt-1">
+                        <div className="pt-0.5">
                             <button
                                 type="button"
                                 onClick={() => setShowMoreSettings(!showMoreSettings)}
-                                className="text-xs text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"
+                                className="text-[11px] text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"
                             >
-                                <ChevronDown size={14} className={`transition-transform duration-200 ${showMoreSettings ? 'rotate-180' : ''}`} />
+                                <ChevronDown size={13} className={`transition-transform duration-200 ${showMoreSettings ? 'rotate-180' : ''}`} />
                                 More settings
                             </button>
 
                             {showMoreSettings && (
-                                <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5 text-xs animate-in fade-in duration-150">
+                                <div className="mt-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200 space-y-2 text-xs animate-in fade-in duration-150">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-600 font-semibold">Number of Copies:</span>
+                                        <span className="text-[11px] text-slate-600 font-semibold">Number of Copies:</span>
                                         <input
                                             type="number"
                                             min="1"
                                             max="10"
                                             value={copies}
                                             onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                                            className="w-16 px-2 py-1 text-center bg-white border border-slate-300 rounded-lg font-bold"
+                                            className="w-14 px-2 py-0.5 text-center bg-white border border-slate-300 rounded font-bold text-xs"
                                         />
                                     </div>
-                                    <label className="flex items-center gap-2 text-slate-700 font-medium cursor-pointer">
+                                    <label className="flex items-center gap-1.5 text-[11px] text-slate-700 font-medium cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={includeBackground}
                                             onChange={(e) => setIncludeBackground(e.target.checked)}
                                             className="rounded text-teal-600 focus:ring-teal-500"
                                         />
-                                        <span>Print Background Graphics & Colors</span>
+                                        <span>Print Background Graphics</span>
                                     </label>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Bottom Action Buttons (Always pinned at bottom) */}
-                    <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex gap-3 shrink-0">
+                    {/* Bottom Action Buttons (Pinned at bottom, compact) */}
+                    <div className="p-3 border-t border-slate-200 bg-slate-50 flex gap-2 shrink-0">
                         <button
                             type="button"
                             onClick={handleExecutePrint}
-                            className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-lg shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                            <Printer size={16} /> Print
+                            <Printer size={14} /> Print
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-sm rounded-xl transition-all cursor-pointer"
+                            className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-lg transition-all cursor-pointer"
                         >
                             Cancel
                         </button>

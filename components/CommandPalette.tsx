@@ -18,7 +18,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, setIsOpen }) =>
 
   const commands = [
     // Navigation
-    { title: 'Dashboard', icon: Activity, path: '/', type: 'Navigation' },
+    { title: 'Dashboard', icon: Activity, path: '/dashboard', type: 'Navigation' },
     { title: 'Patient List', icon: Users, path: '/patients', type: 'Navigation' },
     { title: 'OPD Queue', icon: Activity, path: '/opd', type: 'Navigation' },
     { title: 'IPD & Beds', icon: Bed, path: '/ipd', type: 'Navigation' },
@@ -31,7 +31,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, setIsOpen }) =>
     { title: 'Reports Center', icon: FileText, path: '/reports', type: 'Navigation' },
     
     // Actions
-    { title: 'Register New Patient', icon: UserPlus, path: '/registration', type: 'Action' },
+    { title: 'Register New Patient', icon: UserPlus, path: '/patients/register', type: 'Action' },
     { title: 'Create New Bill', icon: CreditCard, path: '/billing', state: { view: 'create_bill' }, type: 'Action' },
     { title: 'Book Appointment', icon: Calendar, path: '/appointments', type: 'Action' },
     { title: 'Add Inventory Item', icon: Pill, path: '/pharmacy', state: { tab: 'inventory' }, type: 'Action' },

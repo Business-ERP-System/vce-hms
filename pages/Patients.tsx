@@ -158,7 +158,7 @@ const Patients = () => {
             if (canGoBack) {
                 navigate(-1);
             } else {
-                navigate('/');
+                navigate('/dashboard');
             }
         };
 
@@ -1059,7 +1059,7 @@ const Patients = () => {
                     {canAdd && (
                         <button
                             type="button"
-                            onClick={() => navigate('/registration')}
+                            onClick={() => navigate('/patients/register')}
                             className="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
                         >
                             <Plus size={15} /> New Patient Entry
@@ -1767,7 +1767,7 @@ const Patients = () => {
                                             {canEdit && (
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => { e.stopPropagation(); navigate('/registration', { state: { patient } }); }}
+                                                    onClick={(e) => { e.stopPropagation(); navigate('/patients/register', { state: { patient } }); }}
                                                     className="p-1 text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 rounded-md transition-all shadow-xs cursor-pointer flex-shrink-0"
                                                     title="Modify Patient Record"
                                                 >

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -59,6 +59,15 @@ const App: React.FC = () => {
     localStorage.setItem('sidebarAutoHide', JSON.stringify(autoHide));
   }, [autoHide]);
 
+  // Cleanly convert any legacy hash URLs (e.g. /#/patients -> /patients)
+  useEffect(() => {
+    if (window.location.hash && window.location.hash.startsWith('#/')) {
+      const cleanPath = window.location.hash.slice(1);
+      window.history.replaceState(null, '', cleanPath);
+      window.location.reload();
+    }
+  }, []);
+
   if (!isAuthenticated) {
     return (
       <Router>
@@ -104,18 +113,24 @@ const App: React.FC = () => {
             }`}
         >
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/login" element={<Navigate to="/dashboard" replace />} />
             <Route path="/patients" element={
               <ProtectedRoute permissionRequired="Patient List">
                 <Patients />
               </ProtectedRoute>
             } />
-            <Route path="/registration" element={
+            <Route path="/patients/register" element={
               <ProtectedRoute permissionRequired="Patient Registration">
                 <Registration />
               </ProtectedRoute>
             } />
+            <Route path="/registration" element={<Navigate to="/patients/register" replace />} />
+            <Route path="/Patient registration/*" element={<Navigate to="/patients/register" replace />} />
+            <Route path="/Patient%20registration/*" element={<Navigate to="/patients/register" replace />} />
+            <Route path="/Patient registration" element={<Navigate to="/patients/register" replace />} />
+            <Route path="/Patient%20registration" element={<Navigate to="/patients/register" replace />} />
             <Route path="/appointments" element={
               <ProtectedRoute permissionRequired="Appointments">
                 <Appointments />
