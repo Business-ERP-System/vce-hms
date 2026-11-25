@@ -24,6 +24,9 @@ export interface PrintSettings {
     photoSize: 'Full page' | 'Half page' | 'Card slip';
     pageMargins: 'Normal' | 'Narrow' | 'Minimum' | 'None';
     fit: 'Fill page' | 'Fit to page' | 'Actual size';
+    printScope?: 'active' | 'all' | 'selection';
+    pageFrom?: string;
+    pageTo?: string;
 }
 
 interface PrintSettingsModalProps {
@@ -87,6 +90,67 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
     const [showMoreSettings, setShowMoreSettings] = useState(false);
     const [copies, setCopies] = useState<number>(1);
     const [includeBackground, setIncludeBackground] = useState<boolean>(true);
+
+    // Excel-style Settings (Scope & Page Range)
+    const [printScope, setPrintScope] = useState<'active' | 'all' | 'selection'>('active');
+    const [isScopeDropdownOpen, setIsScopeDropdownOpen] = useState(false);
+    const [pageFrom, setPageFrom] = useState<string>('');
+    const [pageTo, setPageTo] = useState<string>('');
+    const scopeDropdownRef = useRef<HTMLDivElement>(null);
+
+    const SCOPE_OPTIONS = [
+        {
+            id: 'active' as const,
+            title: 'Print Active Sheets',
+            subtitle: 'Only print the active sheets',
+            icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 shrink-0">
+                    <rect x="3" y="3" width="18" height="14" rx="1.5" />
+                    <line x1="3" y1="8" x2="21" y2="8" />
+                    <line x1="3" y1="13" x2="21" y2="13" />
+                    <line x1="9" y1="3" x2="9" y2="17" />
+                    <line x1="15" y1="3" x2="15" y2="17" />
+                    <path d="M3 17v4h5l2-4" />
+                </svg>
+            )
+        },
+        {
+            id: 'all' as const,
+            title: 'Print Entire Document',
+            subtitle: 'Print all pages and sections',
+            icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 shrink-0">
+                    <rect x="6" y="5" width="15" height="15" rx="1.5" />
+                    <path d="M3 17V4a1 1 0 0 1 1-1h13" />
+                    <line x1="6" y1="10" x2="21" y2="10" />
+                    <line x1="12" y1="5" x2="12" y2="20" />
+                </svg>
+            )
+        },
+        {
+            id: 'selection' as const,
+            title: 'Print Selection',
+            subtitle: 'Only print the current selection',
+            icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 shrink-0">
+                    <rect x="3" y="3" width="18" height="18" rx="1.5" strokeDasharray="3 3" />
+                    <rect x="7" y="7" width="10" height="10" fill="currentColor" fillOpacity="0.2" />
+                </svg>
+            )
+        }
+    ];
+
+    const currentScope = SCOPE_OPTIONS.find(s => s.id === printScope) || SCOPE_OPTIONS[0];
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (scopeDropdownRef.current && !scopeDropdownRef.current.contains(e.target as Node)) {
+                setIsScopeDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Zoom and preview viewport sizing (defaults to 100% actual size)
     const containerRef = useRef<HTMLDivElement>(null);
@@ -210,7 +274,10 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
             paperSize,
             photoSize,
             pageMargins,
-            fit
+            fit,
+            printScope,
+            pageFrom,
+            pageTo
         };
 
         // Inject dynamic @page rules based on user settings
@@ -406,6 +473,84 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                             >
                                 <Plus size={12} /> Add a printer
                             </button>
+                        </div>
+
+                        {/* Excel-style Print Settings (Active Sheets & Pages) */}
+                        <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                            <label className="text-xs font-bold text-slate-800 block">Settings</label>
+
+                            {/* Dropdown Container */}
+                            <div className="relative" ref={scopeDropdownRef}>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsScopeDropdownOpen(!isScopeDropdownOpen)}
+                                    className="w-full bg-white border border-slate-300 hover:border-slate-400 rounded-lg p-2 flex items-center justify-between text-left transition-all cursor-pointer shadow-2xs"
+                                >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        {currentScope.icon}
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-semibold text-slate-800 leading-tight truncate">
+                                                {currentScope.title}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 leading-tight truncate mt-0.5">
+                                                {currentScope.subtitle}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ChevronDown size={14} className={`text-slate-500 shrink-0 transition-transform duration-200 ${isScopeDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isScopeDropdownOpen && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-in fade-in duration-100">
+                                        {SCOPE_OPTIONS.map((opt) => (
+                                            <button
+                                                key={opt.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setPrintScope(opt.id);
+                                                    setIsScopeDropdownOpen(false);
+                                                }}
+                                                className={`w-full px-2.5 py-2 flex items-center gap-2.5 text-left transition-colors cursor-pointer ${
+                                                    printScope === opt.id ? 'bg-teal-50 text-teal-900 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                                                }`}
+                                            >
+                                                {opt.icon}
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-semibold leading-tight">{opt.title}</p>
+                                                    <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{opt.subtitle}</p>
+                                                </div>
+                                                {printScope === opt.id && (
+                                                    <Check size={14} className="text-teal-600 ml-auto shrink-0" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pages Range: Pages: [ ] to [ ] */}
+                            <div className="flex items-center gap-2 text-xs text-slate-700 pt-0.5">
+                                <span className="text-xs font-medium text-slate-600">Pages:</span>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="999"
+                                    placeholder=""
+                                    value={pageFrom}
+                                    onChange={(e) => setPageFrom(e.target.value)}
+                                    className="w-14 px-1.5 py-0.5 text-center bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none"
+                                />
+                                <span className="text-xs text-slate-500 font-medium">to</span>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="999"
+                                    placeholder=""
+                                    value={pageTo}
+                                    onChange={(e) => setPageTo(e.target.value)}
+                                    className="w-14 px-1.5 py-0.5 text-center bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none"
+                                />
+                            </div>
                         </div>
 
                         {/* 2. Orientation */}
