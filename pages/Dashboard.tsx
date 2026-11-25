@@ -886,47 +886,43 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* 6B. AI Directives & Synchronized Intelligence (5 cols) */}
-            <div className="col-span-12 lg:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white rounded-2xl p-6 shadow-xl border border-teal-900/40 relative flex flex-col justify-between overflow-hidden">
+            <div className="col-span-12 lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
               
-              {/* Background ambient lighting */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[90px] rounded-full pointer-events-none"></div>
-              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none"></div>
-
-              <div className="relative z-10 space-y-4">
+              <div className="space-y-4">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center border border-teal-500/30">
-                      <Sparkles size={16} />
+                    <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-200 shadow-xs">
+                      <Sparkles size={18} />
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-sm tracking-tight text-white flex items-center gap-2">
+                      <h4 className="font-extrabold text-sm tracking-tight text-slate-900 flex items-center gap-2">
                         EXECUTIVE INTELLIGENCE
                       </h4>
-                      <p className="text-[10px] text-teal-200/70 font-semibold uppercase tracking-wider">
+                      <p className="text-[10px] text-teal-700 font-bold uppercase tracking-wider">
                         AI Clinical & Operational Digest
                       </p>
                     </div>
                   </div>
 
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400/20 text-teal-300 border border-teal-400/30">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-50 text-teal-700 border border-teal-200">
                     ISO Standard
                   </span>
                 </div>
 
                 {/* Insight Body */}
-                <div className="space-y-3 my-2 text-xs leading-relaxed text-slate-300">
+                <div className="space-y-2.5 my-2 text-xs leading-relaxed">
                   {loadingInsight ? (
-                    <div className="py-6 flex flex-col items-center justify-center gap-2 text-slate-400">
-                      <RefreshCw size={20} className="animate-spin text-teal-400" />
+                    <div className="py-8 flex flex-col items-center justify-center gap-2 text-slate-400">
+                      <RefreshCw size={20} className="animate-spin text-teal-600" />
                       <span className="text-[11px] font-medium">Synthesizing clinical & supply metrics...</span>
                     </div>
                   ) : (
                     <div className="space-y-2.5">
                       {insight.split('\n\n').map((para, i) => (
-                        <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-teal-400/30 transition-all">
-                          <p className="text-[11px] font-medium text-slate-200 leading-relaxed">
+                        <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-teal-50/50 hover:border-teal-300 transition-all">
+                          <p className="text-[11.5px] font-medium text-slate-700 leading-relaxed">
                             {para}
                           </p>
                         </div>
@@ -938,10 +934,10 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* Action Button */}
-              <div className="relative z-10 pt-4 border-t border-white/10 mt-3">
+              <div className="pt-4 border-t border-slate-100 mt-3">
                 <button
                   onClick={() => navigate('/reports')}
-                  className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  className="w-full py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
                   <span>Full Hospital System Audit</span>
                   <ArrowRight size={14} />
