@@ -134,25 +134,25 @@ const SuperControl: React.FC = () => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-24 px-4 lg:px-0">
             {/* Header with Glass Card */}
-            <div className="relative overflow-hidden bg-slate-900 rounded-[3rem] p-10 lg:p-14 text-white shadow-2xl shadow-slate-200">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/20 rounded-full blur-[120px] -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] -ml-24 -mb-24"></div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 rounded-2xl md:rounded-[2.5rem] p-8 lg:p-12 text-white shadow-xl border border-teal-600/40">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-400/20 rounded-full blur-[110px] -mr-32 -mt-32 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-300/15 rounded-full blur-[90px] -ml-24 -mb-24 pointer-events-none"></div>
 
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-teal-500 rounded-2xl shadow-xl shadow-teal-500/30">
+                        <div className="flex items-center gap-3.5">
+                            <div className="p-3 bg-white/20 text-white rounded-2xl shadow-lg border border-white/30 backdrop-blur-md">
                                 <ShieldCheck size={32} />
                             </div>
                             <div>
-                                <h1 className="text-4xl font-black tracking-tighter uppercase leading-none">Super Control Center</h1>
+                                <h1 className="text-3xl sm:text-4xl font-black tracking-tight uppercase leading-none">Super Control Center</h1>
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="px-2 py-0.5 bg-white/10 rounded-full text-xs font-black uppercase tracking-[0.2em] text-teal-400 border border-white/5">System Kernel Level</span>
-                                    <span className="flex items-center gap-1.5 text-xs font-bold text-white/50"><Activity size={12} /> Nodes Status: Stable</span>
+                                    <span className="px-2.5 py-0.5 bg-white/20 rounded-full text-xs font-black uppercase tracking-wider text-teal-100 border border-white/25">System Kernel Level</span>
+                                    <span className="flex items-center gap-1.5 text-xs font-bold text-teal-100/80"><Activity size={12} /> Nodes Status: Stable</span>
                                 </div>
                             </div>
                         </div>
-                        <p className="text-slate-300 max-w-xl text-sm font-medium leading-relaxed opacity-80">
+                        <p className="text-teal-100/90 max-w-xl text-xs sm:text-sm font-medium leading-relaxed">
                             Advanced enterprise orchestration engine. Configure mother databases, toggle modular capabilities, and manage global security protocols from a unified kernel command center.
                         </p>
                     </div>
@@ -161,7 +161,7 @@ const SuperControl: React.FC = () => {
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className={`px-8 py-4 rounded-[1.5rem] flex items-center gap-3 text-xs font-black uppercase tracking-widest transition-all ${isSaving ? 'bg-slate-800 text-slate-400' : 'bg-teal-500 hover:bg-teal-400 text-white shadow-xl shadow-teal-500/20 active:scale-95'
+                            className={`px-7 py-3.5 rounded-xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${isSaving ? 'bg-teal-900/60 text-teal-200' : 'bg-cyan-400 hover:bg-cyan-300 text-teal-950 shadow-lg shadow-cyan-950/20 active:scale-95'
                                 }`}
                         >
                             {isSaving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
@@ -170,24 +170,24 @@ const SuperControl: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-14">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-10 pt-6 border-t border-white/15">
                     {[
                         { label: 'Kernel Version', value: 'VC-H2-2026', icon: Zap },
                         { label: 'Active Clusters', value: '4 Global', icon: Globe },
                         { label: 'Security Mode', value: 'E2E RSA', icon: Lock },
                         { label: 'System Uptime', value: '99.99%', icon: Activity }
                     ].map((stat, i) => (
-                        <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-5 flex flex-col gap-1">
-                            <stat.icon className="text-teal-400 mb-2" size={18} />
-                            <p className="text-xs font-black text-white/40 uppercase tracking-widest">{stat.label}</p>
-                            <p className="text-lg font-black tracking-tight">{stat.value}</p>
+                        <div key={i} className="bg-black/20 hover:bg-black/25 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-5 flex flex-col gap-1 transition-all">
+                            <stat.icon className="text-cyan-300 mb-1 sm:mb-2" size={18} />
+                            <p className="text-[10px] sm:text-xs font-black text-teal-100/70 uppercase tracking-widest">{stat.label}</p>
+                            <p className="text-base sm:text-lg font-black tracking-tight text-white">{stat.value}</p>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* Control Tabs */}
-            <div className="flex flex-wrap items-center bg-white p-2 rounded-[2.5rem] border border-slate-100 shadow-sm gap-2">
+            <div className="flex flex-wrap items-center bg-white p-2 rounded-2xl border border-slate-200/80 shadow-sm gap-2">
                 {[
                     { id: 'modules', label: 'Modular Switches', icon: Layout },
                     { id: 'branches', label: 'Branch Overlord', icon: Landmark },
@@ -198,10 +198,12 @@ const SuperControl: React.FC = () => {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${activeTab === tab.id
+                            ? 'bg-gradient-to-r from-teal-700 to-teal-800 text-white shadow-md shadow-teal-800/20'
+                            : 'text-slate-600 hover:text-teal-800 hover:bg-teal-50/70'
                             }`}
                     >
-                        <tab.icon size={14} />
+                        <tab.icon size={14} className={activeTab === tab.id ? 'text-teal-200' : 'text-slate-400'} />
                         {tab.label}
                     </button>
                 ))}
@@ -222,7 +224,7 @@ const SuperControl: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => setShowBranchModal(true)}
-                                className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-slate-200 transition-all active:scale-95"
+                                className="px-6 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm active:scale-95 transition-all cursor-pointer"
                             >
                                 Provision New Branch
                             </button>
@@ -259,7 +261,7 @@ const SuperControl: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <button className="w-full py-4 bg-slate-50 hover:bg-slate-900 hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                                        <button className="w-full py-4 bg-slate-50 hover:bg-teal-700 hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
                                             Access Management <ChevronRight size={14} />
                                         </button>
                                     </div>
@@ -281,7 +283,7 @@ const SuperControl: React.FC = () => {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     className="relative z-10 w-full max-w-4xl bg-white rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row"
                                 >
-                                    <div className="w-full lg:w-1/3 bg-slate-900 p-10 lg:p-14 text-white relative flex flex-col justify-between overflow-hidden">
+                                    <div className="w-full lg:w-1/3 bg-gradient-to-br from-teal-900 via-teal-800 to-cyan-950 p-10 lg:p-14 text-white relative flex flex-col justify-between overflow-hidden border-r border-teal-700/30">
                                         <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px] -mr-32 -mt-32"></div>
                                         <div className="relative z-10">
                                             <div className="w-16 h-16 bg-teal-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-teal-500/40 mb-8">
@@ -369,7 +371,7 @@ const SuperControl: React.FC = () => {
                                                     addBranch(b);
                                                     setShowBranchModal(false);
                                                 }}
-                                                className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-teal-500 transition-all shadow-xl active:scale-95"
+                                                className="flex-[2] py-4 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-teal-700/20 active:scale-95 cursor-pointer"
                                             >
                                                 Finalize & Deploy Node
                                             </button>
@@ -392,7 +394,7 @@ const SuperControl: React.FC = () => {
                             <div key={mod.id} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden group hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
                                 <div className={`p-8 flex justify-between items-center border-b border-slate-50 ${!mod.isEnabled ? 'bg-slate-50/50 opacity-80' : ''}`}>
                                     <div className="flex items-center gap-5">
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${mod.isEnabled ? 'bg-slate-900 text-teal-400 shadow-slate-200' : 'bg-slate-200 text-slate-400'}`}>
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${mod.isEnabled ? 'bg-teal-700 text-white shadow-teal-700/20' : 'bg-slate-100 text-slate-400'}`}>
                                             <Layout size={24} />
                                         </div>
                                         <div>
@@ -485,7 +487,7 @@ const SuperControl: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 rounded-[3rem] p-10 text-white space-y-8 flex flex-col justify-between">
+                        <div className="bg-gradient-to-br from-teal-900 via-teal-800 to-cyan-950 rounded-2xl md:rounded-[2.5rem] p-8 lg:p-10 text-white space-y-8 flex flex-col justify-between border border-teal-700/40 shadow-xl">
                             <div>
                                 <h4 className="text-lg font-black tracking-tight mb-4 flex items-center gap-3"><Cpu className="text-teal-400" /> HW Resources</h4>
                                 <div className="space-y-6">
