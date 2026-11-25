@@ -886,27 +886,31 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* 6B. AI Directives & Synchronized Intelligence (5 cols) */}
-            <div className="col-span-12 lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+            <div className="col-span-12 lg:col-span-5 bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 text-white rounded-2xl p-6 shadow-xl border border-teal-600/40 relative flex flex-col justify-between overflow-hidden">
               
-              <div className="space-y-4">
+              {/* Background ambient lighting */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/20 blur-[80px] rounded-full pointer-events-none"></div>
+              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-teal-300/15 blur-[70px] rounded-full pointer-events-none"></div>
+
+              <div className="relative z-10 space-y-4">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center justify-between border-b border-white/20 pb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-200 shadow-xs">
+                    <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center border border-white/30 shadow-xs">
                       <Sparkles size={18} />
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-sm tracking-tight text-slate-900 flex items-center gap-2">
+                      <h4 className="font-black text-sm tracking-tight text-white flex items-center gap-2">
                         EXECUTIVE INTELLIGENCE
                       </h4>
-                      <p className="text-[10px] text-teal-700 font-bold uppercase tracking-wider">
+                      <p className="text-[10px] text-teal-100 font-bold uppercase tracking-wider">
                         AI Clinical & Operational Digest
                       </p>
                     </div>
                   </div>
 
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-50 text-teal-700 border border-teal-200">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/20 text-white border border-white/30 uppercase tracking-wider">
                     ISO Standard
                   </span>
                 </div>
@@ -914,15 +918,15 @@ const Dashboard: React.FC = () => {
                 {/* Insight Body */}
                 <div className="space-y-2.5 my-2 text-xs leading-relaxed">
                   {loadingInsight ? (
-                    <div className="py-8 flex flex-col items-center justify-center gap-2 text-slate-400">
-                      <RefreshCw size={20} className="animate-spin text-teal-600" />
+                    <div className="py-8 flex flex-col items-center justify-center gap-2 text-teal-100">
+                      <RefreshCw size={20} className="animate-spin text-white" />
                       <span className="text-[11px] font-medium">Synthesizing clinical & supply metrics...</span>
                     </div>
                   ) : (
                     <div className="space-y-2.5">
                       {insight.split('\n\n').map((para, i) => (
-                        <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-teal-50/50 hover:border-teal-300 transition-all">
-                          <p className="text-[11.5px] font-medium text-slate-700 leading-relaxed">
+                        <div key={i} className="p-3 rounded-xl bg-black/20 hover:bg-black/25 border border-white/15 transition-all backdrop-blur-xs">
+                          <p className="text-[11.5px] font-medium text-white leading-relaxed">
                             {para}
                           </p>
                         </div>
@@ -934,10 +938,10 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* Action Button */}
-              <div className="pt-4 border-t border-slate-100 mt-3">
+              <div className="relative z-10 pt-4 border-t border-white/20 mt-3">
                 <button
                   onClick={() => navigate('/reports')}
-                  className="w-full py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-teal-600/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  className="w-full py-3 bg-cyan-400 hover:bg-cyan-300 text-teal-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
                   <span>Full Hospital System Audit</span>
                   <ArrowRight size={14} />
