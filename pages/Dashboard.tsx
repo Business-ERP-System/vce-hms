@@ -340,7 +340,7 @@ const Dashboard: React.FC = () => {
                 Visionary Care Eye Hospital & Microsurgery Center
               </h1>
               <p className="text-xs font-bold text-teal-800 uppercase tracking-wider mt-0.5">
-                Executive Command Center • Operational Telemetry & Clinical Digest
+                Executive Dashboard • Operational Telemetry & Clinical Digest
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5">
                 Main Campus - Dhaka • Hotline: +880 1800-000000 • ISO 27001 & DGHS Tier-4 Core
@@ -528,7 +528,7 @@ const Dashboard: React.FC = () => {
     <div className="bg-slate-50/60 min-h-screen p-3 sm:p-5 lg:p-8 space-y-6 max-w-[1750px] mx-auto text-slate-800 font-sans pb-24">
 
       {/* ======================================================== */}
-      {/* 1. COMMAND CENTER MASTER HEADER                          */}
+      {/* 1. DASHBOARD MASTER HEADER                               */}
       {/* ======================================================== */}
       <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
 
@@ -540,7 +540,7 @@ const Dashboard: React.FC = () => {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                COMMAND CENTER
+                Dashboard
                 <span className="text-xs font-black uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/80">
                   VCE-HMS Enterprise
                 </span>
