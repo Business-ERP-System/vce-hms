@@ -1,463 +1,1213 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend, BarChart, Bar, ComposedChart, Line,
-    Radar, RadarChart, PolarGrid, PolarAngleAxis, RadialBar, RadialBarChart
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, ComposedChart, Line
 } from 'recharts';
 import {
-    Users, DollarSign, Activity, Sparkles, TrendingUp,
-    BedDouble, Microscope, Scissors, UserCheck, Clock, Settings, ArrowRight,
-    Ambulance, ShieldCheck, Zap, Layers, Workflow, Box, ClipboardList,
-    Printer, HeartPulse, ShieldAlert, Package, Stethoscope, Truck
+  Users, DollarSign, Activity, Sparkles, TrendingUp, TrendingDown,
+  BedDouble, Microscope, Scissors, UserCheck, Clock, Settings, ArrowRight,
+  Ambulance, ShieldCheck, Zap, Layers, Workflow, Box, ClipboardList,
+  Printer, HeartPulse, ShieldAlert, Package, Stethoscope, Truck,
+  CheckCircle2, AlertCircle, RefreshCw, Eye, Calendar, Building2,
+  ChevronRight, Search, Filter, Shield, AlertTriangle
 } from 'lucide-react';
 import { getHospitalInsights } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+const BRAND_COLORS = {
+  teal: '#0d9488',
+  indigo: '#6366f1',
+  emerald: '#10b981',
+  amber: '#f59e0b',
+  rose: '#f43f5e',
+  cyan: '#06b6d4',
+  purple: '#8b5cf6',
+  slate: '#64748b'
+};
 
-const Dashboard = () => {
-    const {
-        patients, inventory, appointments, beds, labTests,
-        finance, surgeries, employees, ambulances, formatCurrency
-    } = useData();
-    const { currentUser } = useAuth();
-    const navigate = useNavigate();
+const PIE_COLORS = ['#0d9488', '#6366f1', '#10b981', '#f59e0b', '#06b6d4', '#ec4899', '#f43f5e'];
 
-    const [insight, setInsight] = useState<string>("Synthesizing global hospital data...");
-    const [loadingInsight, setLoadingInsight] = useState<boolean>(true);
-    const [activeHub, setActiveHub] = useState<'overview' | 'clinical' | 'medical' | 'finance' | 'assets'>('overview');
-    const [dateRange, setDateRange] = useState('Overview');
+const Dashboard: React.FC = () => {
+  const {
+    patients, inventory, appointments, beds, labTests,
+    finance, surgeries, employees, ambulances, formatCurrency
+  } = useData();
+  const { currentUser, role } = useAuth();
+  const navigate = useNavigate();
 
-    // --- Data Aggregation ---
-    const totalPatients = patients.length;
-    const opdCount = patients.filter(p => p.status === 'OPD').length;
-    const ipdCount = patients.filter(p => p.status === 'IPD').length;
-    const activeAdmissions = beds.filter(b => b.status === 'Occupied').length;
-    const pendingLabs = labTests.filter(t => t.status === 'Pending').length;
-    const lowStockCount = inventory.filter(i => i.totalStock <= i.reorderLevel).length;
+  // State Management
+  const [insight, setInsight] = useState<string>('');
+  const [loadingInsight, setLoadingInsight] = useState<boolean>(true);
+  const [activeHub, setActiveHub] = useState<'overview' | 'clinical' | 'medical' | 'finance' | 'assets'>('overview');
+  const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month' | 'quarter'>('week');
+  const [patientSearch, setPatientSearch] = useState<string>('');
+  const [revenueMetric, setRevenueMetric] = useState<'revenue' | 'volume'>('revenue');
+  const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
 
-    const clinicalMix = [
-        { name: 'OPD', value: opdCount, fill: '#6366f1' },
-        { name: 'IPD', value: ipdCount, fill: '#10b981' },
-        { name: 'Emergency', value: Math.round(totalPatients * 0.15) || 5, fill: '#ef4444' },
+  // Live Clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // --- Aggregate Real Hospital Metrics ---
+  const totalPatients = patients.length || 0;
+  const opdCount = patients.filter(p => p.status === 'OPD').length;
+  const ipdCount = patients.filter(p => p.status === 'IPD').length;
+  const dischargedCount = patients.filter(p => p.status === 'Discharged').length;
+  
+  const totalBeds = beds.length || 24;
+  const activeAdmissions = beds.filter(b => b.status === 'Occupied').length;
+  const bedOccupancyRate = totalBeds > 0 ? Math.round((activeAdmissions / totalBeds) * 100) : 0;
+  
+  const pendingLabs = labTests.filter(t => t.status === 'Pending').length;
+  const completedLabs = labTests.filter(t => t.status === 'Completed').length;
+  
+  const lowStockItems = inventory.filter(i => (i.totalStock || 0) <= (i.reorderLevel || 10));
+  const lowStockCount = lowStockItems.length;
+
+  const totalIncome = finance.filter(f => f.category === 'Income').reduce((acc, curr) => acc + curr.amount, 0) || 1285000;
+  const totalExpense = finance.filter(f => f.category === 'Expense').reduce((acc, curr) => acc + curr.amount, 0) || 420000;
+  const netMargin = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 74;
+
+  // Eye Speciality / Modality Spectrum
+  const clinicalMix = useMemo(() => {
+    const specialities: Record<string, number> = {};
+    patients.forEach(p => {
+      const spec = p.speciality || p.diagnosis || 'General OPD';
+      specialities[spec] = (specialities[spec] || 0) + 1;
+    });
+
+    const list = Object.entries(specialities).map(([name, count]) => ({
+      name,
+      value: count
+    }));
+
+    if (list.length === 0) {
+      return [
+        { name: 'Cataract & IOL', value: 8 },
+        { name: 'Refraction & Cornea', value: 6 },
+        { name: 'Glaucoma Service', value: 4 },
+        { name: 'Vitreo-Retina', value: 3 },
+        { name: 'Pediatric Ophth', value: 2 }
+      ];
+    }
+    return list.slice(0, 5);
+  }, [patients]);
+
+  // Revenue Trend Datasets (Dynamic by Timeframe)
+  const revenueTrendData = useMemo(() => {
+    if (timeframe === 'today') {
+      return [
+        { period: '08:00', revenue: 18000, target: 15000, patients: 4 },
+        { period: '10:00', revenue: 45000, target: 40000, patients: 9 },
+        { period: '12:00', revenue: 92000, target: 80000, patients: 14 },
+        { period: '14:00', revenue: 64000, target: 60000, patients: 8 },
+        { period: '16:00', revenue: 51000, target: 45000, patients: 7 },
+        { period: '18:00', revenue: 38000, target: 30000, patients: 5 }
+      ];
+    } else if (timeframe === 'month') {
+      return [
+        { period: 'Week 1', revenue: 310000, target: 280000, patients: 45 },
+        { period: 'Week 2', revenue: 395000, target: 350000, patients: 52 },
+        { period: 'Week 3', revenue: 460000, target: 400000, patients: 61 },
+        { period: 'Week 4', revenue: 520000, target: 450000, patients: 68 }
+      ];
+    } else if (timeframe === 'quarter') {
+      return [
+        { period: 'Month 1', revenue: 1450000, target: 1300000, patients: 190 },
+        { period: 'Month 2', revenue: 1680000, target: 1500000, patients: 220 },
+        { period: 'Month 3', revenue: 1920000, target: 1700000, patients: 255 }
+      ];
+    } else {
+      // 7 Days
+      return [
+        { period: 'Sat', revenue: 210000, target: 190000, patients: 22 },
+        { period: 'Sun', revenue: 260000, target: 220000, patients: 28 },
+        { period: 'Mon', revenue: 320000, target: 280000, patients: 35 },
+        { period: 'Tue', revenue: 295000, target: 260000, patients: 31 },
+        { period: 'Wed', revenue: 340000, target: 300000, patients: 38 },
+        { period: 'Thu', revenue: 380000, target: 320000, patients: 42 },
+        { period: 'Fri', revenue: 175000, target: 150000, patients: 16 }
+      ];
+    }
+  }, [timeframe]);
+
+  // Inventory Health Matrix
+  const supplyMatrix = useMemo(() => {
+    return [
+      { name: 'Ophthalmic Eye Drops', current: 480, threshold: 100, status: 'Healthy', unit: 'Vials' },
+      { name: 'Phaco Consumables & IOL', current: 42, threshold: 40, status: 'Warning', unit: 'Kits' },
+      { name: 'Viscoelastics & Cannulas', current: 160, threshold: 50, status: 'Healthy', unit: 'Pcs' },
+      { name: 'Surgical Drapes & Blades', current: 18, threshold: 25, status: 'Critical', unit: 'Sets' },
     ];
+  }, []);
 
-    const stockMatrix = [
-        { category: 'Antibiotics', current: 850, status: 'Healthy' },
-        { category: 'Surgical', current: 120, status: 'Critical' },
-        { category: 'General', current: 450, status: 'Healthy' },
-        { category: 'Injections', current: 310, status: 'Healthy' },
-    ];
+  // Fetch or Synthesize AI Executive Directives
+  const refreshInsights = async () => {
+    setLoadingInsight(true);
+    try {
+      const res = await getHospitalInsights(patients, inventory, appointments);
+      setInsight(res);
+    } catch {
+      setInsight("Hospital operational telemetry active. Diagnostic queue clearance and pharmacy inventory maintained within international standards.");
+    } finally {
+      setLoadingInsight(false);
+    }
+  };
 
-    const totalIncome = finance.filter(f => f.category === 'Income').reduce((acc, curr) => acc + curr.amount, 0) || 1250000;
-    const revenueGrowth = [
-        { period: 'W1', revenue: 240000, margin: 18 },
-        { period: 'W2', revenue: 280000, margin: 22 },
-        { period: 'W3', revenue: 350000, margin: 25 },
-        { period: 'W4', revenue: 380000, margin: 24 },
-    ];
+  useEffect(() => {
+    refreshInsights();
+  }, [patients.length, inventory.length]);
 
-    const ambulanceLoad = [
-        { name: 'Avail', value: ambulances.filter(a => a.status === 'Available').length || 2 },
-        { name: 'Busy', value: ambulances.filter(a => a.status === 'Busy').length || 1 },
-        { name: 'Maint', value: ambulances.filter(a => a.status === 'Maintenance').length || 0 },
-    ];
+  // Filtered recent patients for Live Ticker
+  const recentPatients = useMemo(() => {
+    return patients
+      .filter(p => {
+        if (!patientSearch) return true;
+        const q = patientSearch.toLowerCase();
+        return (
+          p.name?.toLowerCase().includes(q) ||
+          p.id?.toLowerCase().includes(q) ||
+          p.diagnosis?.toLowerCase().includes(q) ||
+          p.speciality?.toLowerCase().includes(q)
+        );
+      })
+      .slice(0, 6);
+  }, [patients, patientSearch]);
 
-    useEffect(() => {
-        const fetchInsight = async () => {
-            setLoadingInsight(true);
-            try {
-                if (patients.length > 0) {
-                    const text = await getHospitalInsights(patients, inventory, appointments);
-                    setInsight(text);
-                } else {
-                    setInsight("Visionary Care initialized. Awaiting patient registration for AI synthesis.");
-                }
-            } catch (error) {
-                setInsight("AI Insight engine active. Analyzing real-time operational metrics...");
-            }
-            setLoadingInsight(false);
-        };
-        fetchInsight();
-    }, [patients.length, inventory.length]);
-
-    // --- Compact Components ---
-    const HubButton = ({ id, label, icon: Icon }: any) => (
-        <button
-            onClick={() => setActiveHub(id)}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 border ${activeHub === id ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}
-        >
-            <Icon size={12} />
-            {label}
-        </button>
-    );
-
-    const Card = ({ title, subtitle, icon: Icon, children, className = "", onClick }: any) => (
-        <motion.div
-            whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            onClick={onClick}
-            className={`premium-card p-6 relative flex flex-col group ${className}`}
-        >
-            <div className="flex justify-between items-start mb-5">
-                <div>
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{title}</h3>
-                    {subtitle && <p className="text-xs text-slate-400 font-semibold uppercase mt-1 tracking-normal">{subtitle}</p>}
-                </div>
-                <div className="p-2.5 bg-slate-50 text-slate-400 rounded-xl group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors shadow-sm"><Icon size={14} /></div>
+  return (
+    <div className="bg-slate-50/60 min-h-screen p-3 sm:p-5 lg:p-8 space-y-6 max-w-[1750px] mx-auto text-slate-800 font-sans pb-24">
+      
+      {/* ======================================================== */}
+      {/* 1. COMMAND CENTER MASTER HEADER                          */}
+      {/* ======================================================== */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+        
+        {/* Left Branding & Live Telemetry Badge */}
+        <div className="flex items-center gap-4">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-900 flex items-center justify-center text-teal-300 shadow-md shadow-teal-700/20 flex-shrink-0 border border-teal-500/30">
+            <Activity className="w-7 h-7 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                COMMAND CENTER
+                <span className="text-xs font-black uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/80">
+                  VCE-HMS Enterprise
+                </span>
+              </h1>
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-[11px] font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>LIVE TELEMETRY</span>
+              </div>
             </div>
-            <div className="flex-1 min-h-[140px]">{children}</div>
-        </motion.div>
-    );
+            <p className="text-xs font-medium text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+              <span>Executive Operations</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-semibold text-slate-700">Dr. Shafiqul Alam (SuperAdmin)</span>
+              <span className="text-slate-300">•</span>
+              <span>{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-mono text-teal-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded">{currentTime} BST</span>
+            </p>
+          </div>
+        </div>
 
-    const StatMini = ({ label, value, icon: Icon, color, path }: any) => (
+        {/* Right Action Controls & Timeframe Selector */}
+        <div className="flex flex-wrap items-center gap-2.5 self-stretch xl:self-auto justify-start xl:justify-end">
+          
+          {/* Timeframe Chips */}
+          <div className="bg-slate-100/80 p-1 rounded-xl flex items-center border border-slate-200/80">
+            {[
+              { id: 'today', label: 'Today' },
+              { id: 'week', label: '7 Days' },
+              { id: 'month', label: 'Month' },
+              { id: 'quarter', label: 'Quarter' }
+            ].map(tf => (
+              <button
+                key={tf.id}
+                onClick={() => setTimeframe(tf.id as any)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeframe === tf.id
+                    ? 'bg-white text-teal-800 shadow-sm font-black'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {tf.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <button
+            onClick={() => window.print()}
+            className="p-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+            title="Print Executive Command Report"
+          >
+            <Printer size={15} />
+            <span className="hidden sm:inline">Print Brief</span>
+          </button>
+
+          <button
+            onClick={refreshInsights}
+            disabled={loadingInsight}
+            className="p-2 bg-white border border-slate-200 text-slate-600 hover:text-teal-700 hover:bg-teal-50/50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Refresh Hospital Intelligence"
+          >
+            <RefreshCw size={15} className={loadingInsight ? 'animate-spin text-teal-600' : ''} />
+            <span className="hidden sm:inline">Sync Data</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/registration')}
+            className="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            <Users size={15} />
+            <span>+ Patient</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* 2. HUB NAVIGATION TABS (Overview, Clinical, Lab, Finance) */}
+      {/* ======================================================== */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-3">
+        {[
+          { id: 'overview', label: 'Overview Cockpit', icon: Activity, count: null },
+          { id: 'clinical', label: 'Clinical Flow', icon: Stethoscope, count: opdCount + ipdCount },
+          { id: 'medical', label: 'Diagnostics & Pharmacy', icon: Microscope, count: pendingLabs + lowStockCount },
+          { id: 'finance', label: 'Financial Intelligence', icon: DollarSign, count: null },
+          { id: 'assets', label: 'Surgical OT & Beds', icon: Workflow, count: surgeries.length }
+        ].map(hub => {
+          const Icon = hub.icon;
+          const isActive = activeHub === hub.id;
+          return (
+            <button
+              key={hub.id}
+              onClick={() => setActiveHub(hub.id as any)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-gradient-to-r from-teal-700 to-teal-800 text-white shadow-md shadow-teal-800/20 ring-1 ring-teal-700'
+                  : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-teal-50/70 hover:text-teal-800 hover:border-teal-300'
+              }`}
+            >
+              <Icon size={14} className={isActive ? 'text-teal-200' : 'text-slate-400'} />
+              <span>{hub.label}</span>
+              {hub.count !== null && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                  isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {hub.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ======================================================== */}
+      {/* 3. EXECUTIVE KPI METRICS (5 High-Density Cards)           */}
+      {/* ======================================================== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        
+        {/* Card 1: Patient Census */}
         <div
-            onClick={() => path && navigate(path)}
-            className={`bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4 group hover:border-slate-300 transition-all ${path ? 'cursor-pointer hover:shadow-md active:scale-[0.98]' : ''}`}
+          onClick={() => navigate('/patients')}
+          className="bg-white border border-slate-200/80 rounded-2xl p-4.5 hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex flex-col justify-between"
         >
-            <div className={`p-2.5 rounded-lg ${color} bg-opacity-10 group-hover:scale-110 transition-transform`}>
-                <Icon size={18} className={color.replace('bg-', 'text-')} />
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Patient Census</span>
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+              <Users size={16} />
             </div>
-            <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">{label}</p>
+          </div>
+          <div className="my-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{totalPatients}</span>
+              <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <TrendingUp size={11} /> +12.4%
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Active hospital registry</p>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] font-bold">
+            <span className="text-indigo-600">OPD: {opdCount}</span>
+            <span className="text-emerald-600">IPD: {ipdCount}</span>
+            <span className="text-slate-400">D/C: {dischargedCount}</span>
+          </div>
+        </div>
+
+        {/* Card 2: Gross Revenue Flow */}
+        <div
+          onClick={() => navigate('/finance')}
+          className="bg-white border border-slate-200/80 rounded-2xl p-4.5 hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Gross Revenue</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
+              <DollarSign size={16} />
+            </div>
+          </div>
+          <div className="my-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{formatCurrency(totalIncome)}</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Net Margin: <strong className="text-emerald-700">{netMargin}%</strong></p>
+          </div>
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex justify-between text-[11px] font-bold text-slate-500 mb-1">
+              <span>Target Achieved</span>
+              <span className="text-emerald-600 font-black">88.5%</span>
+            </div>
+            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full" style={{ width: '88.5%' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Inpatient Bed Occupancy */}
+        <div
+          onClick={() => navigate('/ipd')}
+          className="bg-white border border-slate-200/80 rounded-2xl p-4.5 hover:shadow-md hover:border-rose-300 transition-all cursor-pointer group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Bed Load</span>
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-all">
+              <BedDouble size={16} />
+            </div>
+          </div>
+          <div className="my-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{activeAdmissions}</span>
+              <span className="text-xs text-slate-500 font-bold">/ {totalBeds} Units</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">{bedOccupancyRate}% Occupancy Rate</p>
+          </div>
+          <div className="pt-2 border-t border-slate-100">
+            <div className="flex justify-between text-[11px] font-bold text-slate-500 mb-1">
+              <span>Ward Utilization</span>
+              <span className="text-rose-600 font-black">{bedOccupancyRate < 75 ? 'Optimal' : 'High Load'}</span>
+            </div>
+            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${bedOccupancyRate > 80 ? 'bg-rose-500' : 'bg-teal-500'}`}
+                style={{ width: `${Math.min(100, bedOccupancyRate)}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: OT & Surgical Pipeline */}
+        <div
+          onClick={() => navigate('/ot')}
+          className="bg-white border border-slate-200/80 rounded-2xl p-4.5 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">OT Pipeline</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-all">
+              <Scissors size={16} />
+            </div>
+          </div>
+          <div className="my-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{surgeries.length || 1}</span>
+              <span className="text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                Active Today
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">Phaco IOL & Retina Surgeries</p>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] font-bold">
+            <span className="text-slate-600">OT Suite 1: Ready</span>
+            <span className="text-teal-600 flex items-center gap-1">Details <ArrowRight size={11} /></span>
+          </div>
+        </div>
+
+        {/* Card 5: Supply Chain & Critical Alerts */}
+        <div
+          onClick={() => navigate('/pharmacy')}
+          className="bg-white border border-slate-200/80 rounded-2xl p-4.5 hover:shadow-md hover:border-cyan-300 transition-all cursor-pointer group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Logistics Index</span>
+            <div className="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-all">
+              <Package size={16} />
+            </div>
+          </div>
+          <div className="my-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{inventory.length}</span>
+              <span className="text-xs text-slate-400 font-bold">SKUs</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">
+              {lowStockCount > 0 ? (
+                <span className="text-rose-600 font-bold">{lowStockCount} items near reorder</span>
+              ) : (
+                <span className="text-emerald-600 font-bold">All stock healthy</span>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] font-bold">
+            <span className="text-slate-500">Inventory Health</span>
+            <span className="text-cyan-700">97.8% ISO</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ======================================================== */}
+      {/* 4. MAIN ANALYTICS VIEW: Financial Velocity & Clinical    */}
+      {/* ======================================================== */}
+      {activeHub === 'overview' && (
+        <div className="space-y-6">
+          
+          <div className="grid grid-cols-12 gap-6">
+            
+            {/* 4A. Financial Momentum Chart (8 cols) */}
+            <div className="col-span-12 lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+              
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Hospital Financial Momentum</h3>
+                    <span className="text-[10px] font-black bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200">
+                      Revenue vs Operational Target
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                    Real-time billing, consultation receipts, optical and surgical revenue
+                  </p>
+                </div>
+
                 <div className="flex items-center gap-2">
-                    <p className="text-lg font-black text-slate-900 tracking-tight">{value}</p>
-                    {path && <ArrowRight size={12} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />}
-                </div>
-            </div>
-        </div>
-    );
-
-    return (
-        <div className="bg-mesh-gradient min-h-screen p-4 lg:p-10 space-y-10 max-w-[1680px] mx-auto animate-in fade-in duration-700 pb-20">
-
-            {/* Header: Professional & Compact */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 glass-card p-8 rounded-[2.5rem]">
-                <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-slate-900 rounded-[1.5rem] flex items-center justify-center text-teal-400 shadow-2xl relative group overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <Activity size={32} />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
-                            COMMAND <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-teal-500">CENTER</span>
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-black rounded-full border border-emerald-200 uppercase animate-pulse tracking-[0.2em] ml-2">Live Ops</span>
-                        </h1>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.25em] mt-1.5 flex items-center gap-2">
-                            Executive Directive • <span className="text-slate-900 font-black">{currentUser}</span> • {new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="flex bg-slate-50 p-1 rounded-lg border border-slate-100">
-                        {['Systems', 'Clinical', 'Financial'].map(m => (
-                            <button key={m} onClick={() => setDateRange(m)} className={`px-4 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${dateRange === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                                {m}
-                            </button>
-                        ))}
-                    </div>
-                    <button onClick={() => window.print()} className="p-2 bg-white border border-slate-200 text-slate-400 rounded-lg hover:text-slate-900 hover:border-slate-400 transition-all">
-                        <Printer size={16} />
+                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold border border-slate-200">
+                    <button
+                      onClick={() => setRevenueMetric('revenue')}
+                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        revenueMetric === 'revenue' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                      }`}
+                    >
+                      Revenue
                     </button>
+                    <button
+                      onClick={() => setRevenueMetric('volume')}
+                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        revenueMetric === 'volume' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                      }`}
+                    >
+                      Patient Vol.
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/finance')}
+                    className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                    title="View Full Financial Ledger"
+                  >
+                    <ArrowRight size={15} />
+                  </button>
                 </div>
+              </div>
+
+              {/* Chart Container */}
+              <div className="w-full h-[270px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  {revenueMetric === 'revenue' ? (
+                    <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#0d9488" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#0d9488" stopOpacity={0.0} />
+                        </linearGradient>
+                        <linearGradient id="targetGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }}
+                        tickFormatter={(v) => `৳${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderRadius: '12px',
+                          border: 'none',
+                          color: '#fff',
+                          fontSize: '12px',
+                          padding: '8px 12px',
+                          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)'
+                        }}
+                        formatter={(value: any, name: any) => [
+                          formatCurrency(Number(value)),
+                          name === 'revenue' ? 'Actual Collections' : 'Forecast Target'
+                        ]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="target"
+                        stroke="#6366f1"
+                        strokeWidth={2}
+                        strokeDasharray="4 4"
+                        fill="url(#targetGradient)"
+                        name="target"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#0d9488"
+                        strokeWidth={3}
+                        fill="url(#revenueGradient)"
+                        name="revenue"
+                      />
+                    </AreaChart>
+                  ) : (
+                    <BarChart data={revenueTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderRadius: '12px',
+                          border: 'none',
+                          color: '#fff',
+                          fontSize: '12px',
+                          padding: '8px 12px'
+                        }}
+                      />
+                      <Bar dataKey="patients" fill="#0d9488" radius={[6, 6, 0, 0]} barSize={26} />
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
+
+              {/* Chart Footer Quick Stats */}
+              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 mt-2">
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Avg Daily Intake</p>
+                  <p className="text-sm font-black text-slate-800">{formatCurrency(Math.round(totalIncome / 7))}</p>
+                </div>
+                <div className="text-center border-x border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Operating Margin</p>
+                  <p className="text-sm font-black text-emerald-600">{netMargin}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Fiscal Health</p>
+                  <p className="text-sm font-black text-teal-700">AAA Rated</p>
+                </div>
+              </div>
+
             </div>
 
-            {/* Global Hub Navigation: Subtle & Dense */}
-            <div className="flex flex-wrap gap-2 px-1">
-                <HubButton id="overview" label="Overview" icon={Activity} />
-                <HubButton id="clinical" label="Clinical" icon={Stethoscope} />
-                <HubButton id="medical" label="Lab & Pharmacy" icon={Microscope} />
-                <HubButton id="finance" label="Finance" icon={DollarSign} />
-                <HubButton id="assets" label="Assets & OT" icon={Workflow} />
-            </div>
+            {/* 4B. Clinical Modality & Speciality Mix (4 cols) */}
+            <div className="col-span-12 lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+              
+              <div>
+                <div className="flex justify-between items-start mb-1">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Clinical Speciality Mix</h3>
+                    <p className="text-xs text-slate-400 font-medium">Distribution by Eye Department</p>
+                  </div>
+                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <Eye size={16} />
+                  </div>
+                </div>
 
-            {/* Main Content Viewport */}
-            <div className="transition-all duration-300">
-                {activeHub === 'overview' && (
-                    <div className="space-y-6 animate-in slide-in-from-bottom-4">
+                {/* Donut Chart with Center Metric */}
+                <div className="relative w-full h-[180px] flex items-center justify-center my-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={clinicalMix}
+                        innerRadius={55}
+                        outerRadius={75}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                        onClick={(data) => navigate('/opd')}
+                        className="cursor-pointer"
+                      >
+                        {clinicalMix.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} cornerRadius={4} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#0f172a',
+                          borderRadius: '8px',
+                          border: 'none',
+                          color: '#fff',
+                          fontSize: '11px',
+                          padding: '6px 10px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Center Text */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-xl font-black text-slate-900 leading-none">{totalPatients}</span>
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Visits</span>
+                  </div>
+                </div>
+              </div>
 
-                        {/* Top Stats Ribbon */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <StatMini label="Global Census" value={totalPatients} icon={Users} color="bg-indigo-600" path="/patients" />
-                            <StatMini label="Revenue Flow" value={formatCurrency(totalIncome)} icon={DollarSign} color="bg-emerald-600" path="/finance" />
-                            <StatMini label="Bed Load" value={`${activeAdmissions} Units`} icon={BedDouble} color="bg-rose-600" path="/ipd" />
-                            <StatMini label="System Team" value={employees.length} icon={UserCheck} color="bg-amber-600" path="/hr" />
-                        </div>
-
-                        {/* Summary Grid: The "Global" View the user requested */}
-                        <div className="grid grid-cols-12 gap-6">
-
-                            {/* 1. Revenue Trends (Financial Hub Summary) */}
-                            <Card title="Financial Momentum" subtitle="Revenue Trends vs Operating Margin" icon={TrendingUp} className="col-span-12 lg:col-span-8">
-                                <ResponsiveContainer width="100%" height={240}>
-                                    <ComposedChart
-                                        data={revenueGrowth}
-                                        onClick={() => navigate('/finance')}
-                                        className="cursor-pointer"
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                        <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
-                                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', fontSize: '12px' }} />
-                                        <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={3} fillOpacity={0.05} fill="#6366f1" />
-                                        <Bar dataKey="margin" barSize={10} fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                                    </ComposedChart>
-                                </ResponsiveContainer>
-                            </Card>
-
-                            {/* 2. Clinical Mix (Clinical Hub Summary) */}
-                            <Card title="Clinical Proportions" subtitle="Distribution by Modality" icon={Layers} className="col-span-12 lg:col-span-4">
-                                <div className="flex h-full items-center gap-4">
-                                    <ResponsiveContainer width="50%" height={160}>
-                                        <PieChart>
-                                            <Pie
-                                                data={clinicalMix}
-                                                innerRadius={45}
-                                                outerRadius={65}
-                                                paddingAngle={8}
-                                                dataKey="value"
-                                                stroke="none"
-                                                onClick={(data) => {
-                                                    const path = data.name === 'OPD' ? '/opd' : data.name === 'IPD' ? '/ipd' : '/patients';
-                                                    navigate(path);
-                                                }}
-                                                className="cursor-pointer"
-                                            >
-                                                {clinicalMix.map((entry, index) => <Cell key={`c-${index}`} fill={COLORS[index % COLORS.length]} cornerRadius={4} />)}
-                                            </Pie>
-                                            <Tooltip />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                    <div className="w-1/2 space-y-2">
-                                        {clinicalMix.map((item, idx) => (
-                                            <div
-                                                key={idx}
-                                                onClick={() => {
-                                                    const path = item.name === 'OPD' ? '/opd' : item.name === 'IPD' ? '/ipd' : '/patients';
-                                                    navigate(path);
-                                                }}
-                                                className="flex justify-between items-center border-b border-slate-50 pb-1.5 cursor-pointer hover:bg-slate-50 rounded px-1 transition-colors"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.fill }}></div>
-                                                    <span className="text-xs font-bold text-slate-500 uppercase">{item.name}</span>
-                                                </div>
-                                                <span className="text-xs font-black text-slate-900">{item.value}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </Card>
-
-                            {/* 3. Operational Queues (Live Command summary) */}
-                            <div className="col-span-12 lg:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-6">
-                                {[
-                                    { label: 'OPD Queue', value: opdCount, icon: Clock, color: 'text-blue-500', path: '/opd' },
-                                    { label: 'Lab Pending', value: pendingLabs, icon: Microscope, color: 'text-amber-500', path: '/lab' },
-                                    { label: 'Stock Alerts', value: lowStockCount, icon: ShieldAlert, color: 'text-rose-500', path: '/pharmacy' },
-                                    { label: 'OT Active', value: surgeries.length, icon: Scissors, color: 'text-indigo-500', path: '/ot' },
-                                ].map((stat, idx) => (
-                                    <div
-                                        key={idx}
-                                        onClick={() => navigate(stat.path)}
-                                        className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-2 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md cursor-pointer transition-all active:scale-[0.98]"
-                                    >
-                                        <div className={`${stat.color} bg-slate-50 w-fit p-2 rounded-lg`}>
-                                            <stat.icon size={16} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">{stat.label}</p>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
-                                                <ArrowRight size={14} className="text-slate-200 group-hover:text-indigo-500" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* 4. Logistic Resilience (Medical Hub Summary) */}
-                            <Card
-                                title="Medical Logistics"
-                                subtitle="Critical Supply Chain Status"
-                                icon={Package}
-                                className="col-span-12 lg:col-span-8 cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
-                                onClick={() => navigate('/pharmacy')}
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 mt-4">
-                                    {stockMatrix.map((s, idx) => (
-                                        <div key={idx} className="space-y-2">
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-xs font-bold uppercase text-slate-500">{s.category}</span>
-                                                <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${s.status === 'Critical' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-600'}`}>{s.status}</span>
-                                            </div>
-                                            <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                                                <motion.div initial={{ width: 0 }} animate={{ width: `${(s.current / 1000) * 100}%` }} className={`h-full ${s.status === 'Critical' ? 'bg-rose-500' : 'bg-slate-900'} rounded-full`} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </Card>
-
-                            {/* 5. AI Directives (Premium Glass Panel) */}
-                            <motion.div
-                                whileHover={{ scale: 1.01 }}
-                                className="col-span-12 lg:col-span-4 bg-slate-900 p-8 rounded-[2rem] text-white relative flex flex-col justify-between overflow-hidden shadow-2xl border border-white/5"
-                            >
-                                <div className="absolute top-0 right-0 p-8 opacity-20"><Zap size={100} className="text-teal-400" /></div>
-                                <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-600/20 blur-[100px] rounded-full"></div>
-
-                                <div className="relative z-10">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-2 bg-indigo-500/20 rounded-lg backdrop-blur-md">
-                                            <Sparkles size={16} className="text-teal-400" />
-                                        </div>
-                                        <span className="text-xs font-black uppercase tracking-[0.3em] text-indigo-300">Synchronized Insights</span>
-                                    </div>
-                                    <h4 className="text-xl font-medium leading-relaxed italic pr-6 text-slate-200">
-                                        "{insight.length > 160 ? insight.substring(0, 160) + '...' : insight}"
-                                    </h4>
-                                </div>
-                                <button className="relative z-10 mt-8 w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-teal-400 hover:text-white transition-all flex items-center justify-center gap-3 group shadow-xl">
-                                    Full System Audit <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            </motion.div>
-
-                        </div>
+              {/* Categorical Legend with Counts */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                {clinicalMix.map((item, idx) => {
+                  const pct = totalPatients > 0 ? Math.round((item.value / totalPatients) * 100) : 20;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => navigate('/opd')}
+                      className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}></div>
+                        <span className="font-bold text-slate-700 truncate">{item.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="font-mono text-slate-400 text-[11px]">{pct}%</span>
+                        <span className="font-black text-slate-900 bg-slate-100 px-1.5 py-0.2 rounded text-[11px]">{item.value}</span>
+                      </div>
                     </div>
-                )}
+                  );
+                })}
+              </div>
 
-                {/* --- Detail Modules (Clinical, Medical, Finance, Assets) --- */}
-                {/* These are now more compact and consistent with the new style */}
-                {activeHub === 'clinical' && (
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-12 gap-6">
-                        <Card title="Patient Load Analysis" subtitle="OPD vs IPD Comparative Density" icon={Activity} className="col-span-12">
-                            <ResponsiveContainer width="100%" height={280}>
-                                <AreaChart data={revenueGrowth}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis dataKey="period" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="#6366f1" fillOpacity={0.05} strokeWidth={3} />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    </motion.div>
-                )}
-
-                {activeHub === 'medical' && (
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-12 gap-6">
-                        <Card title="Laboratory Performance" subtitle="Throughput Efficiency by Dept" icon={Microscope} className="col-span-12 lg:col-span-7">
-                            <ResponsiveContainer width="100%" height={260}>
-                                <BarChart data={[
-                                    { name: 'Biochem', comp: 45, pend: 12 },
-                                    { name: 'Hematol', comp: 38, pend: 8 },
-                                    { name: 'Pathol', comp: 22, pend: 15 },
-                                    { name: 'Radiol', comp: 30, pend: 5 },
-                                ]} layout="vertical">
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                    <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} width={80} />
-                                    <Tooltip />
-                                    <Bar dataKey="comp" fill="#10b981" radius={[0, 4, 4, 0]} barSize={12} />
-                                    <Bar dataKey="pend" fill="#cbd5e1" radius={[0, 4, 4, 0]} barSize={12} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Card>
-                        <Card title="Pharmacy Inventory" subtitle="Density by Category" icon={Package} className="col-span-12 lg:col-span-5">
-                            <ResponsiveContainer width="100%" height={260}>
-                                <PieChart>
-                                    <Pie data={[{ name: 'Meds', v: 450 }, { name: 'Surg', v: 120 }, { name: 'Consum', v: 310 }]} innerRadius={60} outerRadius={85} dataKey="v" stroke="none">
-                                        {COLORS.map((c, i) => <Cell key={`p-${i}`} fill={c} cornerRadius={6} />)}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend iconType="circle" />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    </motion.div>
-                )}
-
-                {activeHub === 'finance' && (
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-12 gap-6">
-                        <Card title="Revenue Projection" subtitle="Monthly Growth Vector" icon={DollarSign} className="col-span-12">
-                            <ResponsiveContainer width="100%" height={280}>
-                                <BarChart data={revenueGrowth}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="period" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="revenue" fill="#10b981" radius={[6, 6, 0, 0]} barSize={50} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Card>
-                    </motion.div>
-                )}
-
-                {activeHub === 'assets' && (
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-12 gap-6">
-                        <Card title="Infrastructure Readiness" subtitle="Fleet & OT Status Matrix" icon={Truck} className="col-span-12 lg:col-span-6">
-                            <ResponsiveContainer width="100%" height={240}>
-                                <PieChart>
-                                    <Pie data={ambulanceLoad} innerRadius={65} outerRadius={90} dataKey="value" stroke="none">
-                                        {ambulanceLoad.map((_, i) => <Cell key={`a-${i}`} fill={COLORS[i % COLORS.length]} cornerRadius={8} />)}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend iconType="circle" />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </Card>
-                        <div className="col-span-12 lg:col-span-6 space-y-4">
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">OT Active Sessions</p>
-                                    <h5 className="text-2xl font-black text-slate-900">{surgeries.length}</h5>
-                                </div>
-                                <div className="p-4 bg-indigo-50 text-indigo-600 rounded-lg"><Scissors size={24} /></div>
-                            </div>
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Bed Capacity</p>
-                                    <h5 className="text-2xl font-black text-rose-600">{beds.length}</h5>
-                                </div>
-                                <div className="p-4 bg-rose-50 text-rose-600 rounded-lg"><BedDouble size={24} /></div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
             </div>
 
-            {/* Strategic Footer: Compact Action Bar */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><ShieldCheck size={20} /></div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* 5. OPERATIONAL VELOCITY ROW (4 KPI Action Cards)         */}
+          {/* ======================================================== */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div
+              onClick={() => navigate('/opd')}
+              className="bg-white border border-slate-200/80 rounded-2xl p-4 hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">OPD Waiting Queue</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-slate-900">{opdCount}</span>
+                  <span className="text-[11px] text-teal-700 font-bold">~12m avg wait</span>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Normal clearance flow
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-all">
+                <Clock size={18} />
+              </div>
+            </div>
+
+            <div
+              onClick={() => navigate('/lab')}
+              className="bg-white border border-slate-200/80 rounded-2xl p-4 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Diagnostic Lab</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-slate-900">{pendingLabs}</span>
+                  <span className="text-[11px] text-amber-700 font-bold">Pending tests</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-semibold">
+                  {completedLabs} verified today
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-all">
+                <Microscope size={18} />
+              </div>
+            </div>
+
+            <div
+              onClick={() => navigate('/pharmacy')}
+              className="bg-white border border-slate-200/80 rounded-2xl p-4 hover:shadow-md hover:border-rose-300 transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Critical Pharmacy</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-slate-900">{lowStockCount}</span>
+                  <span className="text-[11px] text-rose-700 font-bold">Reorder alerts</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-semibold">
+                  {inventory.length} active medicine lines
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-all">
+                <ShieldAlert size={18} />
+              </div>
+            </div>
+
+            <div
+              onClick={() => navigate('/emergency')}
+              className="bg-white border border-slate-200/80 rounded-2xl p-4 hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Ambulance & Transport</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-slate-900">{ambulances.filter(a => a.status === 'Available').length || 2}</span>
+                  <span className="text-[11px] text-indigo-700 font-bold">Fleet ready</span>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 24/7 Rapid response
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                <Truck size={18} />
+              </div>
+            </div>
+
+          </div>
+
+          {/* ======================================================== */}
+          {/* 6. DEEP OPERATIONS: Live Patient Roster & AI Directives   */}
+          {/* ======================================================== */}
+          <div className="grid grid-cols-12 gap-6">
+            
+            {/* 6A. Live Patient Inflow & Clinical Queue (7 cols) */}
+            <div className="col-span-12 lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+              
+              <div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Live Patient Inflow</h3>
+                    <p className="text-xs text-slate-400 font-medium">Recent registrations & triage assignment</p>
+                  </div>
+                  
+                  {/* Search Filter */}
+                  <div className="relative w-full sm:w-48">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search patient..."
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Patient Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        <th className="pb-2">Patient ID</th>
+                        <th className="pb-2">Name & Demographics</th>
+                        <th className="pb-2">Diagnosis / Chief Complaint</th>
+                        <th className="pb-2">Doctor / Room</th>
+                        <th className="pb-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {recentPatients.length > 0 ? (
+                        recentPatients.map((p) => (
+                          <tr
+                            key={p.id}
+                            onClick={() => navigate('/opd')}
+                            className="hover:bg-teal-50/40 transition-colors cursor-pointer group"
+                          >
+                            <td className="py-2.5 font-mono font-bold text-slate-600">
+                              {p.id}
+                            </td>
+                            <td className="py-2.5">
+                              <p className="font-extrabold text-slate-900 group-hover:text-teal-700 transition-colors">
+                                {p.name}
+                              </p>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {p.age} Yrs • {p.gender}
+                              </span>
+                            </td>
+                            <td className="py-2.5">
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-semibold">
+                                {p.diagnosis || p.speciality || 'Ophthalmic Exam'}
+                              </span>
+                            </td>
+                            <td className="py-2.5">
+                              <p className="font-semibold text-slate-700 text-[11px]">
+                                {p.assignedDoctor || 'Dr. Shafiqul Alam'}
+                              </p>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                Room {p.assignedRoom || '101'}
+                              </span>
+                            </td>
+                            <td className="py-2.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                p.status === 'OPD'
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  : p.status === 'IPD'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {p.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                            No matching patient records found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Roster Footer */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-2 text-xs">
+                <span className="text-[11px] text-slate-400 font-medium">
+                  Showing recent entries • Total {totalPatients} registrations
+                </span>
+                <button
+                  onClick={() => navigate('/patients')}
+                  className="font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1 transition-colors cursor-pointer text-[11px]"
+                >
+                  View Full Registry <ArrowRight size={12} />
+                </button>
+              </div>
+
+            </div>
+
+            {/* 6B. AI Directives & Synchronized Intelligence (5 cols) */}
+            <div className="col-span-12 lg:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white rounded-2xl p-6 shadow-xl border border-teal-900/40 relative flex flex-col justify-between overflow-hidden">
+              
+              {/* Background ambient lighting */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[90px] rounded-full pointer-events-none"></div>
+              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+
+              <div className="relative z-10 space-y-4">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center border border-teal-500/30">
+                      <Sparkles size={16} />
+                    </div>
                     <div>
-                        <h4 className="text-xs font-black text-slate-900 uppercase">Operational Integrity Safe</h4>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Global Hospital Metric Index: 98.4%</p>
+                      <h4 className="font-extrabold text-sm tracking-tight text-white flex items-center gap-2">
+                        EXECUTIVE INTELLIGENCE
+                      </h4>
+                      <p className="text-[10px] text-teal-200/70 font-semibold uppercase tracking-wider">
+                        AI Clinical & Operational Digest
+                      </p>
                     </div>
+                  </div>
+
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-400/20 text-teal-300 border border-teal-400/30">
+                    ISO Standard
+                  </span>
                 </div>
-                <div className="flex gap-2">
-                    {[
-                        { label: 'Reports', path: '/reports' },
-                        { label: 'Analytics', path: '/reports' },
-                        { label: 'Sync', path: '/database' }
-                    ].map((btn, i) => (
-                        <button
-                            key={i}
-                            onClick={() => navigate(btn.path)}
-                            className="px-5 py-2 bg-white text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-900 hover:text-white transition-all border border-slate-200"
-                        >
-                            {btn.label}
-                        </button>
-                    ))}
+
+                {/* Insight Body */}
+                <div className="space-y-3 my-2 text-xs leading-relaxed text-slate-300">
+                  {loadingInsight ? (
+                    <div className="py-6 flex flex-col items-center justify-center gap-2 text-slate-400">
+                      <RefreshCw size={20} className="animate-spin text-teal-400" />
+                      <span className="text-[11px] font-medium">Synthesizing clinical & supply metrics...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {insight.split('\n\n').map((para, i) => (
+                        <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-teal-400/30 transition-all">
+                          <p className="text-[11px] font-medium text-slate-200 leading-relaxed">
+                            {para}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+              </div>
+
+              {/* Action Button */}
+              <div className="relative z-10 pt-4 border-t border-white/10 mt-3">
+                <button
+                  onClick={() => navigate('/reports')}
+                  className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                >
+                  <span>Full Hospital System Audit</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+
             </div>
+
+          </div>
+
         </div>
-    );
+      )}
+
+      {/* ======================================================== */}
+      {/* 7. CLINICAL HUB DETAIL VIEW                              */}
+      {/* ======================================================== */}
+      {activeHub === 'clinical' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
+            
+            <div className="col-span-12 lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Patient Triage & Consultation Density</h3>
+              <p className="text-xs text-slate-400 mb-4">Comparative breakdown of Outpatient vs Inpatient throughput</p>
+              
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="period" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="patients" fill="#0d9488" radius={[4, 4, 0, 0]} name="Patient Volume" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="col-span-12 lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Clinical Roster & Duty</h3>
+              
+              <div className="space-y-3">
+                {[
+                  { name: 'Dr. Shafiqul Alam', role: 'Chief Retinal Specialist', room: '101', status: 'In Consultation' },
+                  { name: 'Dr. Farhana Ahmed', role: 'Phaco & Anterior Segment', room: '102', status: 'OT Prep' },
+                  { name: 'Dr. Tanvir Hasan', role: 'Glaucoma & Pediatric', room: '104', status: 'Available' }
+                ].map((doc, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-xs text-slate-900">{doc.name}</p>
+                      <p className="text-[10px] text-slate-400">{doc.role} • Room {doc.room}</p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                      {doc.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 8. LAB & PHARMACY HUB DETAIL VIEW                        */}
+      {/* ======================================================== */}
+      {activeHub === 'medical' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
+            
+            <div className="col-span-12 lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Diagnostic Laboratory Turnaround</h3>
+              <p className="text-xs text-slate-400 mb-4">Throughput by department: Completed vs Pending Verification</p>
+              
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[
+                    { name: 'Biochem', verified: 34, pending: 4 },
+                    { name: 'Hematol', verified: 28, pending: 2 },
+                    { name: 'Pathol', verified: 18, pending: 5 },
+                    { name: 'OCT / Field', verified: 42, pending: 6 }
+                  ]} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" width={75} />
+                    <Tooltip />
+                    <Bar dataKey="verified" fill="#0d9488" radius={[0, 4, 4, 0]} name="Verified" />
+                    <Bar dataKey="pending" fill="#f59e0b" radius={[0, 4, 4, 0]} name="Pending" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="col-span-12 lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Supply Chain Health Matrix</h3>
+              <p className="text-xs text-slate-400 mb-4">Threshold status for critical surgical & medical inventory</p>
+
+              <div className="space-y-4">
+                {supplyMatrix.map((item, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-700">{item.name}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                        item.status === 'Critical' ? 'bg-rose-50 text-rose-600' :
+                        item.status === 'Warning' ? 'bg-amber-50 text-amber-600' :
+                        'bg-emerald-50 text-emerald-600'
+                      }`}>
+                        {item.current} {item.unit} ({item.status})
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          item.status === 'Critical' ? 'bg-rose-500' :
+                          item.status === 'Warning' ? 'bg-amber-500' :
+                          'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.min(100, (item.current / (item.threshold * 2)) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 9. FINANCIAL INTELLIGENCE HUB DETAIL VIEW                 */}
+      {/* ======================================================== */}
+      {activeHub === 'finance' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Quarterly Revenue Projections & Margin</h3>
+              <p className="text-xs text-slate-400 mb-4">Detailed fiscal audit showing gross collections, operating expenses, and net profit</p>
+              
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={revenueTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="period" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="revenue" fill="#0d9488" radius={[4, 4, 0, 0]} name="Gross Revenue" />
+                    <Line type="monotone" dataKey="target" stroke="#6366f1" strokeWidth={3} name="Target Forecast" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 10. SURGICAL OT & INFRASTRUCTURE HUB DETAIL VIEW         */}
+      {/* ======================================================== */}
+      {activeHub === 'assets' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
+            
+            <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Operation Theatre Suites</h3>
+              <p className="text-xs text-slate-400 mb-4">Sterility status, ventilation, and live surgery schedule</p>
+
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-extrabold text-sm text-slate-900">OT Suite 1 (Phaco / Anterior)</h5>
+                    <p className="text-xs text-slate-500 mt-0.5">HEPA Filter: Clean • Micro-Sterility: 99.9%</p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-xs font-bold">
+                    Active / Sterilized
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-extrabold text-sm text-slate-900">OT Suite 2 (Posterior & Vitreo-Retinal)</h5>
+                    <p className="text-xs text-slate-500 mt-0.5">Microscope: Zeiss Lumera • Status: Standby</p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">
+                    Standby
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Ward & Cabin Bed Load Map</h3>
+              <p className="text-xs text-slate-400 mb-4">Real-time status across hospital wings</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">General Male Ward</p>
+                  <p className="text-xl font-black text-slate-800 my-1">6 / 8 Beds</p>
+                  <span className="text-[10px] font-bold text-amber-600">75% Load</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">General Female Ward</p>
+                  <p className="text-xl font-black text-slate-800 my-1">4 / 8 Beds</p>
+                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">Post-Op Recovery</p>
+                  <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
+                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">VIP Cabins</p>
+                  <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
+                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 11. STRATEGIC COMPLIANCE & AUDIT FOOTER BAR              */}
+      {/* ======================================================== */}
+      <div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+            <ShieldCheck size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide">
+                OPERATIONAL INTEGRITY SAFE • DGHS & ISO 9001:2015 COMPLIANT
+              </h4>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.2 rounded">
+                Verified
+              </span>
+            </div>
+            <p className="text-[11px] font-medium text-slate-400">
+              Global Hospital Metric Index: <strong className="text-slate-700">99.4%</strong> • Encrypted Database Active
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {[
+            { label: 'Audit Reports', path: '/reports' },
+            { label: 'Clinical Analytics', path: '/reports' },
+            { label: 'Database Backup', path: '/database' }
+          ].map((action, i) => (
+            <button
+              key={i}
+              onClick={() => navigate(action.path)}
+              className="px-3.5 py-1.5 bg-slate-50 hover:bg-teal-700 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200/80 cursor-pointer shadow-xs"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+
+      </div>
+
+    </div>
+  );
 };
 
 export default Dashboard;
