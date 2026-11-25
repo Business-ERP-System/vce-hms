@@ -659,7 +659,176 @@ export const MOCK_INVENTORY: InventoryItem[] = [
     ]
   },
 ];
-export const MOCK_APPOINTMENTS = [];
+export const MOCK_APPOINTMENTS: Appointment[] = [
+  {
+    id: 'APT-1001',
+    branchId: 'BR001',
+    patientId: 'P001',
+    patientName: 'Amina Begum',
+    doctorName: 'Dr. Emily Chen',
+    date: '2026-11-25',
+    time: '09:30',
+    type: 'Consultation',
+    status: 'Completed',
+    notes: 'Post-op cataract eval. Visual acuity RE 6/6.'
+  },
+  {
+    id: 'APT-1002',
+    branchId: 'BR001',
+    patientId: 'P002',
+    patientName: 'Mohammad Rafiq',
+    doctorName: 'Dr. Emily Chen',
+    date: '2026-11-25',
+    time: '10:00',
+    type: 'Surgery',
+    status: 'Scheduled',
+    notes: 'Phaco IOL pre-admission consultation.'
+  },
+  {
+    id: 'APT-1003',
+    branchId: 'BR001',
+    patientId: 'P003',
+    patientName: 'Fatema Khatun',
+    doctorName: 'Dr. A. Sharma',
+    date: '2026-11-25',
+    time: '10:30',
+    type: 'Consultation',
+    status: 'Scheduled',
+    notes: 'Corneal topography review & refractive screening.'
+  },
+  {
+    id: 'APT-1004',
+    branchId: 'BR001',
+    patientId: 'P004',
+    patientName: 'Abdul Karim',
+    doctorName: 'Dr. B. Reynolds',
+    date: '2026-11-25',
+    time: '11:00',
+    type: 'Follow-up',
+    status: 'Scheduled',
+    notes: 'Glaucoma IOP follow-up, target IOP < 16 mmHg.'
+  },
+  {
+    id: 'APT-1005',
+    branchId: 'BR001',
+    patientId: 'P005',
+    patientName: 'Taslima Nasrin',
+    doctorName: 'Dr. Sarah Khan',
+    date: '2026-11-25',
+    time: '11:30',
+    type: 'Consultation',
+    status: 'Scheduled',
+    notes: 'Pediatric strabismus & amblyopia evaluation.'
+  },
+  {
+    id: 'APT-1006',
+    branchId: 'BR001',
+    patientId: 'P006',
+    patientName: 'Kamal Hossain',
+    doctorName: 'Dr. M. A. Rahman',
+    date: '2026-11-25',
+    time: '14:00',
+    type: 'Emergency',
+    status: 'Scheduled',
+    notes: 'Sudden vitreous floaters & photopsia LE.'
+  },
+  {
+    id: 'APT-1007',
+    branchId: 'BR001',
+    patientId: 'P007',
+    patientName: 'Shahida Parvin',
+    doctorName: 'Dr. Emily Chen',
+    date: '2026-11-25',
+    time: '15:00',
+    type: 'Consultation',
+    status: 'Scheduled',
+    notes: 'Diabetic retinopathy grading & fundus exam.'
+  },
+  {
+    id: 'APT-1008',
+    branchId: 'BR001',
+    patientId: 'P008',
+    patientName: 'Zahid Hasan',
+    doctorName: 'Dr. A. Sharma',
+    date: '2026-11-25',
+    time: '15:30',
+    type: 'Follow-up',
+    status: 'Scheduled',
+    notes: 'Dry eye management & tear break-up time check.'
+  },
+  {
+    id: 'APT-1009',
+    branchId: 'BR001',
+    patientId: 'P001',
+    patientName: 'Amina Begum',
+    doctorName: 'Dr. Emily Chen',
+    date: '2026-11-26',
+    time: '09:30',
+    type: 'Follow-up',
+    status: 'Scheduled',
+    notes: 'Routine 1-week post-op follow-up.'
+  },
+  {
+    id: 'APT-1010',
+    branchId: 'BR001',
+    patientId: 'P002',
+    patientName: 'Mohammad Rafiq',
+    doctorName: 'Dr. Shafiqul Alam',
+    date: '2026-11-26',
+    time: '11:00',
+    type: 'Surgery',
+    status: 'Scheduled',
+    notes: 'Vitrectomy pre-op mapping.'
+  },
+  {
+    id: 'APT-1011',
+    branchId: 'BR001',
+    patientId: 'P003',
+    patientName: 'Fatema Khatun',
+    doctorName: 'Dr. Sarah Khan',
+    date: '2026-11-26',
+    time: '14:30',
+    type: 'Consultation',
+    status: 'Scheduled',
+    notes: 'Spectacle prescription verification.'
+  },
+  {
+    id: 'APT-1012',
+    branchId: 'BR001',
+    patientId: 'P004',
+    patientName: 'Abdul Karim',
+    doctorName: 'Dr. B. Reynolds',
+    date: '2026-11-27',
+    time: '10:00',
+    type: 'Consultation',
+    status: 'Scheduled',
+    notes: 'Gonioscopy evaluation.'
+  },
+  {
+    id: 'APT-1013',
+    branchId: 'BR001',
+    patientId: 'P005',
+    patientName: 'Taslima Nasrin',
+    doctorName: 'Dr. M. A. Rahman',
+    date: '2026-11-24',
+    time: '10:00',
+    type: 'Consultation',
+    status: 'Completed',
+    notes: 'Fundus fluorescein angiography review.'
+  },
+  {
+    id: 'APT-1014',
+    branchId: 'BR001',
+    patientId: 'P006',
+    patientName: 'Kamal Hossain',
+    doctorName: 'Dr. Emily Chen',
+    date: '2026-11-24',
+    time: '14:00',
+    type: 'Follow-up',
+    status: 'Completed',
+    notes: 'Visual acuity stable.'
+  }
+];
 // Fix: Added missing 'floor' property required by the Bed interface
 export const MOCK_BEDS: Bed[] = [
   { id: 'B101', branchId: 'BR001', number: '101', ward: 'General', floor: 'Ground Floor', status: 'Occupied', patientName: 'John Doe', admissionDate: '2023-10-25' },
@@ -706,6 +875,11 @@ const DEFAULT_SALARY: SalaryStructure = {
 
 export const MOCK_EMPLOYEES: Employee[] = [
   { id: 'EMP001', branchId: 'BR001', name: 'Dr. Emily Chen', role: 'Chief Ophthalmologist', department: 'Clinical', contact: '555-1001', shift: 'Morning', status: 'Active', joiningDate: '2022-01-10', salaryStructure: { ...DEFAULT_SALARY, basic: 85000 } },
+  { id: 'EMP006', branchId: 'BR001', name: 'Dr. Shafiqul Alam', role: 'Doctor', department: 'Clinical', contact: '555-1006', shift: 'Morning', status: 'Active', joiningDate: '2021-06-01', salaryStructure: { ...DEFAULT_SALARY, basic: 90000 } },
+  { id: 'EMP007', branchId: 'BR001', name: 'Dr. A. Sharma', role: 'Doctor', department: 'Clinical', contact: '555-1007', shift: 'Morning', status: 'Active', joiningDate: '2022-08-15', salaryStructure: { ...DEFAULT_SALARY, basic: 75000 } },
+  { id: 'EMP008', branchId: 'BR001', name: 'Dr. Sarah Khan', role: 'Doctor', department: 'Clinical', contact: '555-1008', shift: 'Evening', status: 'Active', joiningDate: '2023-01-10', salaryStructure: { ...DEFAULT_SALARY, basic: 70000 } },
+  { id: 'EMP009', branchId: 'BR001', name: 'Dr. B. Reynolds', role: 'Doctor', department: 'Clinical', contact: '555-1009', shift: 'Morning', status: 'Active', joiningDate: '2022-11-01', salaryStructure: { ...DEFAULT_SALARY, basic: 72000 } },
+  { id: 'EMP010', branchId: 'BR001', name: 'Dr. M. A. Rahman', role: 'Doctor', department: 'Clinical', contact: '555-1010', shift: 'Evening', status: 'Active', joiningDate: '2023-04-12', salaryStructure: { ...DEFAULT_SALARY, basic: 78000 } },
   { id: 'EMP002', branchId: 'BR001', name: 'Sarah Jones', role: 'Senior Nurse', department: 'Clinical', contact: '555-1002', shift: 'Morning', status: 'Active', joiningDate: '2022-03-15', salaryStructure: { ...DEFAULT_SALARY, basic: 35000 } },
   { id: 'EMP003', branchId: 'BR001', name: 'Mike Ross', role: 'Pharmacist', department: 'Pharmacy', contact: '555-1003', shift: 'Evening', status: 'Active', joiningDate: '2023-05-20', salaryStructure: { ...DEFAULT_SALARY, basic: 30000 } },
   { id: 'EMP004', branchId: 'BR001', name: 'Jane Smith', role: 'Reception Manager', department: 'Front Office', contact: '555-1004', shift: 'Morning', status: 'Active', joiningDate: '2023-02-01', salaryStructure: { ...DEFAULT_SALARY, basic: 28000 } },
