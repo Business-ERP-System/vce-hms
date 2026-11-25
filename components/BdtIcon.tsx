@@ -48,3 +48,4 @@ export const BdtIcon: React.FC<BdtIconProps> = ({
 };
 
 export default BdtIcon;
+

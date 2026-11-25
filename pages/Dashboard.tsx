@@ -659,18 +659,16 @@ const Dashboard: React.FC = () => {
         {/* Card 1: Patient Census */}
         <div
           onClick={() => setActiveHub('clinical')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${
-            activeHub === 'clinical'
-              ? 'ring-2 ring-indigo-500 border-indigo-400 bg-indigo-50/15 shadow-md'
-              : 'border-slate-200/80 hover:border-indigo-300'
-          }`}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'clinical'
+            ? 'ring-2 ring-indigo-500 border-indigo-400 bg-indigo-50/15 shadow-md'
+            : 'border-slate-200/80 hover:border-indigo-300'
+            }`}
           title="Click to view Clinical Flow analytics below • Click link to open Patients Directory"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Patient Census</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-              activeHub === 'clinical' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
-            }`}>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'clinical' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
+              }`}>
               <Users size={16} />
             </div>
           </div>
@@ -726,18 +724,16 @@ const Dashboard: React.FC = () => {
         {/* Card 2: Gross Revenue Flow */}
         <div
           onClick={() => setActiveHub('finance')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${
-            activeHub === 'finance'
-              ? 'ring-2 ring-emerald-500 border-emerald-400 bg-emerald-50/15 shadow-md'
-              : 'border-slate-200/80 hover:border-emerald-300'
-          }`}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'finance'
+            ? 'ring-2 ring-emerald-500 border-emerald-400 bg-emerald-50/15 shadow-md'
+            : 'border-slate-200/80 hover:border-emerald-300'
+            }`}
           title="Click to view Financial Intelligence below • Click link to open Ledger"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Gross Revenue</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-              activeHub === 'finance' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
-            }`}>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'finance' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
+              }`}>
               <BdtIcon size={18} />
             </div>
           </div>
@@ -764,18 +760,16 @@ const Dashboard: React.FC = () => {
         {/* Card 3: Inpatient Bed Occupancy */}
         <div
           onClick={() => setActiveHub('assets')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${
-            activeHub === 'assets'
-              ? 'ring-2 ring-rose-500 border-rose-400 bg-rose-50/15 shadow-md'
-              : 'border-slate-200/80 hover:border-rose-300'
-          }`}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'assets'
+            ? 'ring-2 ring-rose-500 border-rose-400 bg-rose-50/15 shadow-md'
+            : 'border-slate-200/80 hover:border-rose-300'
+            }`}
           title="Click to view Ward & Bed Load Map below • Click link to open IPD"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Bed Load</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-              activeHub === 'assets' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white'
-            }`}>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'assets' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white'
+              }`}>
               <BedDouble size={16} />
             </div>
           </div>
@@ -805,18 +799,16 @@ const Dashboard: React.FC = () => {
         {/* Card 4: OT & Surgical Pipeline */}
         <div
           onClick={() => setActiveHub('assets')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${
-            activeHub === 'assets'
-              ? 'ring-2 ring-amber-500 border-amber-400 bg-amber-50/15 shadow-md'
-              : 'border-slate-200/80 hover:border-amber-300'
-          }`}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'assets'
+            ? 'ring-2 ring-amber-500 border-amber-400 bg-amber-50/15 shadow-md'
+            : 'border-slate-200/80 hover:border-amber-300'
+            }`}
           title="Click to view OT schedule below • Click Details to open Operation Theatre"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">OT Pipeline</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-              activeHub === 'assets' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white'
-            }`}>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'assets' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white'
+              }`}>
               <Scissors size={16} />
             </div>
           </div>
@@ -848,18 +840,16 @@ const Dashboard: React.FC = () => {
         {/* Card 5: Supply Chain & Critical Alerts */}
         <div
           onClick={() => setActiveHub('medical')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${
-            activeHub === 'medical'
-              ? 'ring-2 ring-cyan-500 border-cyan-400 bg-cyan-50/15 shadow-md'
-              : 'border-slate-200/80 hover:border-cyan-300'
-          }`}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'medical'
+            ? 'ring-2 ring-cyan-500 border-cyan-400 bg-cyan-50/15 shadow-md'
+            : 'border-slate-200/80 hover:border-cyan-300'
+            }`}
           title="Click to view Diagnostics & Pharmacy below • Click to open Pharmacy Inventory"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Logistics Index</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-              activeHub === 'medical' ? 'bg-cyan-600 text-white' : 'bg-cyan-50 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white'
-            }`}>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'medical' ? 'bg-cyan-600 text-white' : 'bg-cyan-50 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white'
+              }`}>
               <Package size={16} />
             </div>
           </div>
@@ -1316,342 +1306,342 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* 6B. AI Directives & Synchronized Intelligence (5 cols) */}
-              <div className="col-span-12 lg:col-span-5 bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 text-white rounded-2xl p-6 shadow-xl border border-teal-600/40 relative flex flex-col justify-between overflow-hidden">
+            <div className="col-span-12 lg:col-span-5 bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 text-white rounded-2xl p-6 shadow-xl border border-teal-600/40 relative flex flex-col justify-between overflow-hidden">
 
-                {/* Background ambient lighting */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/20 blur-[80px] rounded-full pointer-events-none"></div>
-                <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-teal-300/15 blur-[70px] rounded-full pointer-events-none"></div>
+              {/* Background ambient lighting */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/20 blur-[80px] rounded-full pointer-events-none"></div>
+              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-teal-300/15 blur-[70px] rounded-full pointer-events-none"></div>
 
-                <div className="relative z-10 space-y-4">
+              <div className="relative z-10 space-y-4">
 
-                  {/* Header */}
-                    <div className="flex items-center justify-between border-b border-white/20 pb-3">
-                      <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center border border-white/30 shadow-xs">
-                            <Sparkles size={18} />
-                          </div>
-                          <div>
-                              <h4 className="font-black text-sm tracking-tight text-white flex items-center gap-2">
-                                EXECUTIVE INTELLIGENCE
-                              </h4>
-                                <p className="text-[10px] text-teal-100 font-bold uppercase tracking-wider">
-                                  AI Clinical & Operational Digest
-                                </p>
-                              </div>
-                          </div>
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/20 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center border border-white/30 shadow-xs">
+                      <Sparkles size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm tracking-tight text-white flex items-center gap-2">
+                        EXECUTIVE INTELLIGENCE
+                      </h4>
+                      <p className="text-[10px] text-teal-100 font-bold uppercase tracking-wider">
+                        AI Clinical & Operational Digest
+                      </p>
+                    </div>
+                  </div>
 
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/20 text-white border border-white/30 uppercase tracking-wider">
-                              ISO Standard
-                            </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/20 text-white border border-white/30 uppercase tracking-wider">
+                    ISO Standard
+                  </span>
+                </div>
+
+                {/* Insight Body */}
+                <div className="space-y-2.5 my-2 text-xs leading-relaxed">
+                  {loadingInsight ? (
+                    <div className="py-8 flex flex-col items-center justify-center gap-2 text-teal-100">
+                      <RefreshCw size={20} className="animate-spin text-white" />
+                      <span className="text-[11px] font-medium">Synthesizing clinical & supply metrics...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {insight.split('\n\n').map((para, i) => (
+                        <div key={i} className="p-3 rounded-xl bg-black/20 hover:bg-black/25 border border-white/15 transition-all backdrop-blur-xs">
+                          <p className="text-[11.5px] font-medium text-white leading-relaxed">
+                            {para}
+                          </p>
                         </div>
-
-                        {/* Insight Body */}
-                          <div className="space-y-2.5 my-2 text-xs leading-relaxed">
-                            {loadingInsight ? (
-                                <div className="py-8 flex flex-col items-center justify-center gap-2 text-teal-100">
-                                  <RefreshCw size={20} className="animate-spin text-white" />
-                                  <span className="text-[11px] font-medium">Synthesizing clinical & supply metrics...</span>
-                                </div>
-                                ) : (
-                                <div className="space-y-2.5">
-                                  {insight.split('\n\n').map((para, i) => (
-                                        <div key={i} className="p-3 rounded-xl bg-black/20 hover:bg-black/25 border border-white/15 transition-all backdrop-blur-xs">
-                                          <p className="text-[11.5px] font-medium text-white leading-relaxed">
-                                            {para}
-                                          </p>
-                                        </div>
                       ))}
-                                    </div>
-                                  )}
-                                </div>
+                    </div>
+                  )}
+                </div>
 
-                              </div>
+              </div>
 
               {/* Action Button */}
-                              <div className="relative z-10 pt-4 border-t border-white/20 mt-3">
-                                <button
-                                  onClick={() => navigate('/reports')}
-                                  className="w-full py-3 bg-cyan-400 hover:bg-cyan-300 text-teal-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                                >
-                                  <span>Full Hospital System Audit</span>
-                                  <ArrowRight size={14} />
-                                </button>
-                              </div>
+              <div className="relative z-10 pt-4 border-t border-white/20 mt-3">
+                <button
+                  onClick={() => navigate('/reports')}
+                  className="w-full py-3 bg-cyan-400 hover:bg-cyan-300 text-teal-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                >
+                  <span>Full Hospital System Audit</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
 
-                            </div>
+            </div>
 
-                          </div>
+          </div>
 
-                        </div>
+        </div>
       )}
 
-                        {/* ======================================================== */}
-                        {/* 7. CLINICAL HUB DETAIL VIEW                              */}
-                        {/* ======================================================== */}
-                        {activeHub === 'clinical' && (
-                          <div className="space-y-6 animate-in fade-in duration-300">
-                            <div className="grid grid-cols-12 gap-6">
+      {/* ======================================================== */}
+      {/* 7. CLINICAL HUB DETAIL VIEW                              */}
+      {/* ======================================================== */}
+      {activeHub === 'clinical' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
 
-                              <div className="col-span-12 lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Patient Triage & Consultation Density</h3>
-                                <p className="text-xs text-slate-400 mb-4">Comparative breakdown of Outpatient vs Inpatient throughput</p>
+            <div className="col-span-12 lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Patient Triage & Consultation Density</h3>
+              <p className="text-xs text-slate-400 mb-4">Comparative breakdown of Outpatient vs Inpatient throughput</p>
 
-                                <div className="h-[280px]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={revenueTrendData}>
-                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                      <XAxis dataKey="period" />
-                                      <YAxis />
-                                      <Tooltip />
-                                      <Bar dataKey="patients" fill="#0d9488" radius={[4, 4, 0, 0]} name="Patient Volume" />
-                                    </BarChart>
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="period" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="patients" fill="#0d9488" radius={[4, 4, 0, 0]} name="Patient Volume" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
 
-                              <div className="col-span-12 lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Clinical Roster & Duty</h3>
+            <div className="col-span-12 lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Clinical Roster & Duty</h3>
 
-                                <div className="space-y-3">
-                                  {[
-                                    { name: 'Dr. Shafiqul Alam', role: 'Chief Retinal Specialist', room: '101', status: 'In Consultation' },
-                                    { name: 'Dr. Farhana Ahmed', role: 'Phaco & Anterior Segment', room: '102', status: 'OT Prep' },
-                                    { name: 'Dr. Tanvir Hasan', role: 'Glaucoma & Pediatric', room: '104', status: 'Available' }
-                                  ].map((doc, idx) => (
-                                    <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                                      <div>
-                                        <p className="font-bold text-xs text-slate-900">{doc.name}</p>
-                                        <p className="text-[10px] text-slate-400">{doc.role} • Room {doc.room}</p>
-                                      </div>
-                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
-                                        {doc.status}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+              <div className="space-y-3">
+                {[
+                  { name: 'Dr. Shafiqul Alam', role: 'Chief Retinal Specialist', room: '101', status: 'In Consultation' },
+                  { name: 'Dr. Farhana Ahmed', role: 'Phaco & Anterior Segment', room: '102', status: 'OT Prep' },
+                  { name: 'Dr. Tanvir Hasan', role: 'Glaucoma & Pediatric', room: '104', status: 'Available' }
+                ].map((doc, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-xs text-slate-900">{doc.name}</p>
+                      <p className="text-[10px] text-slate-400">{doc.role} • Room {doc.room}</p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                      {doc.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                            </div>
-                          </div>
-                        )}
+          </div>
+        </div>
+      )}
 
-                        {/* ======================================================== */}
-                        {/* 8. LAB & PHARMACY HUB DETAIL VIEW                        */}
-                        {/* ======================================================== */}
-                        {activeHub === 'medical' && (
-                          <div className="space-y-6 animate-in fade-in duration-300">
-                            <div className="grid grid-cols-12 gap-6">
+      {/* ======================================================== */}
+      {/* 8. LAB & PHARMACY HUB DETAIL VIEW                        */}
+      {/* ======================================================== */}
+      {activeHub === 'medical' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
 
-                              <div className="col-span-12 lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Diagnostic Laboratory Turnaround</h3>
-                                <p className="text-xs text-slate-400 mb-4">Throughput by department: Completed vs Pending Verification</p>
+            <div className="col-span-12 lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Diagnostic Laboratory Turnaround</h3>
+              <p className="text-xs text-slate-400 mb-4">Throughput by department: Completed vs Pending Verification</p>
 
-                                <div className="h-[260px]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={[
-                                      { name: 'Biochem', verified: 34, pending: 4 },
-                                      { name: 'Hematol', verified: 28, pending: 2 },
-                                      { name: 'Pathol', verified: 18, pending: 5 },
-                                      { name: 'OCT / Field', verified: 42, pending: 6 }
-                                    ]} layout="vertical">
-                                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                      <XAxis type="number" />
-                                      <YAxis dataKey="name" type="category" width={75} />
-                                      <Tooltip />
-                                      <Bar dataKey="verified" fill="#0d9488" radius={[0, 4, 4, 0]} name="Verified" />
-                                      <Bar dataKey="pending" fill="#f59e0b" radius={[0, 4, 4, 0]} name="Pending" />
-                                    </BarChart>
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[
+                    { name: 'Biochem', verified: 34, pending: 4 },
+                    { name: 'Hematol', verified: 28, pending: 2 },
+                    { name: 'Pathol', verified: 18, pending: 5 },
+                    { name: 'OCT / Field', verified: 42, pending: 6 }
+                  ]} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" width={75} />
+                    <Tooltip />
+                    <Bar dataKey="verified" fill="#0d9488" radius={[0, 4, 4, 0]} name="Verified" />
+                    <Bar dataKey="pending" fill="#f59e0b" radius={[0, 4, 4, 0]} name="Pending" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
 
-                              <div className="col-span-12 lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Supply Chain Health Matrix</h3>
-                                <p className="text-xs text-slate-400 mb-4">Threshold status for critical surgical & medical inventory</p>
+            <div className="col-span-12 lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Supply Chain Health Matrix</h3>
+              <p className="text-xs text-slate-400 mb-4">Threshold status for critical surgical & medical inventory</p>
 
-                                <div className="space-y-4">
-                                  {supplyMatrix.map((item, idx) => (
-                                    <div key={idx} className="space-y-1.5">
-                                      <div className="flex justify-between items-center text-xs">
-                                        <span className="font-bold text-slate-700">{item.name}</span>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${item.status === 'Critical' ? 'bg-rose-50 text-rose-600' :
-                                          item.status === 'Warning' ? 'bg-amber-50 text-amber-600' :
-                                            'bg-emerald-50 text-emerald-600'
-                                          }`}>
-                                          {item.current} {item.unit} ({item.status})
-                                        </span>
-                                      </div>
-                                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                        <div
-                                          className={`h-full rounded-full ${item.status === 'Critical' ? 'bg-rose-500' :
-                                            item.status === 'Warning' ? 'bg-amber-500' :
-                                              'bg-emerald-500'
-                                            }`}
-                                          style={{ width: `${Math.min(100, (item.current / (item.threshold * 2)) * 100)}%` }}
-                                        ></div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+              <div className="space-y-4">
+                {supplyMatrix.map((item, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-700">{item.name}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${item.status === 'Critical' ? 'bg-rose-50 text-rose-600' :
+                        item.status === 'Warning' ? 'bg-amber-50 text-amber-600' :
+                          'bg-emerald-50 text-emerald-600'
+                        }`}>
+                        {item.current} {item.unit} ({item.status})
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${item.status === 'Critical' ? 'bg-rose-500' :
+                          item.status === 'Warning' ? 'bg-amber-500' :
+                            'bg-emerald-500'
+                          }`}
+                        style={{ width: `${Math.min(100, (item.current / (item.threshold * 2)) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                            </div>
-                          </div>
-                        )}
+          </div>
+        </div>
+      )}
 
-                        {/* ======================================================== */}
-                        {/* 9. FINANCIAL INTELLIGENCE HUB DETAIL VIEW                 */}
-                        {/* ======================================================== */}
-                        {activeHub === 'finance' && (
-                          <div className="space-y-6 animate-in fade-in duration-300">
-                            <div className="grid grid-cols-12 gap-6">
-                              <div className="col-span-12 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Quarterly Revenue Projections & Margin</h3>
-                                <p className="text-xs text-slate-400 mb-4">Detailed fiscal audit showing gross collections, operating expenses, and net profit</p>
+      {/* ======================================================== */}
+      {/* 9. FINANCIAL INTELLIGENCE HUB DETAIL VIEW                 */}
+      {/* ======================================================== */}
+      {activeHub === 'finance' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Quarterly Revenue Projections & Margin</h3>
+              <p className="text-xs text-slate-400 mb-4">Detailed fiscal audit showing gross collections, operating expenses, and net profit</p>
 
-                                <div className="h-[300px]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <ComposedChart data={revenueTrendData}>
-                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                      <XAxis dataKey="period" />
-                                      <YAxis />
-                                      <Tooltip />
-                                      <Bar dataKey="revenue" fill="#0d9488" radius={[4, 4, 0, 0]} name="Gross Revenue" />
-                                      <Line type="monotone" dataKey="target" stroke="#6366f1" strokeWidth={3} name="Target Forecast" />
-                                    </ComposedChart>
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={revenueTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="period" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="revenue" fill="#0d9488" radius={[4, 4, 0, 0]} name="Gross Revenue" />
+                    <Line type="monotone" dataKey="target" stroke="#6366f1" strokeWidth={3} name="Target Forecast" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-                        {/* ======================================================== */}
-                        {/* 10. SURGICAL OT & INFRASTRUCTURE HUB DETAIL VIEW         */}
-                        {/* ======================================================== */}
-                        {activeHub === 'assets' && (
-                          <div className="space-y-6 animate-in fade-in duration-300">
-                            <div className="grid grid-cols-12 gap-6">
+      {/* ======================================================== */}
+      {/* 10. SURGICAL OT & INFRASTRUCTURE HUB DETAIL VIEW         */}
+      {/* ======================================================== */}
+      {activeHub === 'assets' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-12 gap-6">
 
-                              <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Operation Theatre Suites</h3>
-                                <p className="text-xs text-slate-400 mb-4">Sterility status, ventilation, and live surgery schedule</p>
+            <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Operation Theatre Suites</h3>
+              <p className="text-xs text-slate-400 mb-4">Sterility status, ventilation, and live surgery schedule</p>
 
-                                <div className="space-y-3">
-                                  <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 flex items-center justify-between">
-                                    <div>
-                                      <h5 className="font-extrabold text-sm text-slate-900">OT Suite 1 (Phaco / Anterior)</h5>
-                                      <p className="text-xs text-slate-500 mt-0.5">HEPA Filter: Clean • Micro-Sterility: 99.9%</p>
-                                    </div>
-                                    <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-xs font-bold">
-                                      Active / Sterilized
-                                    </span>
-                                  </div>
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-extrabold text-sm text-slate-900">OT Suite 1 (Phaco / Anterior)</h5>
+                    <p className="text-xs text-slate-500 mt-0.5">HEPA Filter: Clean • Micro-Sterility: 99.9%</p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-xs font-bold">
+                    Active / Sterilized
+                  </span>
+                </div>
 
-                                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                                    <div>
-                                      <h5 className="font-extrabold text-sm text-slate-900">OT Suite 2 (Posterior & Vitreo-Retinal)</h5>
-                                      <p className="text-xs text-slate-500 mt-0.5">Microscope: Zeiss Lumera • Status: Standby</p>
-                                    </div>
-                                    <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">
-                                      Standby
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <h5 className="font-extrabold text-sm text-slate-900">OT Suite 2 (Posterior & Vitreo-Retinal)</h5>
+                    <p className="text-xs text-slate-500 mt-0.5">Microscope: Zeiss Lumera • Status: Standby</p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">
+                    Standby
+                  </span>
+                </div>
+              </div>
+            </div>
 
-                              <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Ward & Cabin Bed Load Map</h3>
-                                <p className="text-xs text-slate-400 mb-4">Real-time status across hospital wings</p>
+            <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Ward & Cabin Bed Load Map</h3>
+              <p className="text-xs text-slate-400 mb-4">Real-time status across hospital wings</p>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-xs text-slate-400 font-bold uppercase">General Male Ward</p>
-                                    <p className="text-xl font-black text-slate-800 my-1">6 / 8 Beds</p>
-                                    <span className="text-[10px] font-bold text-amber-600">75% Load</span>
-                                  </div>
-                                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-xs text-slate-400 font-bold uppercase">General Female Ward</p>
-                                    <p className="text-xl font-black text-slate-800 my-1">4 / 8 Beds</p>
-                                    <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
-                                  </div>
-                                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-xs text-slate-400 font-bold uppercase">Post-Op Recovery</p>
-                                    <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
-                                    <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
-                                  </div>
-                                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-xs text-slate-400 font-bold uppercase">VIP Cabins</p>
-                                    <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
-                                    <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
-                                  </div>
-                                </div>
-                              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">General Male Ward</p>
+                  <p className="text-xl font-black text-slate-800 my-1">6 / 8 Beds</p>
+                  <span className="text-[10px] font-bold text-amber-600">75% Load</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">General Female Ward</p>
+                  <p className="text-xl font-black text-slate-800 my-1">4 / 8 Beds</p>
+                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">Post-Op Recovery</p>
+                  <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
+                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">VIP Cabins</p>
+                  <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
+                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
+                </div>
+              </div>
+            </div>
 
-                            </div>
-                          </div>
-                        )}
+          </div>
+        </div>
+      )}
 
-                        {/* ======================================================== */}
-                        {/* 11. STRATEGIC COMPLIANCE & AUDIT FOOTER BAR              */}
-                        {/* ======================================================== */}
-                        <div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+      {/* ======================================================== */}
+      {/* 11. STRATEGIC COMPLIANCE & AUDIT FOOTER BAR              */}
+      {/* ======================================================== */}
+      <div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
 
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                              <ShieldCheck size={20} />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide">
-                                  OPERATIONAL INTEGRITY SAFE • DGHS & ISO 9001:2015 COMPLIANT
-                                </h4>
-                                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.2 rounded">
-                                  Verified
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-medium text-slate-400">
-                                Global Hospital Metric Index: <strong className="text-slate-700">99.4%</strong> • Encrypted Database Active
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {[
-                              { label: 'Audit Reports', path: '/reports' },
-                              { label: 'Clinical Analytics', path: '/reports' },
-                              { label: 'Database Backup', path: '/database' }
-                            ].map((action, i) => (
-                              <button
-                                key={i}
-                                onClick={() => navigate(action.path)}
-                                className="px-3.5 py-1.5 bg-slate-50 hover:bg-teal-700 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200/80 cursor-pointer shadow-xs"
-                              >
-                                {action.label}
-                              </button>
-                            ))}
-                          </div>
-
-                        </div>
-
-        {/* Hidden printable container for native browser print & PrintSettingsModal */}
-        <div id="printable-slip" className="hidden print:block bg-white text-slate-900">
-          {renderExecutiveBriefContent()}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+            <ShieldCheck size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide">
+                OPERATIONAL INTEGRITY SAFE • DGHS & ISO 9001:2015 COMPLIANT
+              </h4>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.2 rounded">
+                Verified
+              </span>
+            </div>
+            <p className="text-[11px] font-medium text-slate-400">
+              Global Hospital Metric Index: <strong className="text-slate-700">99.4%</strong> • Encrypted Database Active
+            </p>
+          </div>
         </div>
 
-        {/* Print Settings Modal */}
-        {isPrintModalOpen && (
-          <PrintSettingsModal
-            isOpen={isPrintModalOpen}
-            onClose={() => setIsPrintModalOpen(false)}
-            previewContent={renderExecutiveBriefContent()}
-            defaultPaperSize="A4"
-            documentTitle={`Executive Operational Brief - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          {[
+            { label: 'Audit Reports', path: '/reports' },
+            { label: 'Clinical Analytics', path: '/reports' },
+            { label: 'Database Backup', path: '/database' }
+          ].map((action, i) => (
+            <button
+              key={i}
+              onClick={() => navigate(action.path)}
+              className="px-3.5 py-1.5 bg-slate-50 hover:bg-teal-700 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200/80 cursor-pointer shadow-xs"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
 
       </div>
-    );
+
+      {/* Hidden printable container for native browser print & PrintSettingsModal */}
+      <div id="printable-slip" className="hidden print:block bg-white text-slate-900">
+        {renderExecutiveBriefContent()}
+      </div>
+
+      {/* Print Settings Modal */}
+      {isPrintModalOpen && (
+        <PrintSettingsModal
+          isOpen={isPrintModalOpen}
+          onClose={() => setIsPrintModalOpen(false)}
+          previewContent={renderExecutiveBriefContent()}
+          defaultPaperSize="A4"
+          documentTitle={`Executive Operational Brief - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+        />
+      )}
+
+    </div>
+  );
 };
 
 export default Dashboard;
