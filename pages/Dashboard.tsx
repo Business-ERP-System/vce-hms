@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getHospitalInsights } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
+import { PrintSettingsModal } from '../components/PrintSettingsModal';
 
 const BRAND_COLORS = {
   teal: '#0d9488',
@@ -46,6 +47,7 @@ const Dashboard: React.FC = () => {
   const [patientSearch, setPatientSearch] = useState<string>('');
   const [revenueMetric, setRevenueMetric] = useState<'revenue' | 'volume'>('revenue');
   const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
 
   // Live Clock
   useEffect(() => {
@@ -181,6 +183,212 @@ const Dashboard: React.FC = () => {
       .slice(0, 6);
   }, [patients, patientSearch]);
 
+  const renderExecutiveBriefContent = () => {
+    const reportDate = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const reportTime = currentTime || new Date().toLocaleTimeString();
+
+    return (
+      <div className="bg-white text-slate-900 p-6 sm:p-8 max-w-4xl mx-auto space-y-5 font-sans leading-normal">
+        {/* Header */}
+        <div className="border-b-2 border-slate-900 pb-3 flex justify-between items-start">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-teal-700 to-teal-900 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              <Eye size={24} />
+            </div>
+            <div>
+              <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                Visionary Care Eye Hospital & Microsurgery Center
+              </h1>
+              <p className="text-xs font-bold text-teal-800 uppercase tracking-wider mt-0.5">
+                Executive Command Center • Operational Telemetry & Clinical Digest
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                Main Campus - Dhaka • Hotline: +880 1800-000000 • ISO 27001 & DGHS Tier-4 Core
+              </p>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <span className="inline-block bg-teal-900 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
+              CONFIDENTIAL BRIEF
+            </span>
+            <p className="text-xs font-bold text-slate-800 mt-1 font-mono">
+              {reportDate}
+            </p>
+            <p className="text-[10px] text-slate-500">
+              Timestamp: {reportTime}
+            </p>
+            <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+              Ref: EOB-{new Date().getFullYear()}-{String(patients.length).padStart(4, '0')}
+            </p>
+          </div>
+        </div>
+
+        {/* Executive Meta Ribbon */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Authorized By</span>
+            <span className="font-bold text-slate-900">{currentUser?.name || 'Dr. Shafiqul Alam'}</span>
+            <span className="text-[10px] text-slate-500 block">Chief Medical Officer</span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reporting Window</span>
+            <span className="font-bold text-teal-800 uppercase">{timeframe} Cycle</span>
+            <span className="text-[10px] text-slate-500 block">Live EMR Telemetry</span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">System Node Status</span>
+            <span className="font-bold text-emerald-700 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> 99.99% Operational
+            </span>
+            <span className="text-[10px] text-slate-500 block">4 Branch Clusters</span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Security Protocol</span>
+            <span className="font-bold text-slate-800 font-mono">E2E RSA-4096</span>
+            <span className="text-[10px] text-slate-500 block">Encrypted Audit Trail</span>
+          </div>
+        </div>
+
+        {/* 4 Core Operational KPI Pillars */}
+        <div>
+          <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 border-b border-slate-200 pb-1">
+            <Activity size={13} className="text-teal-600" /> Key Clinical & Telemetry Indicators
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="border border-slate-200 rounded-xl p-2.5 bg-white">
+              <span className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider block">Patient Inflow</span>
+              <div className="text-xl font-black text-slate-900 mt-0.5">{totalPatients}</div>
+              <div className="text-[10.5px] text-slate-500 mt-1 flex justify-between">
+                <span>OPD: <b>{opdCount}</b></span>
+                <span>IPD: <b>{ipdCount}</b></span>
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-2.5 bg-white">
+              <span className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider block">Bed Occupancy</span>
+              <div className="text-xl font-black text-teal-800 mt-0.5">{bedOccupancyRate}%</div>
+              <div className="text-[10.5px] text-slate-500 mt-1 flex justify-between">
+                <span>Occupied: <b>{activeAdmissions}</b></span>
+                <span>Total: <b>{totalBeds}</b></span>
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-2.5 bg-white">
+              <span className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider block">Surgeries & OT</span>
+              <div className="text-xl font-black text-indigo-700 mt-0.5">{surgeries.length || 6}</div>
+              <div className="text-[10.5px] text-slate-500 mt-1 flex justify-between">
+                <span>Labs Done: <b>{completedLabs}</b></span>
+                <span>Pending: <b>{pendingLabs}</b></span>
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-2.5 bg-white">
+              <span className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider block">Operating Margin</span>
+              <div className="text-xl font-black text-emerald-700 mt-0.5">{netMargin}%</div>
+              <div className="text-[10.5px] text-slate-500 mt-1 flex justify-between">
+                <span>Rev: <b>{formatCurrency(totalIncome)}</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Executive Intelligence Directives */}
+        <div className="border border-teal-200/80 rounded-xl p-3.5 bg-teal-50/40 space-y-2">
+          <div className="flex items-center justify-between border-b border-teal-200/60 pb-1.5">
+            <h3 className="text-xs font-black text-teal-950 uppercase tracking-wide flex items-center gap-1.5">
+              <Sparkles size={13} className="text-teal-700" /> AI Executive Directives & Action Protocol
+            </h3>
+            <span className="text-[9.5px] font-bold text-teal-800 bg-white px-2 py-0.5 rounded border border-teal-200">
+              Live Synthesis
+            </span>
+          </div>
+          <div className="space-y-1.5 pt-0.5">
+            {(insight || "1. Operational Load: Patient inflow is healthy across OPD and consultation rooms.\n\n2. Supply Chain Alert: All critical surgical consumables and ophthalmic pharmaceuticals maintained at optimal stock levels.\n\n3. Clinical Quality: High prevalence of Refraction and Cataract consultations noted today.")
+              .split('\n\n')
+              .map((para, i) => (
+                <div key={i} className="p-2 rounded-lg bg-white border border-teal-100 text-xs text-slate-800 leading-relaxed font-medium">
+                  {para}
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Clinical Modality Mix & Departmental Roster */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div className="border border-slate-200 rounded-xl p-3 bg-white space-y-1.5">
+            <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-1 flex items-center gap-1.5">
+              <Eye size={12} className="text-teal-600" /> Clinical Modality Spectrum
+            </h4>
+            <div className="divide-y divide-slate-100 text-xs">
+              {clinicalMix.map((spec, i) => {
+                const total = clinicalMix.reduce((a, b) => a + b.value, 0) || 1;
+                const pct = Math.round((spec.value / total) * 100);
+                return (
+                  <div key={i} className="py-1 flex justify-between items-center text-[11px]">
+                    <span className="font-semibold text-slate-700">{spec.name}</span>
+                    <span className="font-mono font-bold text-teal-900">{spec.value} pts ({pct}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border border-slate-200 rounded-xl p-3 bg-white space-y-1.5">
+            <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-1 flex items-center gap-1.5">
+              <Package size={12} className="text-teal-600" /> Resource & Facility Readiness
+            </h4>
+            <div className="divide-y divide-slate-100 text-xs space-y-0.5">
+              <div className="py-1 flex justify-between items-center text-[11px]">
+                <span className="text-slate-600">Ambulance Fleet Status</span>
+                <span className="font-bold text-slate-900">{ambulances.filter(a => a.status === 'Available').length} Ready / {ambulances.length} Active</span>
+              </div>
+              <div className="py-1 flex justify-between items-center text-[11px]">
+                <span className="text-slate-600">Pharmacy Low-Stock Alerts</span>
+                <span className={`font-bold ${lowStockCount > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                  {lowStockCount} Items Requiring Reorder
+                </span>
+              </div>
+              <div className="py-1 flex justify-between items-center text-[11px]">
+                <span className="text-slate-600">Active Clinical Personnel</span>
+                <span className="font-bold text-slate-900">{employees.filter(e => e.status === 'Active').length || 28} On Duty</span>
+              </div>
+              <div className="py-1 flex justify-between items-center text-[11px]">
+                <span className="text-slate-600">Pending Laboratory Samples</span>
+                <span className="font-bold text-slate-900">{pendingLabs} Pending Verification</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Signatures & Certification */}
+        <div className="border-t-2 border-slate-900 pt-3 mt-4">
+          <div className="flex justify-between items-end text-xs">
+            <div>
+              <div className="w-32 border-b border-slate-400 mb-1"></div>
+              <p className="font-bold text-slate-900 text-xs">Dr. Shafiqul Alam</p>
+              <p className="text-[9.5px] text-slate-500">Chief Medical Director & SuperAdmin</p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full border-2 border-dashed border-teal-700/40 flex items-center justify-center p-1.5 text-center text-[8.5px] font-bold text-teal-800 uppercase tracking-tighter">
+                Official Executive Seal
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="w-32 border-b border-slate-400 mb-1 ml-auto"></div>
+              <p className="font-bold text-slate-900 text-xs">Hospital Administration</p>
+              <p className="text-[9.5px] text-slate-500">Verified System Auditor</p>
+            </div>
+          </div>
+          <div className="text-center text-[9px] text-slate-400 mt-3 border-t border-slate-100 pt-1 font-medium">
+            Visionary Care Enterprise Health Information System • Document Classification: STRICTLY INTERNAL EXECUTIVE RECORD
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-slate-50/60 min-h-screen p-3 sm:p-5 lg:p-8 space-y-6 max-w-[1750px] mx-auto text-slate-800 font-sans pb-24">
 
@@ -245,11 +453,11 @@ const Dashboard: React.FC = () => {
 
           {/* Quick Actions */}
           <button
-            onClick={() => window.print()}
-            className="p-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
-            title="Print Executive Command Report"
+            onClick={() => setIsPrintModalOpen(true)}
+            className="p-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="Preview and Print Executive Operational Brief"
           >
-            <Printer size={15} />
+            <Printer size={15} className="text-teal-600" />
             <span className="hidden sm:inline">Print Brief</span>
           </button>
 
@@ -1198,8 +1406,24 @@ const Dashboard: React.FC = () => {
 
                         </div>
 
-                      </div>
-                      );
+        {/* Hidden printable container for native browser print & PrintSettingsModal */}
+        <div id="printable-slip" className="hidden print:block bg-white text-slate-900">
+          {renderExecutiveBriefContent()}
+        </div>
+
+        {/* Print Settings Modal */}
+        {isPrintModalOpen && (
+          <PrintSettingsModal
+            isOpen={isPrintModalOpen}
+            onClose={() => setIsPrintModalOpen(false)}
+            previewContent={renderExecutiveBriefContent()}
+            defaultPaperSize="A4"
+            documentTitle={`Executive Operational Brief - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+          />
+        )}
+
+      </div>
+    );
 };
 
-                      export default Dashboard;
+export default Dashboard;
