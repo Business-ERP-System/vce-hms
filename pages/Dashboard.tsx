@@ -659,7 +659,7 @@ const Dashboard: React.FC = () => {
 
         {/* Card 1: Patient Census */}
         <div
-          onClick={() => setActiveHub('clinical')}
+          onClick={() => setActiveHub(prev => prev === 'clinical' ? 'overview' : 'clinical')}
           className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'clinical'
             ? 'ring-2 ring-indigo-500 border-indigo-400 bg-indigo-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-indigo-300'
@@ -724,7 +724,7 @@ const Dashboard: React.FC = () => {
 
         {/* Card 2: Gross Revenue Flow */}
         <div
-          onClick={() => setActiveHub('finance')}
+          onClick={() => setActiveHub(prev => prev === 'finance' ? 'overview' : 'finance')}
           className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'finance'
             ? 'ring-2 ring-emerald-500 border-emerald-400 bg-emerald-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-emerald-300'
@@ -760,7 +760,7 @@ const Dashboard: React.FC = () => {
 
         {/* Card 3: Inpatient Bed Occupancy */}
         <div
-          onClick={() => setActiveHub('beds')}
+          onClick={() => setActiveHub(prev => prev === 'beds' ? 'overview' : 'beds')}
           className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'beds'
             ? 'ring-2 ring-rose-500 border-rose-400 bg-rose-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-rose-300'
@@ -799,7 +799,7 @@ const Dashboard: React.FC = () => {
 
         {/* Card 4: OT & Surgical Pipeline */}
         <div
-          onClick={() => setActiveHub('ot')}
+          onClick={() => setActiveHub(prev => prev === 'ot' ? 'overview' : 'ot')}
           className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'ot'
             ? 'ring-2 ring-amber-500 border-amber-400 bg-amber-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-amber-300'
@@ -840,7 +840,7 @@ const Dashboard: React.FC = () => {
 
         {/* Card 5: Supply Chain & Critical Alerts */}
         <div
-          onClick={() => setActiveHub('medical')}
+          onClick={() => setActiveHub(prev => prev === 'medical' ? 'overview' : 'medical')}
           className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'medical'
             ? 'ring-2 ring-cyan-500 border-cyan-400 bg-cyan-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-cyan-300'
