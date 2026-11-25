@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
   // State Management
   const [insight, setInsight] = useState<string>('');
   const [loadingInsight, setLoadingInsight] = useState<boolean>(true);
-  const [activeHub, setActiveHub] = useState<'overview' | 'clinical' | 'medical' | 'finance' | 'assets'>('overview');
+  const [activeHub, setActiveHub] = useState<'overview' | 'clinical' | 'medical' | 'finance' | 'beds' | 'ot'>('overview');
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month' | 'quarter'>('week');
   const [patientSearch, setPatientSearch] = useState<string>('');
   const [revenueMetric, setRevenueMetric] = useState<'revenue' | 'volume'>('revenue');
@@ -623,9 +623,10 @@ const Dashboard: React.FC = () => {
         {[
           { id: 'overview', label: 'Overview Cockpit', icon: Activity, count: null },
           { id: 'clinical', label: 'Clinical Flow', icon: Stethoscope, count: opdCount + ipdCount },
-          { id: 'medical', label: 'Diagnostics & Pharmacy', icon: Microscope, count: pendingLabs + lowStockCount },
           { id: 'finance', label: 'Financial Intelligence', icon: BdtIcon, count: null },
-          { id: 'assets', label: 'Surgical OT & Beds', icon: Workflow, count: surgeries.length }
+          { id: 'beds', label: 'Inpatient Beds', icon: BedDouble, count: beds.length },
+          { id: 'ot', label: 'Surgical OT', icon: Scissors, count: surgeries.length },
+          { id: 'medical', label: 'Diagnostics & Pharmacy', icon: Microscope, count: pendingLabs + lowStockCount }
         ].map(hub => {
           const Icon = hub.icon;
           const isActive = activeHub === hub.id;
@@ -759,8 +760,8 @@ const Dashboard: React.FC = () => {
 
         {/* Card 3: Inpatient Bed Occupancy */}
         <div
-          onClick={() => setActiveHub('assets')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'assets'
+          onClick={() => setActiveHub('beds')}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'beds'
             ? 'ring-2 ring-rose-500 border-rose-400 bg-rose-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-rose-300'
             }`}
@@ -768,7 +769,7 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Bed Load</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'assets' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white'
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'beds' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white'
               }`}>
               <BedDouble size={16} />
             </div>
@@ -798,8 +799,8 @@ const Dashboard: React.FC = () => {
 
         {/* Card 4: OT & Surgical Pipeline */}
         <div
-          onClick={() => setActiveHub('assets')}
-          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'assets'
+          onClick={() => setActiveHub('ot')}
+          className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between ${activeHub === 'ot'
             ? 'ring-2 ring-amber-500 border-amber-400 bg-amber-50/15 shadow-md'
             : 'border-slate-200/80 hover:border-amber-300'
             }`}
@@ -807,7 +808,7 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">OT Pipeline</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'assets' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white'
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${activeHub === 'ot' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white'
               }`}>
               <Scissors size={16} />
             </div>
@@ -1517,67 +1518,92 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* ======================================================== */}
-      {/* 10. SURGICAL OT & INFRASTRUCTURE HUB DETAIL VIEW         */}
+      {/* 10. SURGICAL OT DETAIL VIEW                              */}
       {/* ======================================================== */}
-      {activeHub === 'assets' && (
+      {activeHub === 'ot' && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="grid grid-cols-12 gap-6">
-
-            <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Operation Theatre Suites</h3>
-              <p className="text-xs text-slate-400 mb-4">Sterility status, ventilation, and live surgery schedule</p>
-
-              <div className="space-y-3">
-                <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 flex items-center justify-between">
-                  <div>
-                    <h5 className="font-extrabold text-sm text-slate-900">OT Suite 1 (Phaco / Anterior)</h5>
-                    <p className="text-xs text-slate-500 mt-0.5">HEPA Filter: Clean • Micro-Sterility: 99.9%</p>
-                  </div>
-                  <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-xs font-bold">
-                    Active / Sterilized
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                  <div>
-                    <h5 className="font-extrabold text-sm text-slate-900">OT Suite 2 (Posterior & Vitreo-Retinal)</h5>
-                    <p className="text-xs text-slate-500 mt-0.5">Microscope: Zeiss Lumera • Status: Standby</p>
-                  </div>
-                  <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">
-                    Standby
-                  </span>
-                </div>
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Operation Theatre Suites</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Sterility status, ventilation, and live ophthalmic surgery schedule</p>
               </div>
+              <button
+                onClick={() => navigate('/ot')}
+                className="px-3.5 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                <span>Full OT Center</span>
+                <ArrowRight size={13} />
+              </button>
             </div>
 
-            <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Ward & Cabin Bed Load Map</h3>
-              <p className="text-xs text-slate-400 mb-4">Real-time status across hospital wings</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/50 flex items-center justify-between">
+                <div>
+                  <h5 className="font-extrabold text-sm text-slate-900">OT Suite 1 (Phaco / Anterior)</h5>
+                  <p className="text-xs text-slate-500 mt-0.5">HEPA Filter: Clean • Micro-Sterility: 99.9%</p>
+                </div>
+                <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-xs font-bold">
+                  Active / Sterilized
+                </span>
+              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  <p className="text-xs text-slate-400 font-bold uppercase">General Male Ward</p>
-                  <p className="text-xl font-black text-slate-800 my-1">6 / 8 Beds</p>
-                  <span className="text-[10px] font-bold text-amber-600">75% Load</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <h5 className="font-extrabold text-sm text-slate-900">OT Suite 2 (Posterior & Vitreo-Retinal)</h5>
+                  <p className="text-xs text-slate-500 mt-0.5">Microscope: Zeiss Lumera • Status: Standby</p>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  <p className="text-xs text-slate-400 font-bold uppercase">General Female Ward</p>
-                  <p className="text-xl font-black text-slate-800 my-1">4 / 8 Beds</p>
-                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  <p className="text-xs text-slate-400 font-bold uppercase">Post-Op Recovery</p>
-                  <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
-                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  <p className="text-xs text-slate-400 font-bold uppercase">VIP Cabins</p>
-                  <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
-                  <span className="text-[10px] font-bold text-emerald-600">50% Load</span>
-                </div>
+                <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">
+                  Standby
+                </span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* ======================================================== */}
+      {/* 10B. INPATIENT BED LOAD & CABIN MAP                      */}
+      {/* ======================================================== */}
+      {activeHub === 'beds' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Ward & Cabin Bed Load Map</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Real-time bed utilization across hospital wings</p>
+              </div>
+              <button
+                onClick={() => navigate('/ipd')}
+                className="px-3.5 py-1.5 bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                <span>Full Bed Management</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                <p className="text-xs text-slate-400 font-bold uppercase">General Male Ward</p>
+                <p className="text-xl font-black text-slate-800 my-1">6 / 8 Beds</p>
+                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">75% Load</span>
+              </div>
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                <p className="text-xs text-slate-400 font-bold uppercase">General Female Ward</p>
+                <p className="text-xl font-black text-slate-800 my-1">4 / 8 Beds</p>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">50% Load</span>
+              </div>
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                <p className="text-xs text-slate-400 font-bold uppercase">Post-Op Recovery</p>
+                <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">50% Load</span>
+              </div>
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                <p className="text-xs text-slate-400 font-bold uppercase">VIP Cabins</p>
+                <p className="text-xl font-black text-slate-800 my-1">2 / 4 Units</p>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">50% Load</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
