@@ -5,7 +5,7 @@ import { Patient, Invoice, InvoiceItem, Appointment, Bed, BillingItem } from '..
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Search, Plus, Trash2, Printer, CheckCircle, CreditCard, DollarSign, User,
-    FileText, Download, Receipt, ArrowLeft, Stethoscope, Bed as BedIcon,
+    FileText, Download, ReceiptText, ArrowLeft, Stethoscope, Bed as BedIcon,
     TestTube, Pill, Filter, Eye, AlertCircle, ScanLine, Calendar, Save, X,
     Edit, RefreshCw, TrendingUp, PieChart as PieIcon, BarChart3, Link as LinkIcon,
     CheckSquare, Square, ChevronRight, Hash, ClipboardList, Info, Settings, Coins, Mail
@@ -345,7 +345,7 @@ const Billing = () => {
                             {selectedPatient && <div className="mt-4 p-3 bg-teal-50 border border-teal-100 rounded-lg flex justify-between"><div><div className="font-bold text-teal-900">{selectedPatient.name}</div><div className="text-xs text-teal-700">{selectedPatient.id}</div></div><button onClick={() => setSelectedPatient(null)} className="text-xs text-teal-700 underline">Change</button></div>}
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><Receipt size={16} className="text-teal-600" /> Services & Items</h3>
+                            <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><ReceiptText size={16} className="text-teal-600" /> Services & Items</h3>
                             <div className="flex flex-col md:flex-row gap-2 mb-4">
                                 <select className="w-full md:w-1/3 p-2 border border-slate-200 rounded-lg text-sm bg-slate-50" value={serviceDeptFilter} onChange={(e) => setServiceDeptFilter(e.target.value)}><option value="All">All Departments</option><option value="OPD">OPD</option><option value="IPD">IPD</option><option value="Lab">Lab</option><option value="Surgery">Surgery</option></select>
                                 <div className="flex-1 flex gap-2"><select className="flex-1 p-2 border border-slate-200 rounded-lg text-sm" value={selectedServiceId} onChange={(e) => setSelectedServiceId(e.target.value)}><option value="">-- Select Service --</option>{filteredServices.map(s => <option key={s.id} value={s.id}>{s.name} - {formatCurrency(s.price)}</option>)}</select><button onClick={addService} className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"><Plus size={18} /></button></div>

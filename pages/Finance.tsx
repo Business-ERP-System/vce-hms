@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { DollarSign, TrendingUp, TrendingDown, FileText, Download, Receipt, Calendar, Plus, X, Printer } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, FileText, Download, ReceiptText, Calendar, Plus, X, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FinanceRecord } from '../types';
 import { CustomDatePicker } from '../components/CustomDatePicker';
@@ -137,7 +137,7 @@ const Finance = () => {
                             <p className="text-xs font-bold text-slate-500 uppercase">Billing Revenue</p>
                             <h3 className="text-2xl font-bold text-teal-600 mt-1">{formatCurrency(billingIncome)}</h3>
                         </div>
-                        <div className="p-2 bg-teal-50 rounded-lg text-teal-600"><Receipt size={20} /></div>
+                        <div className="p-2 bg-teal-50 rounded-lg text-teal-600"><ReceiptText size={20} /></div>
                     </div>
                     <p className="text-xs text-slate-400 mt-2">From Invoices in Period</p>
                 </div>

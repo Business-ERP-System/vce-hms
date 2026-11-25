@@ -7,7 +7,7 @@ import {
     FileText, TrendingUp, DollarSign, Activity, Users, ShoppingCart,
     TestTube, Bed, Eye, Calendar, Scissors, Box, ArrowLeft, Download,
     Printer, Filter, Sparkles, AlertTriangle, Database, Globe, Map, Tag,
-    ChevronRight, Briefcase, Ambulance as AmbulanceIcon, Receipt, Pill,
+    ChevronRight, Briefcase, Ambulance as AmbulanceIcon, ReceiptText, Pill,
     Landmark, ClipboardList, FileSpreadsheet, FileCode, FileJson, X, Stethoscope,
     Search, Settings, EyeOff
 } from 'lucide-react';
@@ -100,7 +100,7 @@ const Reports = () => {
         },
         {
             title: "Billing & POS",
-            icon: Receipt,
+            icon: ReceiptText,
             color: "text-amber-600 bg-amber-50",
             items: [
                 "Daily Collection Report",

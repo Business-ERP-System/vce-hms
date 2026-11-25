@@ -7,7 +7,7 @@ export interface BdtIconProps extends React.SVGProps<SVGSVGElement> {
 
 /**
  * Bangladeshi Taka (BDT) Icon Component (৳)
- * Designed as a drop-in replacement for Lucide icon components (such as DollarSign).
+ * Clean SVG drop-in replacement for Lucide icon components.
  */
 export const BdtIcon: React.FC<BdtIconProps> = ({
   size = 16,
@@ -37,9 +37,9 @@ export const BdtIcon: React.FC<BdtIconProps> = ({
         y="52%"
         dominantBaseline="central"
         textAnchor="middle"
-        fontSize="19"
+        fontSize="17"
         fontWeight="800"
-        fontFamily="'Segoe UI', Roboto, 'Noto Sans Bengali', Arial, sans-serif"
+        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Bengali', Arial, sans-serif"
       >
         ৳
       </text>

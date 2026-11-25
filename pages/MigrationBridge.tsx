@@ -6,7 +6,7 @@ import {
     ArrowRight, Settings, Info, Zap, HardDrive, History,
     FileJson, FileSpreadsheet, FileCode, Search, Filter,
     ChevronRight, ChevronDown, Activity, PlayCircle, Lock, FileText,
-    Users, Receipt, Stethoscope, Package, X, BookOpen
+    Users, ReceiptText, Stethoscope, Package, X, BookOpen
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { getMigrationModules, generateMigrationScript } from '../src/services/migrationService';
@@ -272,7 +272,7 @@ const MigrationBridge = () => {
                           </button>
                           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-black text-slate-400 uppercase tracking-widest">
                               <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><Users size={12} className="text-blue-500"/> Patients & HR</div>
-                              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><Receipt size={12} className="text-emerald-500"/> Billing & POS</div>
+                              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><ReceiptText size={12} className="text-emerald-500"/> Billing & POS</div>
                               <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><Stethoscope size={12} className="text-indigo-500"/> EMR & Clinical</div>
                               <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100"><Package size={12} className="text-amber-500"/> Inventory & Stock</div>
                           </div>

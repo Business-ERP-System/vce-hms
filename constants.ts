@@ -4,7 +4,7 @@ import { BdtIcon } from './components/BdtIcon';
 import {
   LayoutDashboard, Users, Bed as BedIcon, Calendar, Stethoscope,
   TestTube, Pill, ShoppingCart, UserCog, FileText,
-  Ambulance as AmbulanceIcon, Eye, TrendingUp, Activity, Scissors, Briefcase, DollarSign, ShieldCheck, UserPlus, List, Receipt, FilePlus, Glasses, Package, Landmark, ClipboardList, Info, Sparkles, Download, Database, BookOpen, Coins, RefreshCw
+  Ambulance as AmbulanceIcon, Eye, TrendingUp, Activity, Scissors, Briefcase, DollarSign, ShieldCheck, UserPlus, List, Receipt, ReceiptText, FilePlus, Glasses, Package, Landmark, ClipboardList, Info, Sparkles, Download, Database, BookOpen, Coins, RefreshCw
 } from 'lucide-react';
 
 export const APP_NAME = "Visionary Care HMS";
@@ -868,7 +868,7 @@ export const MENU_GROUPS = [
   {
     group: "Commercial & Retail",
     items: [
-      { name: 'Billing & POS', icon: Receipt, path: '/billing' },
+      { name: 'Billing & POS', icon: ReceiptText, path: '/billing' },
       { name: 'Pharmacy & Optical', icon: Pill, path: '/pharmacy' },
       { name: 'Financial Ledger', icon: BdtIcon, path: '/finance' },
     ]
