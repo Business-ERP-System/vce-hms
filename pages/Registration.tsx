@@ -235,7 +235,7 @@ const Registration = () => {
         setRegistrationTimestamp('');
         setIsSuccess(false);
         setTimeout(() => {
-            targetRoomRef.current?.focus();
+            patientCategoryRef.current?.focus();
         }, 60);
     };
 
@@ -541,6 +541,7 @@ const Registration = () => {
 
     const [selectedRoomId, setSelectedRoomId] = useState<string>('');
     const targetRoomRef = useRef<HTMLSelectElement>(null);
+    const patientCategoryRef = useRef<HTMLSelectElement>(null);
 
     const currentTokenNumber = useMemo(() => {
         const activeRoom = selectedRoomId
@@ -558,11 +559,11 @@ const Registration = () => {
         return `${d}-${m}-${y}`;
     }, []);
 
-    // Auto-focus Target Room when registration form opens
+    // Auto-focus Patient Category when registration form opens
     useEffect(() => {
         if (!isSuccess) {
             const timer = setTimeout(() => {
-                targetRoomRef.current?.focus();
+                patientCategoryRef.current?.focus();
             }, 80);
             return () => clearTimeout(timer);
         }
@@ -1852,7 +1853,7 @@ const Registration = () => {
                                                     campaignId: ''
                                                 }));
                                             }
-                                            setTimeout(() => targetRoomRef.current?.focus(), 50);
+                                            setTimeout(() => patientCategoryRef.current?.focus(), 50);
                                         }}
                                         className={`flex items-center gap-1 px-2.5 py-1 rounded-md border text-[15px] transition-all ${serviceType === type.id
                                             ? 'bg-white text-teal-900 border-white shadow-xs font-bold'
@@ -1915,6 +1916,7 @@ const Registration = () => {
                                                 <div className="space-y-0.5">
                                                     <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
                                                     <select
+                                                        ref={patientCategoryRef}
                                                         required
                                                         name="patientType"
                                                         className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
@@ -2039,6 +2041,8 @@ const Registration = () => {
                                             <div className="space-y-0.5">
                                                 <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
                                                 <select
+                                                    ref={patientCategoryRef}
+                                                    autoFocus
                                                     required
                                                     name="patientType"
                                                     className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
@@ -2375,18 +2379,16 @@ const Registration = () => {
                         </div>
 
                         {/* Target Room / Target Counter Selection (Swapped from Header) */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[14px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-[13px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">
                                 {serviceType === 'Camp' ? 'Target Counter' : 'Target Room'} <span className="text-red-400">*</span>
                             </span>
                             <div className="relative">
                                 <select
                                     ref={targetRoomRef}
-                                    autoFocus
                                     required
-                                    tabIndex={1}
                                     name="selectedRoomId"
-                                    className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-[16px] pl-2.5 pr-7 py-1 rounded-md border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300 focus:bg-teal-900/90 cursor-pointer outline-none transition-all appearance-none truncate ring-offset-1 ring-offset-teal-800"
+                                    className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs sm:text-[13px] pl-2.5 pr-6 h-8 w-32 sm:w-36 rounded-md border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300 focus:bg-teal-900/90 cursor-pointer outline-none transition-all appearance-none truncate ring-offset-1 ring-offset-teal-800"
                                     value={selectedRoomId}
                                     onChange={(e) => setSelectedRoomId(e.target.value)}
                                 >
@@ -2397,19 +2399,19 @@ const Registration = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
+                                <ChevronDown size={13} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
                             </div>
-                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-[18px] shadow-xs">
+                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-sm sm:text-base shadow-xs shrink-0">
                                 {rooms.find(r => r.id === selectedRoomId)?.roomNumber || '--'}
                             </div>
                             <button
                                 type="button"
                                 tabIndex={-1}
                                 onClick={() => setShowRoomModal(true)}
-                                className="px-2 py-1 bg-white/15 hover:bg-white/25 text-white rounded-md text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-white/20"
+                                className="px-2 h-8 bg-white/15 hover:bg-white/25 text-white rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-white/20 shrink-0"
                                 title={serviceType === 'Camp' ? "Manage Counters" : "Manage Rooms"}
                             >
-                                <Settings size={14} />
+                                <Settings size={13} />
                                 <span className="hidden sm:inline">{serviceType === 'Camp' ? 'Counters' : 'Rooms'}</span>
                             </button>
                         </div>
