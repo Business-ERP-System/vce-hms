@@ -1217,9 +1217,49 @@ const Registration = () => {
             return;
         }
 
-        if (e.key !== 'Enter') return;
-
         const target = e.target as HTMLElement;
+
+        // Backspace: Navigate to previous field when input is empty or on dropdowns/buttons
+        if (e.key === 'Backspace') {
+            let canNavigateBack = false;
+
+            if (target instanceof HTMLSelectElement) {
+                // Dropdowns don't use backspace for character deletion
+                canNavigateBack = true;
+            } else if (target.tagName === 'BUTTON') {
+                canNavigateBack = true;
+            } else if (target instanceof HTMLInputElement) {
+                const type = (target.type || 'text').toLowerCase();
+                if (['checkbox', 'radio', 'button', 'submit'].includes(type)) {
+                    canNavigateBack = true;
+                } else if (!target.value || target.value.length === 0) {
+                    // Empty field: Backspace moves focus to previous field
+                    canNavigateBack = true;
+                }
+            }
+
+            if (canNavigateBack) {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const selector = 'input:not([disabled]):not([type="hidden"]):not([type="button"]):not([type="submit"]), select:not([disabled]), textarea:not([disabled]), button[type="submit"]';
+                const focusableElements = Array.from(form.querySelectorAll<HTMLElement>(selector)).filter(el => {
+                    return el.offsetParent !== null && !el.hasAttribute('disabled');
+                });
+
+                const currentIndex = focusableElements.indexOf(target);
+                if (currentIndex > 0) {
+                    const prev = focusableElements[currentIndex - 1];
+                    prev.focus();
+                    if (prev instanceof HTMLInputElement && prev.type !== 'date') {
+                        prev.select?.();
+                    }
+                }
+                return;
+            }
+            return;
+        }
+
+        if (e.key !== 'Enter') return;
 
         // Allow default button click or textarea linebreaks
         if (target.tagName === 'BUTTON' && (target as HTMLButtonElement).type === 'submit') {
