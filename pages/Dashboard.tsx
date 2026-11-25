@@ -619,9 +619,9 @@ const Dashboard: React.FC = () => {
       {/* ======================================================== */}
       {/* 2. HUB NAVIGATION TABS (Overview, Clinical, Lab, Finance) */}
       {/* ======================================================== */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto no-scrollbar flex-nowrap">
         {[
-          { id: 'overview', label: 'Overview Cockpit', icon: Activity, count: null },
+          { id: 'overview', label: 'Overview', icon: Activity, count: null },
           { id: 'clinical', label: 'Clinical Flow', icon: Stethoscope, count: opdCount + ipdCount },
           { id: 'finance', label: 'Financial Intelligence', icon: BdtIcon, count: null },
           { id: 'beds', label: 'Inpatient Beds', icon: BedDouble, count: beds.length },
@@ -634,12 +634,12 @@ const Dashboard: React.FC = () => {
             <button
               key={hub.id}
               onClick={() => setActiveHub(hub.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${isActive
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${isActive
                 ? 'bg-gradient-to-r from-teal-700 to-teal-800 text-white shadow-md shadow-teal-800/20 ring-1 ring-teal-700'
                 : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-teal-50/70 hover:text-teal-800 hover:border-teal-300'
                 }`}
             >
-              <Icon size={14} className={isActive ? 'text-teal-200' : 'text-slate-400'} />
+              <Icon size={13} className={isActive ? 'text-teal-200' : 'text-slate-400'} />
               <span>{hub.label}</span>
               {hub.count !== null && (
                 <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
