@@ -1,5 +1,6 @@
 
 import { ChartDataPoint, InventoryItem, Patient, Appointment, UserRole, Bed, LabTest, Campaign, Surgery, Employee, Ambulance, FinanceRecord, Supplier, Invoice, Prescription, ActionPermission, ModulePermissions, Shop, SalaryStructure, AttendanceRecord, LeaveRequest, BiometricMachine, PayrollRecord, Company, Branch } from './types';
+import { BdtIcon } from './components/BdtIcon';
 import {
   LayoutDashboard, Users, Bed as BedIcon, Calendar, Stethoscope,
   TestTube, Pill, ShoppingCart, UserCog, FileText,
@@ -869,7 +870,7 @@ export const MENU_GROUPS = [
     items: [
       { name: 'Billing & POS', icon: Receipt, path: '/billing' },
       { name: 'Pharmacy & Optical', icon: Pill, path: '/pharmacy' },
-      { name: 'Financial Ledger', icon: DollarSign, path: '/finance' },
+      { name: 'Financial Ledger', icon: BdtIcon, path: '/finance' },
     ]
   },
   {
@@ -897,7 +898,7 @@ export const MENU_GROUPS = [
 // Feature-level permissions that aren't menu items
 export const FEATURE_PERMISSIONS = [
   { name: 'AI Clinical Insights', icon: Sparkles },
-  { name: 'Revenue Statistics', icon: DollarSign },
+  { name: 'Revenue Statistics', icon: BdtIcon },
   { name: 'Medical Drawing Tool', icon: Eye },
   { name: 'Bulk Data Export', icon: Download }
 ];

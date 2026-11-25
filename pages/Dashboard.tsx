@@ -17,6 +17,7 @@ import {
 import { getHospitalInsights } from '../services/geminiService';
 import { useNavigate } from 'react-router-dom';
 import { PrintSettingsModal } from '../components/PrintSettingsModal';
+import { BdtIcon } from '../components/BdtIcon';
 
 const BRAND_COLORS = {
   teal: '#0d9488',
@@ -623,7 +624,7 @@ const Dashboard: React.FC = () => {
           { id: 'overview', label: 'Overview Cockpit', icon: Activity, count: null },
           { id: 'clinical', label: 'Clinical Flow', icon: Stethoscope, count: opdCount + ipdCount },
           { id: 'medical', label: 'Diagnostics & Pharmacy', icon: Microscope, count: pendingLabs + lowStockCount },
-          { id: 'finance', label: 'Financial Intelligence', icon: DollarSign, count: null },
+          { id: 'finance', label: 'Financial Intelligence', icon: BdtIcon, count: null },
           { id: 'assets', label: 'Surgical OT & Beds', icon: Workflow, count: surgeries.length }
         ].map(hub => {
           const Icon = hub.icon;
@@ -737,7 +738,7 @@ const Dashboard: React.FC = () => {
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
               activeHub === 'finance' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
             }`}>
-              <DollarSign size={16} />
+              <BdtIcon size={18} />
             </div>
           </div>
           <div className="my-2">

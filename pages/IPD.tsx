@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_EMPLOYEES } from '../constants';
+import { BdtIcon } from '../components/BdtIcon';
 import { downloadPDF, shareToWhatsApp, shareToEmail } from '../services/exportService';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 
@@ -728,7 +729,7 @@ const IPD = () => {
                                         </td>
                                         <td className="px-8 py-5 text-right">
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={() => setViewingAdmissionBill(adm)} className="p-2 text-slate-400 hover:text-indigo-600" title="View Running Bill"><DollarSign size={16} /></button>
+                                                <button onClick={() => setViewingAdmissionBill(adm)} className="p-2 text-slate-400 hover:text-indigo-600" title="View Running Bill"><BdtIcon size={16} /></button>
                                                 <button onClick={() => handleProcessDischarge(adm)} className="p-2 text-slate-400 hover:text-emerald-600" title="Process Discharge"><LogOut size={16} /></button>
                                                 <button className="p-2 text-slate-400 hover:text-indigo-600" title="Edit Admission"><Edit size={16} /></button>
                                             </div>

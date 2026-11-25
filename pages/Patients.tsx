@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Patient, PreviousVisionHistory } from '../types';
 import { MOCK_EMPLOYEES } from '../constants';
+import { BdtIcon } from '../components/BdtIcon';
 import {
     Search, Plus, Filter, FileText, Trash2, X, Save, ArrowUpDown, Sparkles,
     BrainCircuit, AlertTriangle, Edit, RefreshCw, ChevronDown, Download,
@@ -2046,7 +2047,7 @@ const Patients = () => {
                                 {detailsTab === 'Financials' && (
                                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-in fade-in duration-300">
                                         <div className="flex justify-between items-center mb-6">
-                                            <h3 className="font-bold text-slate-800 flex items-center gap-2 uppercase tracking-widest text-xs"><DollarSign size={16} className="text-green-600" /> Patient Billing Records</h3>
+                                            <h3 className="font-bold text-slate-800 flex items-center gap-2 uppercase tracking-widest text-xs"><BdtIcon size={16} className="text-green-600" /> Patient Billing Records</h3>
                                             <button onClick={() => navigate('/billing', { state: { patient: selectedPatient } })} className="text-xs text-teal-600 hover:underline font-bold uppercase transition-all">Open Full Financial Ledger</button>
                                         </div>
                                         <div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs"><tr><th className="px-6 py-4">Transaction Date</th><th className="px-6 py-4">Service Description</th><th className="px-6 py-4 text-right">Settled Amount</th></tr></thead><tbody className="divide-y divide-slate-100">{patientFinancials.map(txn => (<tr key={txn.id} className="hover:bg-slate-50 transition-colors"><td className="px-6 py-4 text-slate-500 font-mono text-xs">{txn.date}</td><td className="px-6 py-4 font-bold text-slate-700">{txn.description}</td><td className="px-6 py-4 text-right font-bold text-slate-900">{formatCurrency(txn.amount)}</td></tr>))}</tbody></table></div>

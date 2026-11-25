@@ -17,6 +17,7 @@ import { SearchableSelect } from '../components/SearchableSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { BANGLADESH_DIVISIONS, BANGLADESH_DISTRICTS, BANGLADESH_UPAZILLAS } from '../data/bangladeshGeo';
 import { PrintSettingsModal } from '../components/PrintSettingsModal';
+import { BdtIcon } from '../components/BdtIcon';
 
 const getNextSequencePid = (patientList: Patient[]): string => {
     let max = 0;
@@ -2666,7 +2667,7 @@ const Registration = () => {
                                         {/* Default Fee */}
                                         <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2">
                                             <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                                                <DollarSign size={16} className="text-teal-600" />
+                                                <BdtIcon size={18} className="text-teal-600" />
                                                 <span>Default Registration Fee</span>
                                             </div>
                                             <p className="text-[12px] text-slate-500">

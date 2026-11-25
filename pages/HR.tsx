@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Employee, AttendanceRecord, LeaveRequest, PayrollRecord, BiometricMachine, UserRole } from '../types';
+import { BdtIcon } from '../components/BdtIcon';
 
 const HR = () => {
     const navigate = useNavigate();
@@ -344,7 +345,7 @@ const HR = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <div className="p-4 bg-teal-50 text-teal-600 rounded-2xl"><DollarSign size={24} /></div>
+                    <div className="p-4 bg-teal-50 text-teal-600 rounded-2xl"><BdtIcon size={24} /></div>
                     <div>
                         <h3 className="font-black text-xl tracking-tighter text-slate-900 border-b-2 border-teal-500 w-fit">Payroll Management</h3>
                         <p className="text-xs text-slate-400 font-black uppercase tracking-widest mt-1">Cycle: Monthly (Current Feb 2026)</p>
@@ -496,7 +497,7 @@ const HR = () => {
                     { id: 'staff', label: 'Staff Directory', icon: Users },
                     { id: 'attendance', label: 'Attendance Logs', icon: Fingerprint },
                     { id: 'leave', label: 'Leave & Holidays', icon: Calendar },
-                    { id: 'payroll', label: 'Payroll Center', icon: DollarSign },
+                    { id: 'payroll', label: 'Payroll Center', icon: BdtIcon },
                     { id: 'machines', label: 'Access Control', icon: Cpu }
                 ].map((tab) => (
                     <button

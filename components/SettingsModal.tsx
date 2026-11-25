@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { UserRole, RoomMaster } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { BdtIcon } from './BdtIcon';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -403,7 +404,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2">
                                     <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                                        <DollarSign size={16} className="text-teal-600" />
+                                        <BdtIcon size={18} className="text-teal-600" />
                                         <span>Default Registration Fee</span>
                                     </div>
                                     <p className="text-[12px] text-slate-500">
