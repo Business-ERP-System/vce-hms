@@ -1267,41 +1267,17 @@ const Registration = () => {
     };
 
     const renderResidentialAddress = (isInsideColumn: boolean) => (
-        <div className="bg-white rounded-xl shadow-xs border border-slate-200/90 p-3.5 md:p-4 space-y-3 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200/70 shrink-0">
-                        <Home size={16} />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-slate-900 text-sm md:text-[15px] flex items-center gap-1.5">
-                            {isForeign ? 'Present Address Coordinates' : 'Residential Address Coordinates'}
-                        </h3>
-                        <p className="text-[11px] text-slate-400 font-medium">Administrative geo-mapping & demographic census data</p>
-                    </div>
+        <div className="bg-white rounded-lg shadow-xs border border-slate-200/90 p-2.5 md:p-3 space-y-2 animate-in fade-in duration-200">
+            <h3 className="font-bold text-slate-900 text-[16px] flex items-center gap-1.5 border-b border-slate-100 pb-1.5 mb-0.5">
+                <Home size={18} className="text-emerald-600" /> {isForeign ? 'Present Address Details' : 'Residential Address Details'}
+            </h3>
+            <div className={`grid grid-cols-1 ${isInsideColumn ? 'sm:grid-cols-2' : 'md:grid-cols-3'} gap-2`}>
+                <div className="space-y-0.5">
+                    <label className="text-[15px] font-semibold text-slate-600">Street / Village / Area <span className="text-red-500">*</span></label>
+                    <input required name="village" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none" value={formData.village} onChange={handleInputChange} placeholder="Street / Village / Area" />
                 </div>
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">
-                    {isForeign ? 'International' : 'National Geo'}
-                </span>
-            </div>
-            <div className={`grid grid-cols-1 ${isInsideColumn ? 'sm:grid-cols-2' : 'md:grid-cols-3'} gap-3`}>
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                        <span>Street / Village / Area <span className="text-rose-500">*</span></span>
-                    </label>
-                    <input
-                        required
-                        name="village"
-                        className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
-                        value={formData.village}
-                        onChange={handleInputChange}
-                        placeholder="House / Road / Village name"
-                    />
-                </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                        <span>Upazilla / Thana <span className="text-rose-500">*</span></span>
-                    </label>
+                <div className="space-y-0.5">
+                    <label className="text-[15px] font-semibold text-slate-600">Upazilla/Thana <span className="text-red-500">*</span></label>
                     <SearchableSelect
                         name="upazilla"
                         required
@@ -1311,8 +1287,8 @@ const Registration = () => {
                         placeholder="Search or select Upazilla / Thana"
                     />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide">District</label>
+                <div className="space-y-0.5">
+                    <label className="text-[15px] font-semibold text-slate-600">District</label>
                     <SearchableSelect
                         name="district"
                         value={formData.district}
@@ -1321,18 +1297,12 @@ const Registration = () => {
                         placeholder="Search or select District"
                     />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide">Postal Code</label>
-                    <input
-                        name="postCode"
-                        className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
-                        value={formData.postCode}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 1207"
-                    />
+                <div className="space-y-0.5">
+                    <label className="text-[15px] font-semibold text-slate-600">Postal Code</label>
+                    <input name="postCode" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none" value={formData.postCode} onChange={handleInputChange} placeholder="Postal Code" />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide">Division</label>
+                <div className="space-y-0.5">
+                    <label className="text-[15px] font-semibold text-slate-600">Division</label>
                     <SearchableSelect
                         name="state"
                         value={formData.state}
@@ -1341,17 +1311,16 @@ const Registration = () => {
                         placeholder="Search or select Division"
                     />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                        <span>Country {isForeign && <span className="text-rose-500">*</span>}</span>
-                        {isForeign && <span className="text-[10px] text-teal-600 font-bold uppercase">Editable</span>}
+                <div className="space-y-0.5">
+                    <label className="text-[15px] font-semibold text-slate-600">
+                        Country {isForeign && <span className="text-red-500">*</span>}
                     </label>
                     <input
                         disabled={!isForeign}
                         required={isForeign}
                         name="country"
-                        className={`w-full h-10 px-3 border rounded-lg text-sm font-medium transition-all ${isForeign
-                            ? 'border-teal-300 bg-teal-50/30 text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none'
+                        className={`w-full px-2.5 py-1 border rounded-md text-[16px] font-medium transition-all ${isForeign
+                            ? 'border-teal-400 bg-teal-50/40 ring-1 ring-teal-200 text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none'
                             : 'border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed select-none'
                             }`}
                         value={formData.country}
@@ -1799,207 +1768,158 @@ const Registration = () => {
     }
 
     return (
-        <div className="bg-slate-50/60 -mt-4 lg:-mt-5 pt-1 px-1 sm:px-2 md:px-4 pb-8 max-w-[1700px] mx-auto animate-in fade-in duration-300 font-sans text-slate-800">
-            <form id="regForm" onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden flex flex-col">
-                {/* 1. Clinical Workstation Top Header */}
-                <div className="flex flex-wrap justify-between items-center gap-3 py-3 px-4 md:px-6 border-b border-slate-200/80 bg-white">
-                    <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-700 to-teal-900 text-teal-200 flex items-center justify-center shadow-md shadow-teal-900/10 shrink-0 border border-teal-600/30">
-                            <UserPlus size={22} />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                    Patient Registration
-                                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/80">
-                                        EMR Admission
-                                    </span>
-                                </h1>
-                                <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-[11px] font-bold">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span>DGHS Tier-4 Verified</span>
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-400 font-medium mt-0.5 flex items-center gap-1.5">
-                                <span>Visionary Care Medical Center</span>
-                                <span>•</span>
-                                <span>High-Speed Clinical Workstation</span>
-                                <span className="hidden sm:inline">•</span>
-                                <span className="hidden sm:inline text-teal-700 font-semibold font-mono">F2: Clear • Ctrl+S: Save</span>
-                            </p>
+        <div className="bg-mesh-gradient -mt-4 lg:-mt-5 pt-0 px-1 sm:px-2 md:px-3 pb-2 max-w-[1600px] mx-auto animate-in fade-in duration-300">
+            <form id="regForm" onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-200/90 overflow-hidden">
+                {/* Form Header */}
+                <div className="flex flex-wrap justify-between items-center gap-2 py-2 px-4 md:px-5 border-b border-slate-200/80 bg-white">
+                    <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-teal-50 text-teal-600 rounded-lg shadow-xs"><UserPlus size={20} /></div>
+                        <div className="flex items-baseline gap-2">
+                            <h1 className="text-[18px] md:text-[20px] font-bold text-slate-900 tracking-tight">Patient Registration</h1>
+                            <span className="hidden sm:inline text-[15px] text-slate-400 font-medium">| Electronic Medical Record</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <button
-                            type="button"
-                            tabIndex={-1}
-                            onClick={handleResetForNewPatient}
-                            className="px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all text-xs border bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-teal-700 shadow-2xs cursor-pointer active:scale-95"
-                            title="Reset Form / Register New Patient (F2)"
-                        >
-                            <RefreshCw size={14} className="text-teal-600" />
-                            <span className="hidden sm:inline">New Form</span>
-                            <kbd className="text-[10px] font-mono bg-white border border-slate-200 px-1 py-0.2 rounded text-slate-500 font-bold">F2</kbd>
-                        </button>
+                    <div className="flex items-center gap-2">
                         <button
                             type="button"
                             tabIndex={-1}
                             onClick={handleOpenReprintModal}
-                            className="px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all text-xs border bg-white border-slate-200 text-slate-700 hover:bg-teal-50/50 hover:text-teal-800 hover:border-teal-300 shadow-2xs cursor-pointer active:scale-95"
-                            title="Search & Re-Print Previous Registration Slip"
+                            className="px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-all text-[15px] border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-teal-700 hover:border-teal-300 shadow-xs cursor-pointer"
+                            title="Re-Print Patient Registration Slip"
                         >
-                            <Printer size={15} className="text-teal-600" />
+                            <Printer size={16} className="text-teal-600" />
                             <span>Re-Print Slip</span>
                         </button>
                         <button
                             type="button"
                             tabIndex={-1}
                             onClick={handleOpenSettings}
-                            className="px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all text-xs border bg-white border-slate-200 text-slate-700 hover:bg-teal-50/50 hover:text-teal-800 hover:border-teal-300 shadow-2xs cursor-pointer active:scale-95"
-                            title="Registration Configuration & Fees"
+                            className="px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-all text-[15px] border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-teal-700 hover:border-teal-300 shadow-xs cursor-pointer"
+                            title="Registration Settings (Authorized Users Only)"
                         >
-                            <Settings size={15} className="text-teal-600" />
+                            <Settings size={16} className="text-teal-600" />
                             <span>Settings</span>
                         </button>
                         <button
                             type="button"
                             tabIndex={-1}
                             onClick={handleToggleForeign}
-                            className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all text-xs border cursor-pointer active:scale-95 ${isForeignPatient
-                                ? 'bg-gradient-to-r from-teal-700 to-teal-800 text-white border-teal-700 shadow-xs ring-2 ring-teal-600/20'
-                                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs'
+                            className={`px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-all text-[16px] border ${isForeignPatient
+                                ? 'bg-teal-600 text-white border-teal-600 shadow-xs ring-1 ring-teal-200'
+                                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                                 }`}
-                            title="Toggle International / Foreign Patient Passport Requirements"
                         >
-                            <Globe size={15} className={isForeignPatient ? 'text-teal-200' : 'text-teal-600'} />
+                            <Globe size={16} className={isForeignPatient ? 'text-white' : 'text-teal-600'} />
                             <span>Foreign Patient</span>
                             {isForeignPatient && (
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
                             )}
                         </button>
                     </div>
                 </div>
 
-                {/* 2. Department & Real-Time Triage Ribbon */}
-                <div className="bg-gradient-to-r from-teal-800 via-teal-900 to-slate-900 text-white py-2 px-4 md:px-6 relative overflow-hidden border-b border-teal-950/40 shadow-xs flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
+                {/* Department Information Banner */}
+                <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-cyan-800 text-white py-2 px-4 md:px-5 relative overflow-hidden border-b border-teal-900/30">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-                    <div className="relative z-10 flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                        <span className="font-black text-teal-300 text-xs uppercase tracking-wider hidden sm:inline flex items-center gap-1">
-                            <Activity size={14} className="text-teal-400" /> Department:
-                        </span>
-                        <div className="inline-flex bg-slate-950/50 p-1 rounded-xl border border-white/10 gap-1 backdrop-blur-md">
-                            {[
-                                { id: 'OPD', label: 'OPD Clinic', icon: Stethoscope },
-                                { id: 'Camp', label: 'Camp Outreach', icon: Tent },
-                                { id: 'Lab', label: 'Lab & Samples', icon: Microscope },
-                                { id: 'Diagnosis', label: 'Diagnostics', icon: Eye }
-                            ].map(type => (
-                                <button
-                                    key={type.id}
-                                    type="button"
-                                    tabIndex={-1}
-                                    onClick={() => {
-                                        const newService = type.id as any;
-                                        setServiceType(newService);
-                                        setSelectedRoomId('');
-                                        if (newService === 'Camp') {
-                                            const activeCamps = campaigns.filter(c => c.status !== 'Completed');
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                patientType: 'Camp Referral',
-                                                campaignId: prev.campaignId || (activeCamps.length > 0 ? activeCamps[0].id : '')
-                                            }));
-                                        } else if (formData.patientType === 'Camp Referral') {
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                patientType: 'New Patient',
-                                                campaignId: ''
-                                            }));
-                                        }
-                                        setTimeout(() => patientCategoryRef.current?.focus(), 50);
-                                    }}
-                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${serviceType === type.id
-                                        ? 'bg-white text-teal-950 font-black shadow-sm ring-1 ring-black/5'
-                                        : 'text-white/80 hover:text-white hover:bg-white/10 font-bold'
-                                        }`}
-                                >
-                                    <type.icon size={14} className={serviceType === type.id ? 'text-teal-700' : 'text-teal-300'} />
-                                    <span>{type.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="relative z-10 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end ml-auto">
-                        {/* Token Number Display */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold uppercase tracking-wider text-teal-300">Queue Token:</span>
-                            <span className="bg-slate-950/60 border border-cyan-400/40 rounded-lg px-3 py-1 font-mono font-black text-cyan-200 text-sm tracking-wider shadow-inner flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                                {currentTokenNumber}
-                            </span>
+                    <div className="relative z-10 flex flex-wrap lg:flex-nowrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                            <span className="font-black text-teal-200 text-[14px] uppercase tracking-wider hidden sm:inline">Dept:</span>
+                            <div className="flex items-center gap-1.5">
+                                {[
+                                    { id: 'OPD', label: 'OPD', icon: Stethoscope },
+                                    { id: 'Camp', label: 'CAMP', icon: Tent },
+                                    { id: 'Lab', label: 'LAB', icon: Microscope },
+                                    { id: 'Diagnosis', label: 'DIAG', icon: Eye }
+                                ].map(type => (
+                                    <button
+                                        key={type.id}
+                                        type="button"
+                                        tabIndex={-1}
+                                        onClick={() => {
+                                            const newService = type.id as any;
+                                            setServiceType(newService);
+                                            setSelectedRoomId('');
+                                            if (newService === 'Camp') {
+                                                const activeCamps = campaigns.filter(c => c.status !== 'Completed');
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    patientType: 'Camp Referral',
+                                                    campaignId: prev.campaignId || (activeCamps.length > 0 ? activeCamps[0].id : '')
+                                                }));
+                                            } else if (formData.patientType === 'Camp Referral') {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    patientType: 'New Patient',
+                                                    campaignId: ''
+                                                }));
+                                            }
+                                            setTimeout(() => patientCategoryRef.current?.focus(), 50);
+                                        }}
+                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md border text-[15px] transition-all ${serviceType === type.id
+                                            ? 'bg-white text-teal-900 border-white shadow-xs font-bold'
+                                            : 'bg-black/20 border-white/20 text-white/90 hover:bg-black/30 hover:border-white/40 font-medium'
+                                            }`}
+                                    >
+                                        <type.icon size={15} />
+                                        <span>{type.label}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* System Date Display */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold uppercase tracking-wider text-teal-300">Admission Date:</span>
-                            <span className="bg-slate-950/60 border border-teal-400/30 rounded-lg px-3 py-1 font-mono font-bold text-teal-100 text-sm tracking-wider shadow-inner flex items-center gap-1.5">
-                                <Calendar size={13} className="text-teal-300" />
-                                {systemDate}
-                            </span>
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end mt-1 sm:mt-0 ml-auto">
+                            {/* Current Token Number Display (Swapped from Footer) */}
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[14px] font-bold uppercase tracking-wider text-teal-200">Token Number:</span>
+                                <span className="bg-black/20 border border-white/20 rounded px-2.5 py-0.5 text-[16px] font-mono font-bold text-cyan-200 tracking-wider shadow-inner">
+                                    {currentTokenNumber}
+                                </span>
+                            </div>
+
+                            {/* Current System Date Display (Swapped from Footer) */}
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[14px] font-bold uppercase tracking-wider text-teal-200">Date:</span>
+                                <span className="bg-black/20 border border-white/20 rounded px-2.5 py-0.5 text-[16px] font-mono font-bold text-cyan-200 tracking-wider shadow-inner flex items-center gap-1.5">
+                                    <Calendar size={14} className="text-cyan-300" />
+                                    {systemDate}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 3. Form Body Sections */}
-                <div className="p-3 sm:p-5 md:p-6 space-y-4 bg-slate-50/40">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
-                        
+                {/* Form Body Sections */}
+                <div className="p-2.5 md:p-3 space-y-2.5 bg-slate-50/40">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 md:gap-3">
                         {/* Left Column: Personal Profile (+ Residential Address when Foreign Patient) */}
-                        <div className="space-y-4">
-                            <div className="bg-white rounded-xl shadow-xs border border-slate-200/90 p-3.5 md:p-4 space-y-3.5">
-                                
-                                {/* Card Header */}
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-200/70 shrink-0">
-                                            <UserCheck size={16} />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-sm md:text-[15px] flex items-center gap-2">
-                                                Patient Demographics & Identification
-                                            </h3>
-                                            <p className="text-[11px] text-slate-400 font-medium">Primary electronic medical dossier</p>
-                                        </div>
-                                    </div>
+                        <div className="space-y-2.5">
+                            <div className="bg-white rounded-lg shadow-xs border border-slate-200/90 p-2.5 md:p-3 space-y-2">
+                                <h3 className="font-bold text-slate-900 text-[16px] flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-1.5 mb-0.5">
+                                    <span className="flex items-center gap-1.5">
+                                        <UserCheck size={18} className="text-teal-600" /> Patient Information
+                                    </span>
                                     {currentUhid ? (
-                                        <div className="flex items-center gap-1.5 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg">
-                                            <span className="text-[10px] font-bold text-teal-600 uppercase">UHID:</span>
-                                            <span className="text-teal-900 font-mono font-bold text-xs select-all">
-                                                {currentUhid}
-                                            </span>
-                                        </div>
+                                        <span className="text-teal-700 font-mono font-bold text-[15px] select-all">
+                                            ({currentUhid})
+                                        </span>
                                     ) : (
-                                        <span className="text-slate-400 font-normal text-xs bg-slate-100 px-2 py-0.5 rounded">
-                                            Pending Auto UHID
+                                        <span className="text-slate-400 font-normal text-[13px]">
+                                            (Pending UHID)
                                         </span>
                                     )}
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-3">
+                                </h3>
+                                <div className="grid grid-cols-1 gap-2">
                                     {formData.patientType === 'Returning / Old Patient' ? (
                                         <>
-                                            {/* Row 1: Patient Category (1st) and UHID / Patient ID (2nd, after Patient Category on same row) */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                                                        <span>Patient Category <span className="text-rose-500">*</span></span>
-                                                    </label>
+                                            {/* Row 1: Patient Category (1st) and UHID / Patient ID (2nd, after Patient Category on same row, NOT below) */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                <div className="space-y-0.5">
+                                                    <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
                                                     <select
                                                         ref={patientCategoryRef}
                                                         required
                                                         name="patientType"
-                                                        className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
+                                                        className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
                                                         value={formData.patientType === 'Foreign Patient' ? 'New Patient' : formData.patientType}
                                                         onChange={handleInputChange}
                                                     >
@@ -2011,18 +1931,18 @@ const Registration = () => {
                                                     </select>
                                                 </div>
 
-                                                <div className="space-y-1 animate-in slide-in-from-right-2 duration-200">
+                                                <div className="space-y-0.5 animate-in slide-in-from-right-2 duration-200">
                                                     <div className="flex items-center justify-between">
-                                                        <label className="text-xs font-bold text-teal-900 flex items-center gap-1">
-                                                            <Hash size={14} className="text-teal-600" /> UHID / Patient ID <span className="text-rose-500">*</span>
+                                                        <label className="text-[15px] font-bold text-teal-900 flex items-center gap-1.5">
+                                                            <Hash size={16} className="text-teal-600" /> UHID / Patient ID <span className="text-red-500">*</span>
                                                         </label>
                                                         {matchedPatient ? (
-                                                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                                                <CheckCircle size={10} className="text-emerald-600" /> Matched: {matchedPatient.name}
+                                                            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                                <CheckCircle size={11} className="text-emerald-600" /> Patient Found: {matchedPatient.name}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-[10px] text-slate-400">
-                                                                Auto-fills dossier
+                                                            <span className="text-[11px] text-slate-500 truncate">
+                                                                Enter UHID to auto-fill
                                                             </span>
                                                         )}
                                                     </div>
@@ -2032,7 +1952,7 @@ const Registration = () => {
                                                             autoFocus
                                                             name="uhid"
                                                             placeholder="Enter UHID (e.g. PID-000001)"
-                                                            className="w-full h-10 pl-9 pr-16 bg-white border border-teal-300 focus:border-teal-600 rounded-lg text-sm font-bold text-slate-900 focus:ring-2 focus:ring-teal-500/15 outline-none uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 transition-all shadow-2xs"
+                                                            className="w-full pl-8 pr-16 py-1 bg-white border border-teal-300 focus:border-teal-600 rounded-md text-[16px] font-bold text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none uppercase placeholder:normal-case placeholder:font-normal"
                                                             value={formData.uhid || ''}
                                                             onChange={handleUhidChange}
                                                             onKeyDown={handleUhidKeyDown}
@@ -2042,7 +1962,7 @@ const Registration = () => {
                                                                 }
                                                             }}
                                                         />
-                                                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none" />
+                                                        <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none" />
                                                         {matchedPatient && (
                                                             <button
                                                                 type="button"
@@ -2051,18 +1971,18 @@ const Registration = () => {
                                                                     setSelectedUhidIndex(-1);
                                                                     setFormData(prev => ({ ...prev, uhid: '' }));
                                                                 }}
-                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[12px] text-slate-400 hover:text-slate-700 bg-slate-100 px-2 py-0.5 rounded cursor-pointer"
                                                             >
                                                                 Clear
                                                             </button>
                                                         )}
 
-                                                        {/* Suggestions dropdown */}
+                                                        {/* Suggestions dropdown if searching */}
                                                         {showUhidSuggestions && uhidMatches.length > 0 && !matchedPatient && (
-                                                            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-teal-300 z-50 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150">
-                                                                <div className="px-3 py-1.5 bg-teal-50 text-[11px] font-bold uppercase text-teal-800 tracking-wider flex justify-between items-center">
-                                                                    <span>Matching Registered Patients</span>
-                                                                    <span className="text-[10px] text-teal-600 font-normal">↑↓ navigate • ↵ auto-fill</span>
+                                                            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-teal-300 z-50 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150">
+                                                                <div className="px-3 py-1 bg-teal-50 text-[11px] font-bold uppercase text-teal-800 tracking-wider flex justify-between items-center">
+                                                                    <span>Matching Patients (Hit Enter or Click to Auto-Fill)</span>
+                                                                    <span className="text-[10px] text-teal-600 font-normal">↑↓ to navigate</span>
                                                                 </div>
                                                                 {uhidMatches.map((p, idx) => {
                                                                     const isSelected = idx === selectedUhidIndex;
@@ -2076,19 +1996,19 @@ const Registration = () => {
                                                                                 handleSelectExistingPatient(p);
                                                                                 setSelectedUhidIndex(-1);
                                                                             }}
-                                                                            className={`w-full px-3.5 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
+                                                                            className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${isSelected ? 'bg-teal-100/90 ring-1 ring-inset ring-teal-400' : 'hover:bg-teal-50/80'
                                                                                 }`}
                                                                         >
                                                                             <div>
-                                                                                <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                                                                                    <span className="text-teal-700 font-mono font-black">{p.id}</span>
+                                                                                <div className="text-[14px] font-bold text-slate-900 flex items-center gap-2">
+                                                                                    <span className="text-teal-700 font-mono">{p.id}</span>
                                                                                     <span>{p.name}</span>
                                                                                 </div>
-                                                                                <div className="text-[11px] text-slate-500">
+                                                                                <div className="text-[12px] text-slate-500">
                                                                                     {p.age} Yrs / {p.gender} • Phone: {p.contact || 'N/A'} • {p.village || ''}
                                                                                 </div>
                                                                             </div>
-                                                                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded border shadow-2xs ${isSelected
+                                                                            <span className={`text-[12px] font-bold px-2 py-1 rounded border shadow-2xs ${isSelected
                                                                                 ? 'bg-teal-600 text-white border-teal-600'
                                                                                 : 'text-teal-600 bg-white border-teal-200'
                                                                                 }`}>
@@ -2104,28 +2024,28 @@ const Registration = () => {
                                             </div>
 
                                             {/* Row 2: Full Legal Name Below Row 1 */}
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-slate-700 tracking-wide">Full Legal Name <span className="text-rose-500">*</span></label>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Full Legal Name <span className="text-red-500">*</span></label>
                                                 <input
                                                     required
                                                     name="name"
-                                                    className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
+                                                    className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
                                                     value={formData.name}
                                                     onChange={handleInputChange}
-                                                    placeholder="Enter full legal name as per national ID / passport"
+                                                    placeholder="Enter full name as per ID"
                                                 />
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-slate-700 tracking-wide">Patient Category <span className="text-rose-500">*</span></label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Patient Category <span className="text-red-500">*</span></label>
                                                 <select
                                                     ref={patientCategoryRef}
                                                     autoFocus
                                                     required
                                                     name="patientType"
-                                                    className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
+                                                    className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
                                                     value={formData.patientType === 'Foreign Patient' ? 'New Patient' : formData.patientType}
                                                     onChange={handleInputChange}
                                                 >
@@ -2136,77 +2056,58 @@ const Registration = () => {
                                                     <option value="Corporate Account">Corporate Account</option>
                                                 </select>
                                             </div>
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-slate-700 tracking-wide">Full Legal Name <span className="text-rose-500">*</span></label>
-                                                <input
-                                                    required
-                                                    name="name"
-                                                    className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
-                                                    value={formData.name}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Enter full name as per ID"
-                                                />
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Full Legal Name <span className="text-red-500">*</span></label>
+                                                <input required name="name" className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none transition-all" value={formData.name} onChange={handleInputChange} placeholder="Enter full name as per ID" />
                                             </div>
                                         </div>
                                     )}
-
                                     {formData.patientType === 'Referral' && (
-                                        <div className="space-y-1 animate-in slide-in-from-left-2 duration-200">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                                                <span>Referral Source (Person / Hospital / Organization) <span className="text-rose-500">*</span></span>
-                                                <span className="text-[11px] text-teal-700 font-semibold">Attending referral source</span>
+                                        <div className="space-y-0.5 animate-in slide-in-from-left-2 duration-200">
+                                            <label className="text-[15px] font-semibold text-slate-600 flex items-center justify-between">
+                                                <span>Referral Source (Person / Organization) <span className="text-red-500">*</span></span>
+                                                <span className="text-[12px] text-teal-700 font-normal">Who referred this patient</span>
                                             </label>
                                             <div className="relative">
-                                                <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-600" size={15} />
+                                                <Share2 className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-600" size={15} />
                                                 <input
                                                     required
                                                     name="referredBy"
                                                     type="text"
-                                                    className="w-full h-10 pl-9 pr-3 bg-teal-50/40 border border-teal-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
+                                                    className="w-full pl-8 pr-2.5 py-1 bg-teal-50/50 border border-teal-200 rounded-md text-[16px] font-medium text-slate-900 focus:bg-white focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-400"
                                                     value={formData.referredBy}
                                                     onChange={handleInputChange}
-                                                    placeholder="Enter name of referring doctor, hospital, or organization"
+                                                    placeholder="Enter name of referring person or organization"
                                                 />
                                             </div>
                                         </div>
                                     )}
-
                                     {formData.patientType === 'Corporate Account' && (
-                                        <div className="space-y-1 animate-in slide-in-from-left-2 duration-200">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                                                <span>Corporate Organization / Company Name <span className="text-rose-500">*</span></span>
-                                                <span className="text-[11px] text-teal-700 font-semibold">Corporate billing account</span>
+                                        <div className="space-y-0.5 animate-in slide-in-from-left-2 duration-200">
+                                            <label className="text-[15px] font-semibold text-slate-600 flex items-center justify-between">
+                                                <span>Corporate Organization / Company Name <span className="text-red-500">*</span></span>
+                                                <span className="text-[12px] text-teal-700 font-normal">Company or institutional account</span>
                                             </label>
                                             <div className="relative">
-                                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-600" size={15} />
+                                                <Building2 className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-600" size={16} />
                                                 <input
                                                     required
                                                     name="corporateName"
                                                     type="text"
-                                                    className="w-full h-10 pl-9 pr-3 bg-teal-50/40 border border-teal-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
+                                                    className="w-full pl-8 pr-2.5 py-1 bg-teal-50/50 border border-teal-200 rounded-md text-[16px] font-medium text-slate-900 focus:bg-white focus:ring-1 focus:ring-teal-500 outline-none transition-all placeholder:text-slate-400"
                                                     value={formData.corporateName}
                                                     onChange={handleInputChange}
-                                                    placeholder="Enter corporate enterprise or institutional client name"
+                                                    placeholder="Enter company, institution, or organization name"
                                                 />
                                             </div>
                                         </div>
                                     )}
-
                                     {formData.patientType === 'Camp Referral' && (
-                                        <div className="space-y-1 animate-in slide-in-from-left-2 duration-200">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                                                <span>Select Outreach Campaign / Camp <span className="text-rose-500">*</span></span>
-                                                <span className="text-[11px] text-teal-700 font-semibold">Active field deployment</span>
-                                            </label>
+                                        <div className="space-y-0.5 animate-in slide-in-from-left-2 duration-200">
+                                            <label className="text-[15px] font-semibold text-slate-600">Select Campaign / Camp <span className="text-red-500">*</span></label>
                                             <div className="relative">
-                                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none" size={15} />
-                                                <select
-                                                    required
-                                                    name="campaignId"
-                                                    className="w-full h-10 pl-9 pr-3 bg-teal-50/40 border border-teal-200 rounded-lg text-sm font-bold text-teal-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
-                                                    value={formData.campaignId}
-                                                    onChange={handleInputChange}
-                                                >
+                                                <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-500" size={14} />
+                                                <select required name="campaignId" className="w-full pl-7 pr-2.5 py-1 bg-teal-50 border border-teal-100 rounded-md text-[16px] font-bold text-teal-900 focus:ring-1 focus:ring-teal-500 outline-none transition-all appearance-none" value={formData.campaignId} onChange={handleInputChange}>
                                                     <option value="">-- Select Active Camp --</option>
                                                     {campaigns.filter(c => c.status !== 'Completed').map(c => (
                                                         <option key={c.id} value={c.id}>{c.name} ({c.location})</option>
@@ -2215,53 +2116,23 @@ const Registration = () => {
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* Age & Date of Birth Row */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                                                <span>Age (Years • Months • Days) <span className="text-rose-500">*</span></span>
-                                                <span className="text-[10px] text-slate-400">Auto syncs DOB</span>
-                                            </label>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <input
-                                                    required
-                                                    name="ageYrs"
-                                                    type="number"
-                                                    min="0"
-                                                    max="150"
-                                                    placeholder="Yrs"
-                                                    className="w-full h-10 px-2.5 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all text-center placeholder:text-slate-400 placeholder:text-xs"
-                                                    value={formData.ageYrs}
-                                                    onChange={handleInputChange}
-                                                />
-                                                <input
-                                                    name="ageMns"
-                                                    type="number"
-                                                    min="0"
-                                                    max="11"
-                                                    placeholder="Mos"
-                                                    className="w-full h-10 px-2.5 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all text-center placeholder:text-slate-400 placeholder:text-xs"
-                                                    value={formData.ageMns}
-                                                    onChange={handleInputChange}
-                                                />
-                                                <input
-                                                    name="ageDays"
-                                                    type="number"
-                                                    min="0"
-                                                    max="31"
-                                                    placeholder="Days"
-                                                    className="w-full h-10 px-2.5 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all text-center placeholder:text-slate-400 placeholder:text-xs"
-                                                    value={formData.ageDays}
-                                                    onChange={handleInputChange}
-                                                />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Years <span className="text-red-500">*</span></label>
+                                                <input required name="ageYrs" type="number" min="0" max="150" placeholder="Years" className="w-full px-2 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.ageYrs} onChange={handleInputChange} />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Months</label>
+                                                <input name="ageMns" type="number" min="0" max="11" placeholder="Months" className="w-full px-2 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.ageMns} onChange={handleInputChange} />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Day</label>
+                                                <input name="ageDays" type="number" min="0" max="31" placeholder="Day" className="w-full px-2 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.ageDays} onChange={handleInputChange} />
                                             </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide flex items-center justify-between">
-                                                <span>Date of Birth</span>
-                                                <span className="text-[10px] text-slate-400">dd-mm-yyyy</span>
-                                            </label>
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600">Date of Birth</label>
                                             <CustomDatePicker
                                                 name="dob"
                                                 value={formData.dob}
@@ -2270,32 +2141,19 @@ const Registration = () => {
                                             />
                                         </div>
                                     </div>
-
-                                    {/* Demographics Row 1: Gender & Marital Status */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide block">Gender <span className="text-rose-500">*</span></label>
-                                            <select
-                                                required
-                                                name="gender"
-                                                className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
-                                                value={formData.gender}
-                                                onChange={handleInputChange}
-                                            >
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Gender <span className="text-red-500">*</span></label>
+                                            <select required name="gender" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.gender} onChange={handleInputChange}>
                                                 <option value="">Select Gender</option>
                                                 <option value="Male">Male</option>
                                                 <option value="Female">Female</option>
                                                 <option value="Other">Other</option>
                                             </select>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide block">Marital Status</label>
-                                            <select
-                                                name="maritalStatus"
-                                                className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
-                                                value={formData.maritalStatus}
-                                                onChange={handleInputChange}
-                                            >
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Marital Status</label>
+                                            <select name="maritalStatus" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.maritalStatus} onChange={handleInputChange}>
                                                 <option value="">Select Marital Status</option>
                                                 <option value="Single">Single</option>
                                                 <option value="Married">Married</option>
@@ -2306,40 +2164,27 @@ const Registration = () => {
                                             </select>
                                         </div>
                                     </div>
-
-                                    {/* Demographics Row 2: Blood Group & Payment Category */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide block">Blood Group</label>
-                                            <select
-                                                name="bloodGroup"
-                                                className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
-                                                value={formData.bloodGroup}
-                                                onChange={handleInputChange}
-                                            >
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Blood Group</label>
+                                            <select name="bloodGroup" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.bloodGroup} onChange={handleInputChange}>
                                                 <option value="">Select Blood Group</option>
-                                                <option value="A+">A+ (Rh Positive)</option>
-                                                <option value="A-">A- (Rh Negative)</option>
-                                                <option value="B+">B+ (Rh Positive)</option>
-                                                <option value="B-">B- (Rh Negative)</option>
-                                                <option value="O+">O+ (Rh Positive)</option>
-                                                <option value="O-">O- (Rh Negative)</option>
-                                                <option value="AB+">AB+ (Rh Positive)</option>
-                                                <option value="AB-">AB- (Rh Negative)</option>
-                                                <option value="Unknown">Unknown / Pending Lab</option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                                <option value="Unknown">Unknown</option>
                                             </select>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide block">Payment Category <span className="text-rose-500">*</span></label>
-                                            <select
-                                                required
-                                                name="paymentCategory"
-                                                className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all cursor-pointer"
-                                                value={formData.paymentCategory}
-                                                onChange={handleInputChange}
-                                            >
-                                                <option value="Pay">Regular Fee (Full Charge)</option>
-                                                <option value="Free">Charity / Exempt (Free Care)</option>
+                                        <div className="space-y-0.5">
+                                            <label className="text-[15px] font-semibold text-slate-600 block">Payment Category <span className="text-red-500">*</span></label>
+                                            <select required name="paymentCategory" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none" value={formData.paymentCategory} onChange={handleInputChange}>
+                                                <option value="Pay">Regular Fee</option>
+                                                <option value="Free">Charity</option>
                                             </select>
                                         </div>
                                     </div>
@@ -2350,207 +2195,160 @@ const Registration = () => {
                             {isForeign && renderResidentialAddress(true)}
                         </div>
 
-                        {/* Right Column: Contact Details & Emergency Network */}
-                        <div className="space-y-4">
-                            <div className="bg-white rounded-xl shadow-xs border border-slate-200/90 p-3.5 md:p-4 space-y-3.5">
-                                
-                                {/* Card Header */}
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-200/70 shrink-0">
-                                            <Phone size={16} />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-sm md:text-[15px] flex items-center gap-2">
-                                                Contact Information & Care Network
-                                            </h3>
-                                            <p className="text-[11px] text-slate-400 font-medium">Primary line, notifications & next-of-kin</p>
-                                        </div>
+                        {/* Contact Details */}
+                        <div className="bg-white rounded-lg shadow-xs border border-slate-200/90 p-2.5 md:p-3 space-y-2">
+                            <h3 className="font-bold text-slate-900 text-[16px] flex items-center gap-1.5 border-b border-slate-100 pb-1.5 mb-0.5">
+                                <Phone size={18} className="text-indigo-600" /> Contact Information
+                            </h3>
+                            <div className="grid grid-cols-1 gap-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-0.5">
+                                        <label className="text-[15px] font-semibold text-slate-600">Primary Phone Number <span className="text-red-500">*</span></label>
+                                        <input required name="contact" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.contact} onChange={handleInputChange} placeholder="01805567271" />
                                     </div>
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Verified Line</span>
+                                    <div className="space-y-0.5">
+                                        <label className="text-[15px] font-semibold text-slate-600">Secondary Phone Number</label>
+                                        <input name="altContact" className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.altContact} onChange={handleInputChange} placeholder="01805567271" />
+                                    </div>
+                                </div>
+                                <div className="space-y-0.5">
+                                    <label className="text-[15px] font-semibold text-slate-600">Email Address</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                        <input name="email" type="email" className="w-full pl-7 pr-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900" value={formData.email} onChange={handleInputChange} placeholder="patient@example.com" />
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-3">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide">Primary Phone Number <span className="text-rose-500">*</span></label>
+                                {isForeign && (
+                                    <div className="pt-2 pb-1 border-t border-teal-100 bg-teal-50/40 -mx-1 px-2.5 py-2 rounded-lg space-y-2 border border-teal-100 animate-in fade-in duration-200">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[15px] font-bold text-teal-800 flex items-center gap-1.5">
+                                                <Globe size={16} className="text-teal-600" /> Passport & Visa Details
+                                            </span>
+                                            <span className="text-[13px] font-bold px-2 py-0.5 bg-teal-100/90 text-teal-800 rounded-full border border-teal-200">Foreign National</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Passport Number <span className="text-red-500">*</span></label>
+                                                <input
+                                                    required={isForeign}
+                                                    name="passportNumber"
+                                                    className="w-full px-2.5 py-1 border border-teal-200 bg-white rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none uppercase placeholder:normal-case"
+                                                    value={formData.passportNumber}
+                                                    onChange={handleInputChange}
+                                                    placeholder="e.g. A12345678"
+                                                />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Issuing Country / Nationality <span className="text-red-500">*</span></label>
+                                                <input
+                                                    required={isForeign}
+                                                    name="passportCountry"
+                                                    className="w-full px-2.5 py-1 border border-teal-200 bg-white rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                                    value={formData.passportCountry}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            passportCountry: val,
+                                                            country: (!prev.country || prev.country === 'Bangladesh') ? val : prev.country
+                                                        }));
+                                                    }}
+                                                    placeholder="e.g. India, USA, Nepal, UK"
+                                                />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Passport Issue Date</label>
+                                                <CustomDatePicker
+                                                    name="passportIssueDate"
+                                                    value={formData.passportIssueDate}
+                                                    onChange={handleInputChange}
+                                                    placeholder="dd-mm-yyyy"
+                                                />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Passport Expiry Date <span className="text-red-500">*</span></label>
+                                                <CustomDatePicker
+                                                    required={isForeign}
+                                                    name="passportExpiryDate"
+                                                    value={formData.passportExpiryDate}
+                                                    onChange={handleInputChange}
+                                                    placeholder="dd-mm-yyyy"
+                                                />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Visa Type / Number</label>
+                                                <input
+                                                    name="visaNumber"
+                                                    className="w-full px-2.5 py-1 border border-slate-200 bg-white rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                                    value={formData.visaNumber}
+                                                    onChange={handleInputChange}
+                                                    placeholder="e.g. Medical Visa / V-12345"
+                                                />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <label className="text-[15px] font-semibold text-slate-600">Visa Valid Until</label>
+                                                <CustomDatePicker
+                                                    name="visaExpiryDate"
+                                                    value={formData.visaExpiryDate}
+                                                    onChange={handleInputChange}
+                                                    placeholder="dd-mm-yyyy"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-1.5 border-t border-slate-100">
+                                    <label className="text-[15px] font-bold text-slate-700 mb-1 block">
+                                        Emergency Contact Details <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                        <div className="space-y-0.5">
+                                            <label className="text-[14px] font-semibold text-slate-600">Name</label>
                                             <input
                                                 required
-                                                name="contact"
-                                                type="tel"
-                                                className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
-                                                value={formData.contact}
+                                                name="emergencyName"
+                                                className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                                value={formData.emergencyName}
                                                 onChange={handleInputChange}
-                                                placeholder="e.g. 01805567271"
+                                                placeholder="Contact name"
                                             />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 tracking-wide">Secondary Phone Number</label>
+                                        <div className="space-y-0.5">
+                                            <label className="text-[14px] font-semibold text-slate-600">Relationship</label>
+                                            <select
+                                                required
+                                                name="emergencyRelation"
+                                                className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
+                                                value={formData.emergencyRelation}
+                                                onChange={handleInputChange}
+                                            >
+                                                <option value="">Select Relation</option>
+                                                <option value="Father">Father</option>
+                                                <option value="Mother">Mother</option>
+                                                <option value="Spouse">Spouse</option>
+                                                <option value="Husband">Husband</option>
+                                                <option value="Wife">Wife</option>
+                                                <option value="Son">Son</option>
+                                                <option value="Daughter">Daughter</option>
+                                                <option value="Brother">Brother</option>
+                                                <option value="Sister">Sister</option>
+                                                <option value="Guardian">Guardian</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <label className="text-[14px] font-semibold text-slate-600">Phone Number</label>
                                             <input
-                                                name="altContact"
+                                                required
+                                                name="emergencyPhone"
                                                 type="tel"
-                                                className="w-full h-10 px-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
-                                                value={formData.altContact}
+                                                className="w-full px-2.5 py-1 border border-slate-200 rounded-md text-[16px] font-medium text-slate-900 focus:ring-1 focus:ring-teal-500 outline-none"
+                                                value={formData.emergencyPhone}
                                                 onChange={handleInputChange}
-                                                placeholder="Alternate phone number"
+                                                placeholder="01805567271"
                                             />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-700 tracking-wide">Email Address (Optional)</label>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
-                                            <input
-                                                name="email"
-                                                type="email"
-                                                className="w-full h-10 pl-9 pr-3 bg-slate-50/50 hover:bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-900 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none transition-all placeholder:text-slate-400 placeholder:text-xs"
-                                                value={formData.email}
-                                                onChange={handleInputChange}
-                                                placeholder="patient@example.com"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Foreign Patient Details Section */}
-                                    {isForeign && (
-                                        <div className="pt-2 pb-1 bg-teal-50/50 border border-teal-200/80 rounded-xl p-3 space-y-3 animate-in fade-in duration-200">
-                                            <div className="flex items-center justify-between border-b border-teal-200/70 pb-2">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Globe size={16} className="text-teal-700" />
-                                                    <span className="text-xs font-bold text-teal-900 uppercase tracking-wide">Passport & Visa Details</span>
-                                                </div>
-                                                <span className="text-[10px] font-black px-2 py-0.5 bg-teal-600 text-white rounded-full">Foreign National</span>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700">Passport Number <span className="text-rose-500">*</span></label>
-                                                    <input
-                                                        required={isForeign}
-                                                        name="passportNumber"
-                                                        className="w-full h-10 px-3 border border-teal-300 bg-white rounded-lg text-sm font-bold text-slate-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none uppercase placeholder:normal-case placeholder:text-xs"
-                                                        value={formData.passportNumber}
-                                                        onChange={handleInputChange}
-                                                        placeholder="e.g. A12345678"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700">Issuing Country <span className="text-rose-500">*</span></label>
-                                                    <input
-                                                        required={isForeign}
-                                                        name="passportCountry"
-                                                        className="w-full h-10 px-3 border border-teal-300 bg-white rounded-lg text-sm font-medium text-slate-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none placeholder:text-xs"
-                                                        value={formData.passportCountry}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setFormData(prev => ({
-                                                                ...prev,
-                                                                passportCountry: val,
-                                                                country: (!prev.country || prev.country === 'Bangladesh') ? val : prev.country
-                                                            }));
-                                                        }}
-                                                        placeholder="e.g. India, UK, USA"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700">Passport Issue Date</label>
-                                                    <CustomDatePicker
-                                                        name="passportIssueDate"
-                                                        value={formData.passportIssueDate}
-                                                        onChange={handleInputChange}
-                                                        placeholder="dd-mm-yyyy"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700">Passport Expiry Date <span className="text-rose-500">*</span></label>
-                                                    <CustomDatePicker
-                                                        required={isForeign}
-                                                        name="passportExpiryDate"
-                                                        value={formData.passportExpiryDate}
-                                                        onChange={handleInputChange}
-                                                        placeholder="dd-mm-yyyy"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700">Visa Type / Number</label>
-                                                    <input
-                                                        name="visaNumber"
-                                                        className="w-full h-10 px-3 border border-slate-200 bg-white rounded-lg text-sm font-medium text-slate-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none placeholder:text-xs"
-                                                        value={formData.visaNumber}
-                                                        onChange={handleInputChange}
-                                                        placeholder="e.g. Medical / V-98231"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-bold text-slate-700">Visa Valid Until</label>
-                                                    <CustomDatePicker
-                                                        name="visaExpiryDate"
-                                                        value={formData.visaExpiryDate}
-                                                        onChange={handleInputChange}
-                                                        placeholder="dd-mm-yyyy"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Emergency Contact Network Sub-Card */}
-                                    <div className="pt-2 border-t border-slate-100">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
-                                                <ShieldAlert size={14} className="text-rose-500" /> Emergency Contact Details <span className="text-rose-500">*</span>
-                                            </label>
-                                            <span className="text-[10px] text-slate-400 font-medium">Kin / Attendant</span>
-                                        </div>
-                                        <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-3 space-y-2.5">
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                                <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-slate-600">Contact Name <span className="text-rose-500">*</span></label>
-                                                    <input
-                                                        required
-                                                        name="emergencyName"
-                                                        className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-900 bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none placeholder:text-slate-400 placeholder:text-xs"
-                                                        value={formData.emergencyName}
-                                                        onChange={handleInputChange}
-                                                        placeholder="Full name"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-slate-600">Relationship <span className="text-rose-500">*</span></label>
-                                                    <select
-                                                        required
-                                                        name="emergencyRelation"
-                                                        className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-900 bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none cursor-pointer"
-                                                        value={formData.emergencyRelation}
-                                                        onChange={handleInputChange}
-                                                    >
-                                                        <option value="">Select Relation</option>
-                                                        <option value="Father">Father</option>
-                                                        <option value="Mother">Mother</option>
-                                                        <option value="Spouse">Spouse</option>
-                                                        <option value="Husband">Husband</option>
-                                                        <option value="Wife">Wife</option>
-                                                        <option value="Son">Son</option>
-                                                        <option value="Daughter">Daughter</option>
-                                                        <option value="Brother">Brother</option>
-                                                        <option value="Sister">Sister</option>
-                                                        <option value="Guardian">Guardian</option>
-                                                        <option value="Other">Other</option>
-                                                    </select>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-slate-600">Phone Number <span className="text-rose-500">*</span></label>
-                                                    <input
-                                                        required
-                                                        name="emergencyPhone"
-                                                        type="tel"
-                                                        className="w-full h-10 px-2.5 border border-slate-200 rounded-lg text-sm font-bold text-slate-900 bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/15 outline-none placeholder:text-slate-400 placeholder:text-xs"
-                                                        value={formData.emergencyPhone}
-                                                        onChange={handleInputChange}
-                                                        placeholder="01805567271"
-                                                    />
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2562,43 +2360,35 @@ const Registration = () => {
                     {!isForeign && renderResidentialAddress(false)}
                 </div>
 
-                {/* 4. Docked Clinical Command Bar (Footer) */}
-                <div className="bg-gradient-to-r from-teal-800 via-teal-900 to-slate-900 text-white py-2.5 px-4 md:px-6 border-t border-teal-950/40 relative overflow-hidden flex flex-wrap gap-4 items-center justify-between shadow-lg">
+                {/* Registration Payment & Actions */}
+                <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-cyan-800 text-white py-2 px-4 md:px-5 border-t border-teal-900/30 relative overflow-hidden flex flex-wrap gap-4 items-center justify-between">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-                    
-                    {/* Left Side: Fee & Counter Selection */}
-                    <div className="relative z-10 flex flex-wrap items-center gap-3 sm:gap-6 flex-1 min-w-[280px]">
-                        
-                        {/* Registration Fee Box */}
-                        <div className="flex items-center gap-2 bg-slate-950/40 px-3 py-1 rounded-xl border border-white/10">
-                            <span className="text-xs font-extrabold uppercase tracking-wider text-teal-300">Reg Fee:</span>
+                    <div className="relative z-10 flex flex-wrap items-center gap-4 sm:gap-6 flex-1 min-w-[200px]">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[14px] font-black uppercase tracking-wider text-teal-200">Registration Fee:</span>
                             <div className="flex items-center">
-                                <span className="text-base font-black text-cyan-300 mr-1">{currency === 'BDT' ? '৳' : '$'}</span>
+                                <span className="text-[18px] font-black text-cyan-200 mr-1">{currency === 'BDT' ? '৳' : '$'}</span>
                                 <input
                                     name="registrationFee"
                                     type="number"
-                                    className="bg-black/40 hover:bg-black/60 border border-white/20 focus:border-cyan-300 rounded px-2 py-0.5 text-sm font-bold text-white focus:ring-1 focus:ring-cyan-300 w-20 outline-none transition-all shadow-inner font-mono text-center"
+                                    className="bg-black/20 hover:bg-black/30 border border-white/20 focus:border-cyan-300 rounded px-2 py-0.5 text-[16px] font-bold text-white focus:ring-1 focus:ring-cyan-300 w-20 outline-none transition-all shadow-inner"
                                     value={formData.registrationFee}
                                     onChange={handleInputChange}
                                 />
                             </div>
-                            <span className="hidden sm:inline text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                                Cash/POS
-                            </span>
                         </div>
 
-                        {/* Target Room / Counter Selection */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
-                                <span>{serviceType === 'Camp' ? 'Target Counter' : 'Target Room'}</span>
-                                <span className="text-rose-400">*</span>
+                        {/* Target Room / Target Counter Selection (Swapped from Header) */}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-[13px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">
+                                {serviceType === 'Camp' ? 'Target Counter' : 'Target Room'} <span className="text-red-400">*</span>
                             </span>
                             <div className="relative">
                                 <select
                                     ref={targetRoomRef}
                                     required
                                     name="selectedRoomId"
-                                    className="bg-black/40 hover:bg-black/60 backdrop-blur-md text-white font-bold text-xs pl-2.5 pr-6 h-8 w-32 sm:w-36 rounded-lg border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300 focus:bg-teal-950 cursor-pointer outline-none transition-all appearance-none truncate"
+                                    className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs sm:text-[13px] pl-2.5 pr-6 h-8 w-32 sm:w-36 rounded-md border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300 focus:bg-teal-900/90 cursor-pointer outline-none transition-all appearance-none truncate ring-offset-1 ring-offset-teal-800"
                                     value={selectedRoomId}
                                     onChange={(e) => setSelectedRoomId(e.target.value)}
                                 >
@@ -2609,47 +2399,41 @@ const Registration = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
+                                <ChevronDown size={13} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
                             </div>
-                            
-                            {/* Room Number Chip */}
-                            <div className="w-8 h-8 bg-white text-teal-900 rounded-lg flex items-center justify-center font-black text-xs font-mono shadow-sm shrink-0 border border-teal-200">
+                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-sm sm:text-base shadow-xs shrink-0">
                                 {rooms.find(r => r.id === selectedRoomId)?.roomNumber || '--'}
                             </div>
-
-                            {/* Manage Counters Button */}
                             <button
                                 type="button"
                                 tabIndex={-1}
                                 onClick={() => setShowRoomModal(true)}
-                                className="px-2.5 h-8 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-white/15 shrink-0 cursor-pointer active:scale-95"
-                                title={serviceType === 'Camp' ? "Manage Active Counters" : "Manage Active Rooms"}
+                                className="px-2 h-8 bg-white/15 hover:bg-white/25 text-white rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-white/20 shrink-0"
+                                title={serviceType === 'Camp' ? "Manage Counters" : "Manage Rooms"}
                             >
                                 <Settings size={13} />
                                 <span className="hidden sm:inline">{serviceType === 'Camp' ? 'Counters' : 'Rooms'}</span>
                             </button>
                         </div>
                     </div>
-
-                    {/* Right Side: Command Buttons */}
-                    <div className="relative z-10 flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                    <div className="relative z-10 flex items-center gap-2 w-full sm:w-auto justify-end">
                         <button
                             type="button"
                             onClick={() => navigate('/patients')}
-                            className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                            title="Cancel registration and return to directory (Esc)"
+                            className="px-3.5 py-1.5 bg-black/20 hover:bg-black/30 border border-white/20 text-white/90 hover:text-white rounded-lg font-bold text-[16px] transition-all flex items-center gap-1.5 cursor-pointer"
+                            title="Cancel and Go Back (Esc)"
                         >
                             <span>Cancel</span>
-                            <kbd className="text-[10px] font-mono bg-black/30 px-1.5 py-0.5 rounded text-white/80 border border-white/20">Esc</kbd>
+                            <kbd className="text-[11px] font-mono bg-white/20 px-1.5 py-0.5 rounded text-white/90 border border-white/20">Esc</kbd>
                         </button>
                         <button
                             type="submit"
-                            className="px-5 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-teal-950 hover:text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/20 border border-teal-300/40"
-                            title="Save patient admission and generate official slip (Ctrl+S)"
+                            className="px-4 py-1.5 bg-black/20 hover:bg-black/30 border border-white/20 text-white hover:text-white rounded-lg font-bold text-[16px] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            title="Save patient and print slip (Ctrl+S)"
                         >
                             <Printer size={16} />
                             <span>Save & Print</span>
-                            <kbd className="text-[10px] font-mono bg-black/20 text-teal-950 px-1.5 py-0.5 rounded font-bold border border-teal-900/20">Ctrl+S</kbd>
+                            <kbd className="text-[11px] font-mono bg-white/20 px-1.5 py-0.5 rounded text-white/90 border border-white/20">Ctrl+S</kbd>
                         </button>
                     </div>
                 </div>
