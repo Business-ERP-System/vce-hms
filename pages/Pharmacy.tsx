@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Search, ShoppingCart, Archive, TrendingDown, Printer, Truck, Package, Phone, Mail, RotateCcw, Eye, Pill, CheckCircle, AlertTriangle, DollarSign, BarChart3, Plus, FileText, Glasses, Receipt, X, Save, Trash2, PenTool, User } from 'lucide-react';
+import { Search, ShoppingCart, Archive, TrendingDown, Printer, Truck, Package, Phone, Mail, RotateCcw, Eye, Pill, CheckCircle, AlertTriangle, BarChart3, Plus, FileText, Glasses, ReceiptText, X, Save, Trash2, PenTool, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, Supplier } from '../types';
 import { CustomDatePicker } from '../components/CustomDatePicker';

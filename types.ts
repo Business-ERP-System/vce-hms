@@ -406,7 +406,7 @@ export interface Invoice {
   tax: number;
   discount: number;
   totalAmount: number;
-  currency: 'BDT' | 'USD';
+  currency: 'BDT';
   paymentMethod: 'Cash' | 'Card' | 'Insurance' | 'Online';
   paymentGateway?: 'SSL Commerz' | 'bKash' | 'Nagad' | 'Rocket' | 'Visa/MasterCard';
   transactionId?: string;

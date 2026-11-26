@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ORG_DETAILS } from '../constants';
 import {
-    FileText, TrendingUp, DollarSign, Activity, Users, ShoppingCart,
+    FileText, TrendingUp, Activity, Users, ShoppingCart,
     TestTube, Bed, Eye, Calendar, Scissors, Box, ArrowLeft, Download,
     Printer, Filter, Sparkles, AlertTriangle, Database, Globe, Map, Tag,
     ChevronRight, Briefcase, Ambulance as AmbulanceIcon, ReceiptText, Pill,
@@ -241,7 +241,7 @@ const Reports = () => {
                             p.lastVisit,
                             p.status,
                             stayDuration,
-                            `${currency === 'BDT' ? '৳' : '$'}${totalBilled.toFixed(2)}`
+                            `৳${totalBilled.toFixed(2)}`
                         ];
                     })
                 };
@@ -258,7 +258,7 @@ const Reports = () => {
                         p.id, p.name, `${p.age}Y/${p.gender}`, p.contact, p.altContact || '-', p.email || '-',
                         p.village || '-', p.postOffice || '-', p.upazilla || '-', p.district || '-', p.state || '-', p.country || '-',
                         p.patientType || '-', p.paymentCategory || '-', p.speciality || '-', p.allocation || '-', p.mrLocation || '-',
-                        p.nextOfKin || '-', `${currency === 'BDT' ? '৳' : '$'}${p.registrationFee}`, p.lastVisit, p.diagnosis
+                        p.nextOfKin || '-', `৳${p.registrationFee}`, p.lastVisit, p.diagnosis
                     ])
                 };
 
@@ -272,10 +272,10 @@ const Reports = () => {
                     headers: ['Bill ID', 'Date', 'Patient Name', 'Category', 'Sub-Total', 'Discount', 'Tax', 'Net Amount', 'Method'],
                     data: invoices.map(inv => [
                         inv.id, inv.date, inv.patientName, inv.category,
-                        `${currency === 'BDT' ? '৳' : '$'}${inv.subTotal.toFixed(2)}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${inv.discount.toFixed(2)}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${inv.tax.toFixed(2)}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${inv.totalAmount.toFixed(2)}`,
+                        `৳${inv.subTotal.toFixed(2)}`,
+                        `৳${inv.discount.toFixed(2)}`,
+                        `৳${inv.tax.toFixed(2)}`,
+                        `৳${inv.totalAmount.toFixed(2)}`,
                         inv.paymentMethod
                     ])
                 };
@@ -316,7 +316,7 @@ const Reports = () => {
                             room.name,
                             room.type,
                             `${totalPatientsIntake} Patients`,
-                            `${currency === 'BDT' ? '৳' : '$'}${totalTransactionsVolume.toFixed(2)}`,
+                            `৳${totalTransactionsVolume.toFixed(2)}`,
                             `${activeQueue} in Queue`,
                             status
                         ];
@@ -328,9 +328,9 @@ const Reports = () => {
                     headers: ['Item ID', 'Name', 'Category', 'Stock Level', 'Unit Price', 'Supplier', 'Value'],
                     data: inventory.map(i => [
                         i.id, i.name, i.category, i.stock,
-                        `${currency === 'BDT' ? '৳' : '$'}${i.price.toFixed(2)}`,
+                        `৳${i.price.toFixed(2)}`,
                         i.supplier,
-                        `${currency === 'BDT' ? '৳' : '$'}${(i.stock * i.price).toFixed(2)}`
+                        `৳${(i.stock * i.price).toFixed(2)}`
                     ])
                 };
 
@@ -370,10 +370,10 @@ const Reports = () => {
                     headers: ['Emp ID', 'Name', 'Month/Year', 'Basic', 'Allowances', 'Deductions', 'Net Payable', 'Status'],
                     data: payroll.map(p => [
                         p.id, p.employeeName, `${p.month} ${p.year}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${p.basicPaid}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${p.allowancesPaid}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${p.deductionsTotal}`,
-                        `${currency === 'BDT' ? '৳' : '$'}${p.netSalary}`,
+                        `৳${p.basicPaid}`,
+                        `৳${p.allowancesPaid}`,
+                        `৳${p.deductionsTotal}`,
+                        `৳${p.netSalary}`,
                         p.paymentStatus
                     ])
                 };
@@ -388,7 +388,7 @@ const Reports = () => {
                 return { headers: ['Req ID', 'Patient', 'Test', 'Date', 'Status', 'Result'], data: labTests.map(t => [t.id, t.patientName, t.testName, t.date, t.status, t.result || '-']) };
 
             case "General Ledger Report":
-                return { headers: ['Txn ID', 'Date', 'Description', 'Category', 'Method', 'Amount'], data: finance.map(f => [f.id, f.date, f.description, f.category, f.method, `${currency === 'BDT' ? '৳' : '$'}${f.amount.toFixed(2)}`]) };
+                return { headers: ['Txn ID', 'Date', 'Description', 'Category', 'Method', 'Amount'], data: finance.map(f => [f.id, f.date, f.description, f.category, f.method, `৳${f.amount.toFixed(2)}`]) };
 
             case "Ambulance Trip Log":
                 return { headers: ['Vehicle No', 'Driver', 'Contact', 'Status', 'Current Location'], data: ambulances.map(a => [a.vehicleNumber, a.driverName, a.contact, a.status, a.location]) };

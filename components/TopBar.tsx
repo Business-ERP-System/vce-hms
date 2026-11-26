@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, Settings, User, ChevronDown, Command, Coins, LogOut, Shield, Menu } from 'lucide-react';
+import { BdtIcon } from './BdtIcon';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { UserRole } from '../types';
@@ -91,15 +92,14 @@ const TopBar: React.FC<TopBarProps> = ({
             <span className="font-mono text-[11px] font-bold">F1</span>
           </button>
 
-          {/* Currency Toggle */}
-          <button
-            onClick={toggleCurrency}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-xs font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
-            title="Switch Currency"
+          {/* Currency Badge */}
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200/80 rounded-xl text-xs font-black text-slate-700 shadow-xs uppercase tracking-wider"
+            title="Operating Currency: Bangladeshi Taka (৳ BDT)"
           >
-            <Coins size={14} className="text-amber-500" />
-            {currency}
-          </button>
+            <BdtIcon size={14} className="text-teal-700" />
+            <span>BDT</span>
+          </div>
 
           <button className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all relative group">
             <Bell className="w-5 h-5 group-hover:shake" />

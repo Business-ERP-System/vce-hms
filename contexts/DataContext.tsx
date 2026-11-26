@@ -58,7 +58,7 @@ interface DataContextType {
   biometricMachines: BiometricMachine[];
   companies: Company[];
   branches: Branch[];
-  currency: 'BDT' | 'USD';
+  currency: 'BDT';
   toggleCurrency: () => void;
   formatCurrency: (amount: number) => string;
 
@@ -316,7 +316,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [itemGroups, setItemGroups] = useState<ItemGroup[]>(MOCK_ITEM_GROUPS);
   const [itemCategories, setItemCategories] = useState<ItemCategory[]>(MOCK_ITEM_CATEGORIES);
   const [itemUnits, setItemUnits] = useState<ItemUnit[]>(MOCK_ITEM_UNITS);
-  const [currency, setCurrency] = useState<'BDT' | 'USD'>('BDT');
+  const [currency, setCurrency] = useState<'BDT'>('BDT');
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(MOCK_ATTENDANCE);
   const [leaves, setLeaves] = useState<LeaveRequest[]>(MOCK_LEAVES);
   const [payroll, setPayroll] = useState<PayrollRecord[]>(MOCK_PAYROLL);
@@ -328,8 +328,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [wards, setWards] = useState<WardMaster[]>(INITIAL_WARDS);
   const [floors, setFloors] = useState<FloorMaster[]>(INITIAL_FLOORS);
 
-  const toggleCurrency = () => setCurrency(prev => prev === 'BDT' ? 'USD' : 'BDT');
-  const formatCurrency = (amount: number) => currency === 'BDT' ? `৳${amount.toLocaleString('en-BD')}` : `$${amount.toLocaleString('en-US')}`;
+  const toggleCurrency = () => setCurrency('BDT');
+  const formatCurrency = (amount: number) => `৳${(Number(amount) || 0).toLocaleString('en-BD')}`;
 
   const hasPermission = useCallback((module: string, action: keyof ActionPermission): boolean => {
     if (role === UserRole.SUPER_ADMIN) return true;

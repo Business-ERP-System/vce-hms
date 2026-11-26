@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { DollarSign, TrendingUp, TrendingDown, FileText, Download, ReceiptText, Calendar, Plus, X, Printer } from 'lucide-react';
+import { TrendingUp, TrendingDown, FileText, Download, ReceiptText, Calendar, Plus, X, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FinanceRecord } from '../types';
 import { CustomDatePicker } from '../components/CustomDatePicker';
@@ -108,7 +108,7 @@ const Finance = () => {
                     {viewMode === 'Dashboard' ? 'View Ledger' : 'View Dashboard'}
                 </button>
                 <button onClick={() => setShowExpenseModal(true)} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-sm transition-colors justify-center">
-                    <span className="font-bold">{currency === 'BDT' ? '৳' : '$'}</span> Record Expense
+                    <span className="font-bold">৳</span> Record Expense
                 </button>
             </div>
         </div>
@@ -161,7 +161,7 @@ const Finance = () => {
                             <p className="text-xs font-bold text-slate-500 uppercase">Net Profit</p>
                             <h3 className="text-2xl font-bold text-blue-600 mt-1">{formatCurrency(netProfit)}</h3>
                         </div>
-                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600 font-bold">{currency === 'BDT' ? '৳' : '$'}</div>
+                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600 font-bold">৳</div>
                     </div>
                     <p className="text-xs text-slate-400 mt-2">Available Cash Flow</p>
                 </div>
@@ -344,7 +344,7 @@ const Finance = () => {
                           />
                       </div>
                       <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Amount ({currency === 'BDT' ? '৳' : '$'})</label>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Amount (৳)</label>
                           <input 
                             type="number" 
                             required

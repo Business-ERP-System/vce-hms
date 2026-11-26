@@ -513,7 +513,7 @@ const Lab = () => {
                                     <input placeholder="e.g. CBC-101" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-tight focus:ring-2 focus:ring-indigo-600 outline-none" value={newTestDef.code} onChange={e => setNewTestDef({ ...newTestDef, code: e.target.value })} required />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Standard Fee ($)</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Standard Fee (৳)</label>
                                     <input placeholder="0.00" type="number" step="0.01" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-indigo-600 outline-none" value={newTestDef.price} onChange={e => setNewTestDef({ ...newTestDef, price: e.target.value })} required />
                                 </div>
                             </div>

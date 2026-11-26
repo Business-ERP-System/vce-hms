@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, ComposedChart, Line
 } from 'recharts';
 import {
-  Users, DollarSign, Activity, Sparkles, TrendingUp, TrendingDown,
+  Users, Activity, Sparkles, TrendingUp, TrendingDown,
   BedDouble, Microscope, Scissors, UserCheck, Clock, Settings, ArrowRight,
   Ambulance, ShieldCheck, Zap, Layers, Workflow, Box, ClipboardList,
   Printer, HeartPulse, ShieldAlert, Package, Stethoscope, Truck,

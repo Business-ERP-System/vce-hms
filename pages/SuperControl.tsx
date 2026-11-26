@@ -100,7 +100,7 @@ const INITIAL_MODULES: ModuleControl[] = [
         name: 'Billing & POS Cashiering',
         isEnabled: true,
         features: [
-          { id: 'FEAT014', name: 'Multi-Currency (BDT / USD)', isEnabled: true },
+          { id: 'FEAT014', name: 'Operating Currency (BDT ৳)', isEnabled: true },
           { id: 'FEAT015', name: 'Corporate & Insurance Billing', isEnabled: true }
         ]
       }

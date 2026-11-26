@@ -4,7 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { Patient, Invoice, InvoiceItem, Appointment, Bed, BillingItem } from '../types';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-    Search, Plus, Trash2, Printer, CheckCircle, CreditCard, DollarSign, User,
+    Search, Plus, Trash2, Printer, CheckCircle, CreditCard, User,
     FileText, Download, ReceiptText, ArrowLeft, Stethoscope, Bed as BedIcon,
     TestTube, Pill, Filter, Eye, AlertCircle, ScanLine, Calendar, Save, X,
     Edit, RefreshCw, TrendingUp, PieChart as PieIcon, BarChart3, Link as LinkIcon,
@@ -286,7 +286,7 @@ const Billing = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"><div><p className="text-xs font-bold text-slate-500 uppercase">Revenue</p><h3 className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalRevenue)}</h3></div><div className="p-3 bg-teal-50 rounded-full text-teal-600 font-bold text-xl w-12 h-12 flex items-center justify-center">{currency === 'BDT' ? '৳' : '$'}</div></div>
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"><div><p className="text-xs font-bold text-slate-500 uppercase">Revenue</p><h3 className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalRevenue)}</h3></div><div className="p-3 bg-teal-50 rounded-full text-teal-600 font-bold text-xl w-12 h-12 flex items-center justify-center">৳</div></div>
                     <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"><div><p className="text-xs font-bold text-slate-500 uppercase">Dues</p><h3 className="text-2xl font-bold text-amber-600 mt-1">{formatCurrency(pendingAmount)}</h3></div><div className="p-3 bg-amber-50 rounded-full text-amber-600"><AlertCircle size={24} /></div></div>
                     <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"><div><p className="text-xs font-bold text-slate-500 uppercase">Invoices</p><h3 className="text-2xl font-bold text-slate-900 mt-1">{filteredInvoices.length}</h3></div><div className="p-3 bg-blue-50 rounded-full text-blue-600"><FileText size={24} /></div></div>
                 </div>

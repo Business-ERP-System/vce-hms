@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Save, User, Phone, MapPin, Calendar, FileText, CreditCard,
     Activity, Upload, Printer, CheckCircle, Eye, Info, UserCheck,
-    ShieldCheck, DollarSign, Stethoscope, Briefcase, Map as MapIcon,
+    ShieldCheck, Stethoscope, Briefcase, Map as MapIcon,
     FlaskConical, Microscope, Users, Home, Archive, Mail, Tag,
     ChevronRight, ArrowLeft, UserPlus, Plus, Trash2, Edit3, Check, X, Settings, Tent, ChevronDown, Globe, Search, Hash,
     ShieldAlert, SlidersHorizontal, Building2, Lock, CheckCircle2, RefreshCw, AlertTriangle, Share2, Sparkles
@@ -2408,7 +2408,7 @@ const Registration = () => {
                         <div className="flex items-center gap-2">
                             <span className="text-[14px] font-black uppercase tracking-wider text-teal-200">Registration Fee:</span>
                             <div className="flex items-center">
-                                <span className="text-[18px] font-black text-cyan-200 mr-1">{currency === 'BDT' ? '৳' : '$'}</span>
+                                <span className="text-[18px] font-black text-cyan-200 mr-1">৳</span>
                                 <input
                                     name="registrationFee"
                                     type="number"

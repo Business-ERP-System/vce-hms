@@ -39,7 +39,7 @@ export const BdtIcon: React.FC<BdtIconProps> = ({
         textAnchor="middle"
         fontSize="17"
         fontWeight="800"
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Bengali', Arial, sans-serif"
+        fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Bengali', 'Kalpurush', 'SolaimanLipi', 'Vrinda', Arial, sans-serif"
       >
         ৳
       </text>

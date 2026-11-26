@@ -8,7 +8,7 @@ import {
     Search, Plus, Filter, FileText, Trash2, X, Save, ArrowUpDown, Sparkles,
     BrainCircuit, AlertTriangle, Edit, RefreshCw, ChevronDown, Download,
     Upload, ScanLine, FileCheck, CheckSquare, Square, UserMinus, UserCheck,
-    Stethoscope, Eye, Clock, Activity, FilePlus, Printer, DollarSign,
+    Stethoscope, Eye, Clock, Activity, FilePlus, Printer,
     CreditCard, Scissors, Bed as BedIcon, ArrowRight, FileJson,
     FileSpreadsheet, FileCode, FileType, Phone, ExternalLink, MapPin,
     Home, CreditCard as CardIcon, UserPlus, Info, Tag, Clipboard, Copy,
@@ -1948,8 +1948,8 @@ const Patients = () => {
                                                     <InfoBlock label="Medical Specialty Track" value={selectedPatient.speciality} icon={Activity} />
                                                     <InfoBlock label="Financial Category" value={selectedPatient.paymentCategory} icon={CardIcon} />
                                                     <div className="bg-white p-4 rounded-xl border border-slate-100 flex items-center gap-4 group hover:border-teal-200 transition-all">
-                                                        <div className="p-2.5 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-teal-50 group-hover:text-teal-600 transition-all font-bold">
-                                                            {currency === 'BDT' ? '৳' : '$'}
+                                                        <div className="p-2.5 bg-slate-50 text-teal-600 rounded-lg group-hover:bg-teal-50 group-hover:text-teal-700 transition-all font-bold">
+                                                            <BdtIcon size={18} />
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Registration Fee Paid</p>

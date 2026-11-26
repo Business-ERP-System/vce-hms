@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Settings, X, ShieldAlert, CheckCircle2, SlidersHorizontal,
-    Building2, Printer, DollarSign, Hash, Plus, Edit3, Trash2,
+    Building2, Printer, Hash, Plus, Edit3, Trash2,
     Check, ExternalLink, Save, Building, Users, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';

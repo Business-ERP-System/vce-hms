@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import {
     Search, Download, ShieldCheck, Phone, FileText, Calendar, Lock,
     ArrowLeft, CheckCircle, AlertCircle, Mail, Eye, EyeOff, User,
-    LogOut, Stethoscope, Pill, Receipt, HelpCircle, X, Home,
+    LogOut, Stethoscope, Pill, HelpCircle, X, Home,
     ChevronRight, FlaskConical, CreditCard, Edit3, Umbrella, Send, CheckCircle2
 } from 'lucide-react';
 import { downloadPDF } from '../services/exportService';

@@ -5,7 +5,7 @@ import { Bed, Patient, WardMaster, FloorMaster, Admission, BedCategory, BillingI
 import {
     BedDouble, CheckCircle, Clock, AlertCircle, ArrowRightLeft,
     X, FileText, User, Plus, Grid, List, Edit, Eye,
-    LogOut, Save, Printer, DollarSign, Stethoscope, Scissors,
+    LogOut, Save, Printer, Stethoscope, Scissors,
     Search, Info, ShieldCheck, Download, Trash2, ChevronRight, ArrowLeft,
     Settings as CogIcon, LayoutGrid, Layers, MapPin, Building, Activity,
     MoreVertical, ChevronDown, ChevronUp, Database, Mail
@@ -281,7 +281,7 @@ const IPD = () => {
                                 <input className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold" placeholder="Referring Doctor name" value={admissionForm.referredBy} onChange={e => setAdmissionForm({ ...admissionForm, referredBy: e.target.value })} />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Admission Advance ({currency === 'BDT' ? '৳' : '$'})</label>
+                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Admission Advance (৳)</label>
                                 <input type="number" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-black text-teal-700" value={admissionForm.advancePaid} onChange={e => setAdmissionForm({ ...admissionForm, advancePaid: parseFloat(e.target.value) })} />
                             </div>
                         </div>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import {
     User, Briefcase, Calendar, Clock, Phone, Mail, Plus, Shield, Users,
-    FileText, CheckCircle, Fingerprint, LogOut, Coffee, DollarSign,
+    FileText, CheckCircle, Fingerprint, LogOut, Coffee,
     Settings, Trash2, Edit3, Eye, Search, AlertCircle, Check, X,
     MapPin, Cpu, TrendingUp, Download, Printer, Filter, Activity
 } from 'lucide-react';
