@@ -25,7 +25,7 @@ const EMR = () => {
     const [showClinicalSummary, setShowClinicalSummary] = useState(false);
     const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
     const [aiSuggestion, setAiSuggestion] = useState<string>("");
-    const [activeTab, setActiveTab] = useState<'clinical' | 'visual' | 'refraction' | 'vitals' | 'diagnosis'>('clinical');
+    const [activeTab, setActiveTab] = useState<'clinical' | 'visual' | 'refraction' | 'vitals' | 'diagnosis'>('vitals');
     const [searchTerm, setSearchTerm] = useState('');
 
     const [isScanningVitals, setIsScanningVitals] = useState(false);
@@ -485,15 +485,15 @@ const EMR = () => {
 
                 <div className="flex flex-col lg:flex-row gap-6 flex-1 overflow-hidden">
                     <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
-                        <div className="flex border-b border-slate-200 bg-slate-50/50">
+                        <div className="flex border-b border-slate-200 bg-slate-50/50 overflow-x-auto no-scrollbar flex-nowrap">
                             {[
                                 { id: 'vitals', label: 'Vitals & VA', roles: ['Nurse', 'Admin', 'Doctor'] },
-                                { id: 'clinical', label: 'Findings', roles: ['Doctor', 'Admin'] },
-                                { id: 'refraction', label: 'Refraction', roles: ['Doctor', 'Admin'] },
+                                { id: 'refraction', label: 'Refractions', roles: ['Doctor', 'Admin'] },
                                 { id: 'visual', label: 'Drawings', roles: ['Doctor', 'Admin'] },
+                                { id: 'clinical', label: 'Findings', roles: ['Doctor', 'Admin'] },
                                 { id: 'diagnosis', label: 'Prescription', roles: ['Doctor', 'Admin'] }
                             ].filter(tab => tab.roles.includes(role)).map(tab => (
-                                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === tab.id ? 'border-teal-600 text-teal-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+                                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`px-6 py-4 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === tab.id ? 'border-teal-600 text-teal-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
                                     {tab.label}
                                 </button>
                             ))}
