@@ -1387,7 +1387,7 @@ const Patients = () => {
                                 </th>
 
                                 {/* 3. Contact & Location */}
-                                <th className="w-[18%] px-2 lg:px-2.5 py-2 font-bold relative column-filter-container text-white">
+                                <th className="w-[17%] px-2 lg:px-2.5 py-2 font-bold relative column-filter-container text-white">
                                     <div className="flex items-center gap-1 min-w-0">
                                         <span className="text-white font-bold truncate">Contact & Location</span>
                                         <button
@@ -1632,7 +1632,7 @@ const Patients = () => {
                                 </th>
 
                                 {/* 6. Clinical Case */}
-                                <th className="w-[14%] px-2 lg:px-2.5 py-2 font-bold relative column-filter-container text-white">
+                                <th className="w-[18%] px-2 lg:px-2.5 py-2 font-bold relative column-filter-container text-white">
                                     <div className="flex items-center gap-1 min-w-0">
                                         <span className="text-white font-bold truncate">Clinical Case</span>
                                         <button
@@ -1711,7 +1711,7 @@ const Patients = () => {
                                 </th>
 
                                 {/* 7. Actions */}
-                                <th className="w-[11%] px-2 lg:px-2.5 py-2 text-right font-bold text-white">
+                                <th className="w-[8%] px-2 lg:px-2.5 py-2 text-right font-bold text-white">
                                     <span className="text-white font-bold whitespace-nowrap">Actions</span>
                                 </th>
                             </tr>
@@ -1756,49 +1756,25 @@ const Patients = () => {
                                             }`}>{patient.status}</span>
                                     </td>
                                     <td className="px-2 lg:px-2.5 py-2 text-right">
-                                        <div className="flex items-center justify-end gap-1 flex-nowrap">
-                                            <button
-                                                type="button"
-                                                onClick={(e) => { e.stopPropagation(); openPatientDetails(patient); }}
-                                                className="p-1 text-teal-600 hover:text-white bg-teal-50 hover:bg-teal-600 border border-teal-200 rounded-md transition-all shadow-xs cursor-pointer flex-shrink-0"
-                                                title="View Clinical Dossier"
-                                            >
-                                                <Eye size={13} />
-                                            </button>
+                                        <div className="flex items-center justify-end gap-1.5 flex-nowrap">
                                             {canEdit && (
                                                 <button
                                                     type="button"
                                                     onClick={(e) => { e.stopPropagation(); navigate('/patients/register', { state: { patient } }); }}
-                                                    className="p-1 text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 rounded-md transition-all shadow-xs cursor-pointer flex-shrink-0"
+                                                    className="p-1.5 text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200/80 rounded-lg transition-all shadow-2xs cursor-pointer flex-shrink-0"
                                                     title="Modify Patient Record"
                                                 >
-                                                    <Edit size={13} />
+                                                    <Edit size={14} />
                                                 </button>
                                             )}
-                                            <button
-                                                type="button"
-                                                onClick={(e) => { e.stopPropagation(); navigate('/e-prescription', { state: { patientId: patient.id } }); }}
-                                                className="p-1 text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 border border-blue-200 rounded-md transition-all shadow-xs cursor-pointer flex-shrink-0"
-                                                title="Create E-Prescription"
-                                            >
-                                                <FileText size={13} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => { e.stopPropagation(); navigate('/billing', { state: { patient } }); }}
-                                                className="p-1 text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 rounded-md transition-all shadow-xs cursor-pointer flex-shrink-0"
-                                                title="Patient Billing & Invoicing"
-                                            >
-                                                <CreditCard size={13} />
-                                            </button>
                                             {canDelete && (
                                                 <button
                                                     type="button"
                                                     onClick={(e) => { e.stopPropagation(); setPatientToDelete(patient.id); setIsDeleteModalOpen(true); }}
-                                                    className="p-1 text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 rounded-md transition-all shadow-xs cursor-pointer flex-shrink-0"
+                                                    className="p-1.5 text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200/80 rounded-lg transition-all shadow-2xs cursor-pointer flex-shrink-0"
                                                     title="Delete Patient Record"
                                                 >
-                                                    <Trash2 size={13} />
+                                                    <Trash2 size={14} />
                                                 </button>
                                             )}
                                         </div>
