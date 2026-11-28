@@ -2525,7 +2525,7 @@ const Registration = () => {
                                     onChange={(e) => setSelectedRoomId(e.target.value)}
                                 >
                                     <option value="" className="text-slate-400 bg-white font-semibold py-1">{serviceType === 'Camp' ? 'Select Counter' : 'Select Room'}</option>
-                                    {rooms.filter(r => r.type === serviceType).map(r => (
+                                    {rooms.filter(r => r.type === serviceType && r.isActive !== false).map(r => (
                                         <option key={r.id} value={r.id} className="text-slate-900 bg-white font-semibold py-1">
                                             {serviceType === 'Camp' ? `Counter ${r.roomNumber}` : r.roomNumber} - {r.name}
                                         </option>
