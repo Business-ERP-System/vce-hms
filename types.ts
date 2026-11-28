@@ -366,10 +366,19 @@ export interface Employee {
   department: string;
   contact: string;
   shift: 'Morning' | 'Evening' | 'Night' | 'Off';
-  status: 'Active' | 'Leave' | 'Terminated';
+  status: 'Active' | 'Leave' | 'Terminated' | 'Inactive' | 'Locked';
   customPermissions?: ModulePermissions;
   salaryStructure: SalaryStructure;
   joiningDate: string;
+  username?: string;
+  email?: string;
+  designation?: string;
+  assignedRoom?: string;
+  additionalRole?: string;
+  lastLogin?: string;
+  forcePasswordChange?: boolean;
+  activeSessions?: number;
+  password?: string;
 }
 
 export interface AttendanceRecord {

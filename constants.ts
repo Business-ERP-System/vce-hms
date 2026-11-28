@@ -704,11 +704,14 @@ const DEFAULT_SALARY: SalaryStructure = {
 };
 
 export const MOCK_EMPLOYEES: Employee[] = [
-  { id: 'EMP001', branchId: 'BR001', name: 'Dr. Emily Chen', role: 'Chief Ophthalmologist', department: 'Clinical', contact: '555-1001', shift: 'Morning', status: 'Active', joiningDate: '2022-01-10', salaryStructure: { ...DEFAULT_SALARY, basic: 85000 } },
-  { id: 'EMP002', branchId: 'BR001', name: 'Sarah Jones', role: 'Senior Nurse', department: 'Clinical', contact: '555-1002', shift: 'Morning', status: 'Active', joiningDate: '2022-03-15', salaryStructure: { ...DEFAULT_SALARY, basic: 35000 } },
-  { id: 'EMP003', branchId: 'BR001', name: 'Mike Ross', role: 'Pharmacist', department: 'Pharmacy', contact: '555-1003', shift: 'Evening', status: 'Active', joiningDate: '2023-05-20', salaryStructure: { ...DEFAULT_SALARY, basic: 30000 } },
-  { id: 'EMP004', branchId: 'BR001', name: 'Jane Smith', role: 'Reception Manager', department: 'Front Office', contact: '555-1004', shift: 'Morning', status: 'Active', joiningDate: '2023-02-01', salaryStructure: { ...DEFAULT_SALARY, basic: 28000 } },
-  { id: 'EMP005', branchId: 'BR001', name: 'Rahim Ahmed', role: 'Accountant', department: 'Finance', contact: '01711-222333', shift: 'Morning', status: 'Active', joiningDate: '2021-11-10', salaryStructure: { ...DEFAULT_SALARY, basic: 40000 } },
+  { id: 'EMP001', branchId: 'BR001', name: 'Dr. Emily Chen', username: 'doctor01', email: 'emily.chen@visionarycare.org', designation: 'Consultant Ophthalmologist', role: 'Doctor', department: 'Clinical', assignedRoom: 'Room 10 (Consultation)', contact: '555-1001', shift: 'Morning', status: 'Active', joiningDate: '2022-01-10', lastLogin: '2026-11-28 09:15 AM', activeSessions: 1, salaryStructure: { ...DEFAULT_SALARY, basic: 85000 } },
+  { id: 'EMP002', branchId: 'BR001', name: 'Sarah Jones', username: 'nurse01', email: 'sarah.jones@visionarycare.org', designation: 'Senior Triage Nurse', role: 'Nurse', department: 'Clinical', assignedRoom: 'Room 41 (Female VAT)', contact: '555-1002', shift: 'Morning', status: 'Active', joiningDate: '2022-03-15', lastLogin: '2026-11-28 08:30 AM', activeSessions: 1, salaryStructure: { ...DEFAULT_SALARY, basic: 35000 } },
+  { id: 'EMP003', branchId: 'BR001', name: 'Mike Ross', username: 'pharma01', email: 'mike.ross@visionarycare.org', designation: 'Chief Pharmacist', role: 'Pharmacist', department: 'Pharmacy', assignedRoom: 'Pharmacy Counter A', contact: '555-1003', shift: 'Evening', status: 'Active', joiningDate: '2023-05-20', lastLogin: '2026-11-27 06:40 PM', activeSessions: 0, salaryStructure: { ...DEFAULT_SALARY, basic: 30000 } },
+  { id: 'EMP004', branchId: 'BR001', name: 'Jane Smith', username: 'reception01', email: 'jane.smith@visionarycare.org', designation: 'Patient Registration Officer', role: 'Receptionist', department: 'Front Office', assignedRoom: 'Registration Counter 01', contact: '555-1004', shift: 'Morning', status: 'Active', joiningDate: '2023-02-01', lastLogin: '2026-11-28 08:00 AM', activeSessions: 2, salaryStructure: { ...DEFAULT_SALARY, basic: 28000 } },
+  { id: 'EMP005', branchId: 'BR001', name: 'Rahim Ahmed', username: 'billing01', email: 'rahim.ahmed@visionarycare.org', designation: 'Senior Billing Officer & Cashier', role: 'Billing Officer', department: 'Finance', assignedRoom: 'Room 08 (Billing Counter)', contact: '01711-222333', shift: 'Morning', status: 'Active', joiningDate: '2021-11-10', lastLogin: '2026-11-28 09:00 AM', activeSessions: 1, salaryStructure: { ...DEFAULT_SALARY, basic: 40000 } },
+  { id: 'EMP006', branchId: 'BR001', name: 'Dr. Shafiqul Alam', username: 'admin01', email: 'admin@visionarycare.org', designation: 'Medical Superintendent & Director', role: 'SuperAdmin', department: 'Administration', assignedRoom: 'Executive Office 01', contact: '01811-998877', shift: 'Morning', status: 'Active', joiningDate: '2020-01-01', lastLogin: '2026-11-28 10:20 AM', activeSessions: 1, salaryStructure: { ...DEFAULT_SALARY, basic: 120000 } },
+  { id: 'EMP007', branchId: 'BR001', name: 'Tariqul Islam', username: 'tariqul.refract', email: 'tariqul@visionarycare.org', designation: 'Senior Refractionist & Optometrist', role: 'Refractionist', department: 'Clinical', assignedRoom: 'Room 36 (Refraction)', contact: '01912-334455', shift: 'Morning', status: 'Active', joiningDate: '2023-08-15', lastLogin: '2026-11-28 08:45 AM', activeSessions: 1, salaryStructure: { ...DEFAULT_SALARY, basic: 32000 } },
+  { id: 'EMP008', branchId: 'BR002', name: 'Nasima Begum', username: 'nasima.nurse', email: 'nasima@visionarycare.org', designation: 'Staff Nurse', role: 'Nurse', department: 'Clinical', assignedRoom: 'Room 40 (Male VAT)', contact: '01722-667788', shift: 'Night', status: 'Inactive', joiningDate: '2024-01-10', lastLogin: '2026-11-20 07:10 PM', activeSessions: 0, salaryStructure: { ...DEFAULT_SALARY, basic: 26000 } },
 ];
 
 export const MOCK_ATTENDANCE: AttendanceRecord[] = [
@@ -890,6 +893,7 @@ export const MENU_GROUPS = [
       { name: 'Reports & Analytics', icon: FileText, path: '/reports' },
       { name: 'User Manual', icon: BookOpen, path: '/manual' },
       { name: 'System Settings', icon: ShieldCheck, path: '/settings' },
+      { name: 'System Settings Demo', icon: ShieldCheck, path: '/system-settings-demo' },
     ]
   }
 ];
@@ -924,7 +928,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, ModulePermissions> = {
     'Lab & Diagnostics': READ_ONLY,
     'AI Clinical Insights': FULL_ACTIONS,
     'Medical Drawing Tool': FULL_ACTIONS,
-    'User Manual': READ_ONLY
+    'User Manual': READ_ONLY,
+    'System Settings Demo': FULL_ACTIONS
   },
   [UserRole.NURSE]: {
     'Dashboard': READ_ONLY,
@@ -932,13 +937,15 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, ModulePermissions> = {
     'OPD Queue': { ...READ_ONLY, edit: true },
     'EMR (Medical Records)': { ...READ_ONLY, edit: true },
     'IPD & Bed Mgmt': { ...DEFAULT_ACTIONS, edit: true },
-    'User Manual': READ_ONLY
+    'User Manual': READ_ONLY,
+    'System Settings Demo': FULL_ACTIONS
   },
   [UserRole.PHARMACIST]: {
     'Dashboard': READ_ONLY,
     'Pharmacy & Optical': FULL_ACTIONS,
     'Billing & POS': { ...DEFAULT_ACTIONS, add: true },
-    'User Manual': READ_ONLY
+    'User Manual': READ_ONLY,
+    'System Settings Demo': FULL_ACTIONS
   },
   [UserRole.RECEPTIONIST]: {
     'Dashboard': READ_ONLY,
@@ -946,6 +953,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, ModulePermissions> = {
     'Patient Registration': FULL_ACTIONS,
     'Appointments': FULL_ACTIONS,
     'Billing & POS': { ...DEFAULT_ACTIONS, add: true, view: true },
-    'User Manual': READ_ONLY
+    'User Manual': READ_ONLY,
+    'System Settings Demo': FULL_ACTIONS
   }
 };

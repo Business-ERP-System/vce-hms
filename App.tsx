@@ -24,6 +24,7 @@ import Billing from './pages/Billing';
 import EPrescription from './pages/EPrescription';
 import EMR from './pages/EMR';
 import Settings from './pages/Settings';
+import SystemSettingsDemo from './pages/SystemSettingsDemo';
 import DatabasePanel from './pages/DatabasePanel';
 import MigrationBridge from './pages/MigrationBridge';
 import UserManual from './pages/UserManual';
@@ -231,6 +232,10 @@ const App: React.FC = () => {
                 <Settings />
               </ProtectedRoute>
             } />
+            <Route path="/settings-demo" element={<SystemSettingsDemo />} />
+            <Route path="/system-settings-demo" element={<SystemSettingsDemo />} />
+            <Route path="/System Settings Demo" element={<SystemSettingsDemo />} />
+            <Route path="/System%20Settings%20Demo" element={<SystemSettingsDemo />} />
             <Route path="/portal" element={<PatientPortal />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

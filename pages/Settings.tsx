@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     ShieldCheck, UserCog, Lock, Save, LayoutDashboard, Monitor, 
     Search, UserPlus, Key, EyeOff, UserMinus, ShieldAlert, 
@@ -7,8 +8,7 @@ import {
     CheckCircle, MoreVertical, Shield, X, Trash2, Edit, Plus,
     List, Eye, PlusCircle, PenTool, Eraser, Download, Settings as CogIcon,
     ChevronDown, ChevronUp, Layers, CheckSquare, Square, Copy, RefreshCcw,
-    // Fix: Added missing imports for Info and Users icons
-    Info, Users
+    Info, Users, Sparkles, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -17,6 +17,7 @@ import { MENU_GROUPS, ALL_PERMISSION_ENTITIES } from '../constants';
 
 const Settings = () => {
   const { role } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('roles');
   const { 
     employees, addEmployee, updateEmployee, deleteEmployee, 
@@ -141,6 +142,29 @@ const Settings = () => {
                 <Save size={18} /> Save & Deploy
             </button>
         </div>
+      </div>
+
+      {/* Enterprise System Control Panel Redesign Demo Callout */}
+      <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white p-5 rounded-3xl shadow-lg border border-teal-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-teal-500/20 rounded-2xl text-teal-300 border border-teal-400/30">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-sm text-white">System Settings Demo Available</span>
+              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">New Redesign</span>
+            </div>
+            <p className="text-xs text-teal-200/80 mt-0.5">Test the new enterprise hospital governance center with 18+ configuration modules, 3-way RBAC matrix, and live telemetry.</p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate('/system-settings-demo')}
+          className="px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+        >
+          <span>Launch System Settings Demo</span>
+          <ArrowRight size={14} />
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
