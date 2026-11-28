@@ -85,6 +85,13 @@ export interface Patient {
   assignedDoctor?: string;
   assignedRoom?: string;
   vatRoom?: string;
+  flowStage?: PatientFlowStage;
+  currentRoom?: string;
+  referredClinic?: string;
+  refractionRoom?: string;
+  investigationRooms?: string[];
+  prescribedServices?: string[];
+  postOpType?: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea';
 
   // Regional & Admin Fields
   paymentCategory: 'Pay' | 'Free';
@@ -127,12 +134,69 @@ export interface Patient {
   corporateName?: string;
 }
 
+export type RoomCategory =
+  | 'VAT'
+  | 'General Consultation'
+  | 'Specialized Clinic'
+  | 'Post-Op Follow-up'
+  | 'Billing Counter'
+  | 'Refraction'
+  | 'Investigation'
+  | 'Other';
+
 export interface RoomMaster {
   id: string;
   roomNumber: string;
   name: string;
   type: 'OPD' | 'Camp' | 'Lab' | 'Diagnosis';
   currentLoad: number;
+  category?: RoomCategory;
+  genderSpecific?: 'Male' | 'Female' | 'All';
+  specialty?: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea' | 'General' | string;
+  testCodes?: string[];
+  isActive?: boolean;
+}
+
+export type PatientFlowStage =
+  | 'Registration'
+  | 'VAT'
+  | 'General Consultation'
+  | 'Specialized Clinic'
+  | 'Post-Op Follow-up'
+  | 'Billing'
+  | 'Refraction'
+  | 'Investigation'
+  | 'Completed';
+
+export interface SpecializedClinicMapping {
+  clinic: string;
+  specialty: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea';
+  roomNumber: string;
+}
+
+export interface PostOpFollowupMapping {
+  surgeryType: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea';
+  roomNumber: string;
+}
+
+export interface InvestigationRoomMapping {
+  roomNumber: string;
+  name: string;
+  tests: string[];
+}
+
+export interface PatientFlowConfig {
+  vatRooms: {
+    male: string;
+    female: string;
+  };
+  generalConsultationRooms: string[];
+  specializedClinics: SpecializedClinicMapping[];
+  postOpFollowupRooms: PostOpFollowupMapping[];
+  billingCounters: string[];
+  refractionRooms: string[];
+  lastRefractionRoomIndex: number;
+  investigationRooms: InvestigationRoomMapping[];
 }
 
 export interface WardMaster {

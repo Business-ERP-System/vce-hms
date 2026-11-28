@@ -7,7 +7,8 @@ import {
   WardMaster, FloorMaster, RoomMaster, DatabaseInstance, UserDatabaseMapping,
   SavedQuery, DynamicModuleConfig, Campaign, Admission, VisitLog, BedCategory,
   Shop, ItemGroup, ItemCategory, ItemUnit, AttendanceRecord, LeaveRequest, PayrollRecord, BiometricMachine,
-  Company, Branch
+  Company, Branch,
+  PatientFlowConfig, PatientFlowStage, RoomCategory, SpecializedClinicMapping, PostOpFollowupMapping, InvestigationRoomMapping
 } from '../types';
 import {
   MOCK_PATIENTS, MOCK_APPOINTMENTS, MOCK_INVENTORY, MOCK_BEDS,
@@ -155,6 +156,20 @@ interface DataContextType {
   updateItemUnit: (id: string, updates: Partial<ItemUnit>) => void;
   deleteItemUnit: (id: string) => void;
 
+  // Patient Flow & Room Allocation Helpers
+  flowConfig: PatientFlowConfig;
+  updateFlowConfig: (updates: Partial<PatientFlowConfig>) => void;
+  resetFlowConfig: () => void;
+  getNextRefractionRoom: () => string;
+  getVatRoomForGender: (gender: string) => string;
+  getGeneralConsultationRoom: (preferred?: string) => string;
+  getSpecializedClinicRoom: (specialty: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea' | string) => string;
+  getPostOpFollowupRoom: (surgeryType?: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea' | string) => string;
+  getBillingCounter: () => string;
+  getInvestigationRoomsForTests: (testNames: string[]) => string[];
+  progressPatientFlow: (patientId: string, nextStage: PatientFlowStage, assignedRoom?: string, extra?: Partial<Patient>) => void;
+  toggleRoomActive: (roomId: string) => void;
+
   // Helpers
   getRecommendedOPDRoom: (type: 'OPD' | 'Camp' | 'Lab' | 'Diagnosis') => RoomMaster | undefined;
   hasPermission: (module: string, action: keyof ActionPermission) => boolean;
@@ -170,6 +185,11 @@ const INITIAL_BILLING_ITEMS: BillingItem[] = [
   { id: 'S007', name: 'Visual Field Test', department: 'Lab', price: 600 },
   { id: 'S008', name: 'OCT Scan', department: 'Lab', price: 1200 },
   { id: 'S010', name: 'Registration Fee', department: 'OPD', price: 200 },
+  { id: 'S011', name: 'Objective & Subjective Refraction', department: 'OPD', price: 300 },
+  { id: 'S012', name: 'Biometry & A-Scan', department: 'Lab', price: 800 },
+  { id: 'S013', name: 'B-Scan Ultrasonography', department: 'Lab', price: 1000 },
+  { id: 'S014', name: 'Fundus Fluorescein Angiography (FFA)', department: 'Lab', price: 1500 },
+  { id: 'S015', name: 'Corneal Topography & Pachymetry', department: 'Lab', price: 1200 },
   { id: 'IPD001', name: 'Nursing Charge (Daily)', department: 'IPD', price: 500 },
   { id: 'IPD002', name: 'Admission Charge', department: 'IPD', price: 1500 },
   { id: 'IPD003', name: 'Service Charge', department: 'IPD', price: 500 },
@@ -194,12 +214,79 @@ const INITIAL_WARDS: WardMaster[] = [
   { id: 'W3', name: 'Private Ward', floorId: 'F1', description: 'First floor private cabins' },
 ];
 
+export const DEFAULT_FLOW_CONFIG: PatientFlowConfig = {
+  vatRooms: {
+    male: '40',
+    female: '41'
+  },
+  generalConsultationRooms: ['9-A', '9-B', '10', '12', '13', '20', '28'],
+  specializedClinics: [
+    { clinic: 'Cataract Clinic', specialty: 'Cataract', roomNumber: '22' },
+    { clinic: 'Retina Clinic', specialty: 'Retina', roomNumber: '27' },
+    { clinic: 'Glaucoma Clinic', specialty: 'Glaucoma', roomNumber: '21' },
+    { clinic: 'Cornea Clinic', specialty: 'Cornea', roomNumber: '15' }
+  ],
+  postOpFollowupRooms: [
+    { surgeryType: 'Cataract', roomNumber: '14' },
+    { surgeryType: 'Retina', roomNumber: '27' },
+    { surgeryType: 'Glaucoma', roomNumber: '21' },
+    { surgeryType: 'Cornea', roomNumber: '15' }
+  ],
+  billingCounters: ['08', '26'],
+  refractionRooms: ['36', '37', '21-1', '21-2'],
+  lastRefractionRoomIndex: -1,
+  investigationRooms: [
+    { roomNumber: '16', name: 'OCT & Fundus Imaging', tests: ['OCT', 'FFA', 'Fundus Photography'] },
+    { roomNumber: '24', name: 'Visual Field & Perimetry', tests: ['Visual Field', 'HFA Perimetry', 'Tonometry'] },
+    { roomNumber: '39', name: 'Biometry & A-Scan', tests: ['Biometry', 'A-Scan', 'Pachymetry', 'Corneal Topography'] },
+    { roomNumber: '35', name: 'B-Scan & Laser Unit', tests: ['B-Scan', 'YAG Laser', 'Argon Laser'] }
+  ]
+};
+
 const INITIAL_ROOMS: RoomMaster[] = [
-  { id: 'R101', roomNumber: '101', name: 'OPD Room 1', type: 'OPD', currentLoad: 0 },
-  { id: 'R102', roomNumber: '102', name: 'OPD Room 2', type: 'OPD', currentLoad: 0 },
-  { id: 'C101', roomNumber: 'C01', name: 'Camp Counter 1', type: 'Camp', currentLoad: 0 },
-  { id: 'L101', roomNumber: 'L01', name: 'Lab Unit A', type: 'Lab', currentLoad: 0 },
-  { id: 'D101', roomNumber: 'D01', name: 'Diagnosis Cabin', type: 'Diagnosis', currentLoad: 0 },
+  // 1. Visual Acuity Test (VAT) Rooms
+  { id: 'R40', roomNumber: '40', name: 'Male VAT Room', type: 'OPD', currentLoad: 0, category: 'VAT', genderSpecific: 'Male', isActive: true },
+  { id: 'R41', roomNumber: '41', name: 'Female VAT Room', type: 'OPD', currentLoad: 0, category: 'VAT', genderSpecific: 'Female', isActive: true },
+
+  // 2. General Doctor Consultation Rooms
+  { id: 'R9A', roomNumber: '9-A', name: 'General Consultation 9-A', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+  { id: 'R9B', roomNumber: '9-B', name: 'General Consultation 9-B', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+  { id: 'R10', roomNumber: '10', name: 'General Consultation 10', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+  { id: 'R12', roomNumber: '12', name: 'General Consultation 12', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+  { id: 'R13', roomNumber: '13', name: 'General Consultation 13', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+  { id: 'R20', roomNumber: '20', name: 'General Consultation 20', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+  { id: 'R28', roomNumber: '28', name: 'General Consultation 28', type: 'OPD', currentLoad: 0, category: 'General Consultation', isActive: true },
+
+  // 3. Specialized Clinic Rooms
+  { id: 'R22', roomNumber: '22', name: 'Cataract Clinic', type: 'OPD', currentLoad: 0, category: 'Specialized Clinic', specialty: 'Cataract', isActive: true },
+  { id: 'R27', roomNumber: '27', name: 'Retina Clinic', type: 'OPD', currentLoad: 0, category: 'Specialized Clinic', specialty: 'Retina', isActive: true },
+  { id: 'R21', roomNumber: '21', name: 'Glaucoma Clinic', type: 'OPD', currentLoad: 0, category: 'Specialized Clinic', specialty: 'Glaucoma', isActive: true },
+  { id: 'R15', roomNumber: '15', name: 'Cornea Clinic', type: 'OPD', currentLoad: 0, category: 'Specialized Clinic', specialty: 'Cornea', isActive: true },
+
+  // 4. Second Visit / Post-Operative Follow-up Rooms
+  { id: 'R14', roomNumber: '14', name: 'Cataract Surgery Follow-up', type: 'OPD', currentLoad: 0, category: 'Post-Op Follow-up', specialty: 'Cataract', isActive: true },
+
+  // 5. Refraction and Investigation Billing Counters
+  { id: 'R08', roomNumber: '08', name: 'Billing Counter 08', type: 'OPD', currentLoad: 0, category: 'Billing Counter', isActive: true },
+  { id: 'R26', roomNumber: '26', name: 'Billing Counter 26', type: 'OPD', currentLoad: 0, category: 'Billing Counter', isActive: true },
+
+  // 6. Refraction Rooms (Round-Robin Rotational)
+  { id: 'R36', roomNumber: '36', name: 'Refraction Room 36', type: 'OPD', currentLoad: 0, category: 'Refraction', isActive: true },
+  { id: 'R37', roomNumber: '37', name: 'Refraction Room 37', type: 'OPD', currentLoad: 0, category: 'Refraction', isActive: true },
+  { id: 'R21-1', roomNumber: '21-1', name: 'Refraction Room 21-1', type: 'OPD', currentLoad: 0, category: 'Refraction', isActive: true },
+  { id: 'R21-2', roomNumber: '21-2', name: 'Refraction Room 21-2', type: 'OPD', currentLoad: 0, category: 'Refraction', isActive: true },
+
+  // 7. Investigation Rooms (Test-Wise Mapped)
+  { id: 'R16', roomNumber: '16', name: 'Investigation Room 16', type: 'Diagnosis', currentLoad: 0, category: 'Investigation', testCodes: ['OCT', 'FFA', 'Fundus Photography'], isActive: true },
+  { id: 'R24', roomNumber: '24', name: 'Investigation Room 24', type: 'Diagnosis', currentLoad: 0, category: 'Investigation', testCodes: ['Visual Field', 'HFA Perimetry', 'Tonometry'], isActive: true },
+  { id: 'R39', roomNumber: '39', name: 'Investigation Room 39', type: 'Diagnosis', currentLoad: 0, category: 'Investigation', testCodes: ['Biometry', 'A-Scan', 'Pachymetry', 'Corneal Topography'], isActive: true },
+  { id: 'R35', roomNumber: '35', name: 'Investigation Room 35', type: 'Diagnosis', currentLoad: 0, category: 'Investigation', testCodes: ['B-Scan', 'YAG Laser', 'Argon Laser'], isActive: true },
+
+  // General fallback counters for other departments
+  { id: 'R101', roomNumber: '101', name: 'OPD Consultation 101', type: 'OPD', currentLoad: 0, isActive: true },
+  { id: 'C101', roomNumber: 'C01', name: 'Camp Counter 1', type: 'Camp', currentLoad: 0, isActive: true },
+  { id: 'L101', roomNumber: 'L01', name: 'Lab Unit A', type: 'Lab', currentLoad: 0, isActive: true },
+  { id: 'D101', roomNumber: 'D01', name: 'Diagnosis Cabin', type: 'Diagnosis', currentLoad: 0, isActive: true },
 ];
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -324,7 +411,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES);
   const [branches, setBranches] = useState<Branch[]>(MOCK_BRANCHES);
 
-  const [rooms, setRooms] = useState<RoomMaster[]>(INITIAL_ROOMS);
+  const FLOW_CONFIG_KEY = 'vce_patient_flow_config_v2';
+  const ROOMS_CONFIG_KEY = 'vce_hospital_rooms_v5';
+
+  const [flowConfig, setFlowConfig] = useState<PatientFlowConfig>(() => {
+    try {
+      const saved = localStorage.getItem(FLOW_CONFIG_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse flowConfig from localStorage', e);
+    }
+    return DEFAULT_FLOW_CONFIG;
+  });
+
+  const [rooms, setRooms] = useState<RoomMaster[]>(() => {
+    try {
+      const saved = localStorage.getItem(ROOMS_CONFIG_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to parse rooms from localStorage', e);
+    }
+    return INITIAL_ROOMS;
+  });
   const [wards, setWards] = useState<WardMaster[]>(INITIAL_WARDS);
   const [floors, setFloors] = useState<FloorMaster[]>(INITIAL_FLOORS);
 
@@ -367,9 +478,146 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateFloor = (id: string, updates: Partial<FloorMaster>) => setFloors(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
   const deleteFloor = (id: string) => setFloors(prev => prev.filter(f => f.id !== id));
 
-  const addRoom = (r: RoomMaster) => setRooms(prev => [...prev, r]);
-  const updateRoom = (id: string, updates: Partial<RoomMaster>) => setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
-  const deleteRoom = (id: string) => setRooms(prev => prev.filter(r => r.id !== id));
+  const addRoom = (r: RoomMaster) => setRooms(prev => {
+    const next = [...prev, r];
+    try { localStorage.setItem(ROOMS_CONFIG_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  });
+  const updateRoom = (id: string, updates: Partial<RoomMaster>) => setRooms(prev => {
+    const next = prev.map(r => r.id === id ? { ...r, ...updates } : r);
+    try { localStorage.setItem(ROOMS_CONFIG_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  });
+  const deleteRoom = (id: string) => setRooms(prev => {
+    const next = prev.filter(r => r.id !== id);
+    try { localStorage.setItem(ROOMS_CONFIG_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  });
+
+  const toggleRoomActive = (roomId: string) => {
+    setRooms(prev => {
+      const next = prev.map(r => r.id === roomId ? { ...r, isActive: r.isActive === false ? true : false } : r);
+      try { localStorage.setItem(ROOMS_CONFIG_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const updateFlowConfig = (updates: Partial<PatientFlowConfig>) => {
+    setFlowConfig(prev => {
+      const next = { ...prev, ...updates };
+      try { localStorage.setItem(FLOW_CONFIG_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const resetFlowConfig = () => {
+    setFlowConfig(DEFAULT_FLOW_CONFIG);
+    setRooms(INITIAL_ROOMS);
+    try {
+      localStorage.setItem(FLOW_CONFIG_KEY, JSON.stringify(DEFAULT_FLOW_CONFIG));
+      localStorage.setItem(ROOMS_CONFIG_KEY, JSON.stringify(INITIAL_ROOMS));
+    } catch {}
+  };
+
+  const getVatRoomForGender = (gender: string): string => {
+    const isMale = gender?.toLowerCase() === 'male';
+    return isMale ? flowConfig.vatRooms.male : flowConfig.vatRooms.female;
+  };
+
+  const getGeneralConsultationRoom = (preferred?: string): string => {
+    const activeRooms = rooms.filter(
+      r => (flowConfig.generalConsultationRooms.includes(r.roomNumber) || r.category === 'General Consultation') && r.isActive !== false
+    );
+    if (preferred && activeRooms.some(r => r.roomNumber === preferred)) {
+      return preferred;
+    }
+    if (activeRooms.length === 0) {
+      return flowConfig.generalConsultationRooms[0] || '9-A';
+    }
+    const leastLoaded = activeRooms.reduce((prev, curr) => (prev.currentLoad <= curr.currentLoad ? prev : curr));
+    return leastLoaded.roomNumber;
+  };
+
+  const getSpecializedClinicRoom = (specialty: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea' | string): string => {
+    const found = flowConfig.specializedClinics.find(
+      c => c.specialty.toLowerCase() === specialty.toLowerCase() || c.clinic.toLowerCase().includes(specialty.toLowerCase())
+    );
+    return found ? found.roomNumber : '22';
+  };
+
+  const getPostOpFollowupRoom = (surgeryType?: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea' | string): string => {
+    if (!surgeryType) return flowConfig.postOpFollowupRooms[0]?.roomNumber || '14';
+    const found = flowConfig.postOpFollowupRooms.find(
+      p => p.surgeryType.toLowerCase() === surgeryType.toLowerCase()
+    );
+    return found ? found.roomNumber : '14';
+  };
+
+  const getBillingCounter = (): string => {
+    const activeCounters = rooms.filter(
+      r => (flowConfig.billingCounters.includes(r.roomNumber) || r.category === 'Billing Counter') && r.isActive !== false
+    );
+    if (activeCounters.length === 0) return flowConfig.billingCounters[0] || '08';
+    const leastLoaded = activeCounters.reduce((prev, curr) => (prev.currentLoad <= curr.currentLoad ? prev : curr));
+    return leastLoaded.roomNumber;
+  };
+
+  const getNextRefractionRoom = (): string => {
+    const activeRefractionRooms = rooms.filter(
+      r => (flowConfig.refractionRooms.includes(r.roomNumber) || r.category === 'Refraction') && r.isActive !== false
+    );
+    if (activeRefractionRooms.length === 0) return '36';
+
+    const nextIndex = (flowConfig.lastRefractionRoomIndex + 1) % activeRefractionRooms.length;
+    const assigned = activeRefractionRooms[nextIndex];
+
+    setFlowConfig(prev => {
+      const next = { ...prev, lastRefractionRoomIndex: nextIndex };
+      try { localStorage.setItem(FLOW_CONFIG_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    return assigned.roomNumber;
+  };
+
+  const getInvestigationRoomsForTests = (testNames: string[]): string[] => {
+    if (!testNames || testNames.length === 0) return [];
+    const matched = new Set<string>();
+    testNames.forEach(tName => {
+      const lower = tName.toLowerCase();
+      flowConfig.investigationRooms.forEach(inv => {
+        if (inv.tests.some(t => lower.includes(t.toLowerCase()) || t.toLowerCase().includes(lower))) {
+          matched.add(inv.roomNumber);
+        }
+      });
+    });
+    if (matched.size === 0 && flowConfig.investigationRooms.length > 0) {
+      matched.add(flowConfig.investigationRooms[0].roomNumber);
+    }
+    return Array.from(matched);
+  };
+
+  const progressPatientFlow = (
+    patientId: string,
+    nextStage: PatientFlowStage,
+    assignedRoom?: string,
+    extra?: Partial<Patient>
+  ) => {
+    setPatients(prev => {
+      const next = prev.map(p => {
+        if (p.id !== patientId) return p;
+        return {
+          ...p,
+          ...extra,
+          flowStage: nextStage,
+          currentRoom: assignedRoom || p.currentRoom || p.assignedRoom,
+          assignedRoom: assignedRoom || p.assignedRoom
+        };
+      });
+      try { localStorage.setItem('vce_patients', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   const addLabTest = (t: LabTest) => {
     setLabTests(prev => [t, ...prev]);
@@ -586,7 +834,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addItemCategory, updateItemCategory, deleteItemCategory, addItemUnit, updateItemUnit, deleteItemUnit,
       addAttendance, updateLeave, addLeave, addPayroll, updatePayroll, deletePayroll, testBiometricMachine,
       addCompany, updateCompany, deleteCompany, addBranch, updateBranch, deleteBranch,
-      getRecommendedOPDRoom, hasPermission
+      getRecommendedOPDRoom, hasPermission,
+      flowConfig, updateFlowConfig, resetFlowConfig,
+      getNextRefractionRoom, getVatRoomForGender, getGeneralConsultationRoom,
+      getSpecializedClinicRoom, getPostOpFollowupRoom, getBillingCounter,
+      getInvestigationRoomsForTests, progressPatientFlow, toggleRoomActive
     }}>
       {children}
     </DataContext.Provider>

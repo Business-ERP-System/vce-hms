@@ -17,6 +17,7 @@ import { SearchableSelect } from '../components/SearchableSelect';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { BANGLADESH_DIVISIONS, BANGLADESH_DISTRICTS, BANGLADESH_UPAZILLAS } from '../data/bangladeshGeo';
 import { PrintSettingsModal } from '../components/PrintSettingsModal';
+import { PatientFlowAdminModal } from '../components/PatientFlowAdminModal';
 
 const getNextSequencePid = (patientList: Patient[]): string => {
     let max = 0;
@@ -50,7 +51,7 @@ const getNextSequencePid = (patientList: Patient[]): string => {
 };
 
 const Registration = () => {
-    const { patients, addPatient, updatePatient, getRecommendedOPDRoom, rooms, addRoom, deleteRoom, updateRoom, addTransaction, currency, hasPermission, campaigns } = useData();
+    const { patients, addPatient, updatePatient, getRecommendedOPDRoom, rooms, addRoom, deleteRoom, updateRoom, addTransaction, currency, hasPermission, campaigns, surgeries, flowConfig, getVatRoomForGender, getGeneralConsultationRoom, getPostOpFollowupRoom } = useData();
     const { activeBranchId, role } = useAuth();
     const isAuthorizedToEdit = role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN || hasPermission('Patient Registration', 'edit') || hasPermission('System Settings', 'edit');
 
@@ -271,10 +272,37 @@ const Registration = () => {
             setIsForeignPatient(true);
         }
         const patientGender = p.gender || formData.gender;
-        if (patientGender === 'Male') {
-            setSelectedVatRoom('40');
-        } else if (patientGender === 'Female') {
-            setSelectedVatRoom('41');
+        const vatNo = getVatRoomForGender(patientGender);
+        setSelectedVatRoom(vatNo);
+
+        // Check past surgeries for post-op follow-up room allocation (Section 4)
+        const patientSurgeries = surgeries.filter(s => s.patientId === p.id);
+        const allText = [
+            ...patientSurgeries.map(s => s.procedure),
+            p.diagnosis || '',
+            p.previousHistory || '',
+            p.remarks || ''
+        ].join(' ').toLowerCase();
+
+        let postOpType: 'Cataract' | 'Retina' | 'Glaucoma' | 'Cornea' | undefined = undefined;
+        if (allText.includes('retina') || allText.includes('vitrectomy')) {
+            postOpType = 'Retina';
+        } else if (allText.includes('glaucoma') || allText.includes('trabeculectomy')) {
+            postOpType = 'Glaucoma';
+        } else if (allText.includes('cornea') || allText.includes('keratoplasty')) {
+            postOpType = 'Cornea';
+        } else if (allText.includes('cataract') || allText.includes('phaco') || patientSurgeries.length > 0) {
+            postOpType = 'Cataract';
+        }
+
+        if (postOpType) {
+            const followUpRoom = getPostOpFollowupRoom(postOpType);
+            const matchedRoom = rooms.find(r => r.roomNumber === followUpRoom);
+            if (matchedRoom) setSelectedRoomId(matchedRoom.id);
+        } else if (!selectedRoomId) {
+            const defaultConsultRoom = getGeneralConsultationRoom();
+            const matchedRoom = rooms.find(r => r.roomNumber === defaultConsultRoom);
+            if (matchedRoom) setSelectedRoomId(matchedRoom.id);
         }
         setFormData(prev => ({
             ...prev,
@@ -548,6 +576,7 @@ const Registration = () => {
 
     const [selectedRoomId, setSelectedRoomId] = useState<string>('');
     const [selectedVatRoom, setSelectedVatRoom] = useState<string>('');
+    const [showFlowAdminModal, setShowFlowAdminModal] = useState<boolean>(false);
     const targetRoomRef = useRef<HTMLSelectElement>(null);
     const patientCategoryRef = useRef<HTMLSelectElement>(null);
 
@@ -598,9 +627,25 @@ const Registration = () => {
     const [editingRoomNumber, setEditingRoomNumber] = useState('');
     const [editingRoomName, setEditingRoomName] = useState('');
 
-    // Esc key: Go back / close modal / match browser Back button
+    // Esc and Ctrl+S shortcuts: Cancel/Go back and Save/Print
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Global Ctrl+S / Cmd+S handler
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                e.stopPropagation();
+                const formEl = document.querySelector('form');
+                if (formEl) {
+                    const submitBtn = formEl.querySelector<HTMLButtonElement>('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    } else {
+                        formEl.requestSubmit();
+                    }
+                }
+                return;
+            }
+
             if (e.key !== 'Escape') return;
 
             // 1. If print modal is open, close it
@@ -936,11 +981,8 @@ const Registration = () => {
 
         if (name === 'gender') {
             setFormData(prev => ({ ...prev, gender: value }));
-            if (value === 'Male') {
-                setSelectedVatRoom('40');
-            } else if (value === 'Female') {
-                setSelectedVatRoom('41');
-            }
+            const vatNo = getVatRoomForGender(value);
+            setSelectedVatRoom(vatNo);
             return;
         }
 
@@ -2449,35 +2491,36 @@ const Registration = () => {
                     {!isForeign && renderResidentialAddress(false)}
                 </div>
 
-                {/* Registration Payment & Actions */}
-                <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-cyan-800 text-white py-2 px-4 md:px-5 border-t border-teal-900/30 relative overflow-hidden flex flex-wrap gap-4 items-center justify-between">
+                {/* Registration Payment & Actions - Single Line Layout */}
+                <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-cyan-800 text-white py-2 px-3 md:px-5 border-t border-teal-900/30 relative overflow-x-auto custom-scrollbar flex items-center justify-between gap-3 flex-nowrap">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-                    <div className="relative z-10 flex flex-wrap items-center gap-4 sm:gap-6 flex-1 min-w-[200px]">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[14px] font-black uppercase tracking-wider text-teal-200">Registration Fee:</span>
+                    <div className="relative z-10 flex items-center gap-3 lg:gap-4 shrink-0 flex-nowrap">
+                        {/* Registration Fee */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-xs sm:text-[13px] font-black uppercase tracking-wider text-teal-200 whitespace-nowrap">Registration Fee:</span>
                             <div className="flex items-center">
-                                <span className="text-[18px] font-black text-cyan-200 mr-1">{currency === 'BDT' ? '৳' : '$'}</span>
+                                <span className="text-[15px] sm:text-[16px] font-black text-cyan-200 mr-1">{currency === 'BDT' ? '৳' : '$'}</span>
                                 <input
                                     name="registrationFee"
                                     type="number"
-                                    className="bg-black/20 hover:bg-black/30 border border-white/20 focus:border-cyan-300 rounded px-2 py-0.5 text-[16px] font-bold text-white focus:ring-1 focus:ring-cyan-300 w-20 outline-none transition-all shadow-inner"
+                                    className="bg-black/20 hover:bg-black/30 border border-white/20 focus:border-cyan-300 rounded px-2 py-0.5 text-xs sm:text-sm font-bold text-white focus:ring-1 focus:ring-cyan-300 w-16 sm:w-20 outline-none transition-all shadow-inner h-8"
                                     value={formData.registrationFee}
                                     onChange={handleInputChange}
                                 />
                             </div>
                         </div>
 
-                        {/* Target Room / Target Counter Selection (Swapped from Header) */}
-                        <div className="flex items-center gap-1.5 sm:gap-2">
+                        {/* Target Room / Target Counter Selection */}
+                        <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-xs sm:text-[13px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">
-                                {serviceType === 'Camp' ? 'Target Counter' : 'Target Room'} <span className="text-red-400">*</span>
+                                {serviceType === 'Camp' ? 'Target Counter' : 'Room'} <span className="text-red-400">*</span>
                             </span>
                             <div className="relative">
                                 <select
                                     ref={targetRoomRef}
                                     required
                                     name="selectedRoomId"
-                                    className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs sm:text-[13px] pl-2.5 pr-6 h-8 w-32 sm:w-36 rounded-md border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300 focus:bg-teal-900/90 cursor-pointer outline-none transition-all appearance-none truncate ring-offset-1 ring-offset-teal-800"
+                                    className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs pl-2 pr-6 h-8 w-28 sm:w-32 rounded-md border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300 focus:bg-teal-900/90 cursor-pointer outline-none transition-all appearance-none truncate"
                                     value={selectedRoomId}
                                     onChange={(e) => setSelectedRoomId(e.target.value)}
                                 >
@@ -2488,64 +2531,68 @@ const Registration = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown size={13} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
+                                <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
                             </div>
-                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-sm sm:text-base shadow-xs shrink-0">
+                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-xs sm:text-sm shadow-xs shrink-0">
                                 {rooms.find(r => r.id === selectedRoomId)?.roomNumber || '--'}
                             </div>
                             <button
                                 type="button"
                                 tabIndex={-1}
                                 onClick={() => setShowRoomModal(true)}
-                                className="px-2 h-8 bg-white/15 hover:bg-white/25 text-white rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-white/20 shrink-0"
+                                className="w-8 h-8 bg-white/15 hover:bg-white/25 text-white rounded-md transition-all flex items-center justify-center border border-white/20 shrink-0 cursor-pointer"
                                 title={serviceType === 'Camp' ? "Manage Counters" : "Manage Rooms"}
                             >
-                                <Settings size={13} />
-                                <span className="hidden sm:inline">{serviceType === 'Camp' ? 'Counters' : 'Rooms'}</span>
+                                <Settings size={14} />
                             </button>
                         </div>
 
-                        {/* VAT Room Selection - positioned right after Target Room */}
-                        <div className="flex items-center gap-1.5 sm:gap-2">
+                        {/* VAT Room Selection - Fixed, only change/edit from Admin Panel */}
+                        <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-xs sm:text-[13px] font-bold text-cyan-200 uppercase tracking-wider whitespace-nowrap">
                                 Vat Room
                             </span>
-                            <div className="relative">
-                                <select
-                                    name="selectedVatRoom"
-                                    className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs sm:text-[13px] pl-2.5 pr-6 h-8 w-32 sm:w-36 rounded-md border border-white/30 hover:border-white/50 focus:border-cyan-300 focus:ring-1 focus:ring-cyan-300 focus:bg-teal-900/90 cursor-pointer outline-none transition-all appearance-none truncate ring-offset-1 ring-offset-teal-800"
-                                    value={selectedVatRoom}
-                                    onChange={(e) => setSelectedVatRoom(e.target.value)}
-                                >
-                                    <option value="" className="text-slate-400 bg-white font-semibold py-1">Select Vat Room</option>
-                                    <option value="40" className="text-slate-900 bg-white font-semibold py-1">40 - Vat Room (Male)</option>
-                                    <option value="41" className="text-slate-900 bg-white font-semibold py-1">41 - Vat Room (Female)</option>
-                                </select>
-                                <ChevronDown size={13} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white/80 pointer-events-none" />
+                            <input type="hidden" name="selectedVatRoom" value={selectedVatRoom} />
+                            <div
+                                className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs pl-2 pr-1.5 h-8 w-28 sm:w-32 rounded-md border border-white/30 flex items-center justify-between select-none opacity-90 cursor-default"
+                                title="Fixed VAT Room (Configured via Admin Panel)"
+                            >
+                                <span className="truncate">{selectedVatRoom ? `${selectedVatRoom} - Vat Room` : 'Vat Room'}</span>
+                                <Lock size={11} className="text-cyan-300 shrink-0 opacity-75 ml-0.5" />
                             </div>
-                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-sm sm:text-base shadow-xs shrink-0">
+                            <div className="w-8 h-8 bg-white text-teal-800 rounded-md flex items-center justify-center font-black text-xs sm:text-sm shadow-xs shrink-0">
                                 {selectedVatRoom || '--'}
                             </div>
+                            <button
+                                type="button"
+                                tabIndex={-1}
+                                onClick={() => setShowFlowAdminModal(true)}
+                                className="px-2 h-8 bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 border border-teal-400/30 shrink-0 cursor-pointer"
+                                title="Configure Eye Hospital Patient Flow & Room Allocation Rules"
+                            >
+                                <SlidersHorizontal size={12} />
+                                <span className="hidden sm:inline">Flow Config</span>
+                            </button>
                         </div>
                     </div>
-                    <div className="relative z-10 flex items-center gap-2 w-full sm:w-auto justify-end">
+
+                    {/* Actions: Cancel & Save/Print */}
+                    <div className="relative z-10 flex items-center gap-2 shrink-0 flex-nowrap ml-auto">
                         <button
                             type="button"
                             onClick={() => navigate('/patients')}
-                            className="px-3.5 py-1.5 bg-black/20 hover:bg-black/30 border border-white/20 text-white/90 hover:text-white rounded-lg font-bold text-[16px] transition-all flex items-center gap-1.5 cursor-pointer"
+                            className="px-3.5 py-1.5 bg-black/20 hover:bg-black/30 border border-white/20 text-white/90 hover:text-white rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 h-8"
                             title="Cancel and Go Back (Esc)"
                         >
                             <span>Cancel</span>
-                            <kbd className="text-[11px] font-mono bg-white/20 px-1.5 py-0.5 rounded text-white/90 border border-white/20">Esc</kbd>
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-1.5 bg-black/20 hover:bg-black/30 border border-white/20 text-white hover:text-white rounded-lg font-bold text-[16px] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            className="px-4 py-1.5 bg-black/20 hover:bg-black/30 border border-white/20 text-white hover:text-white rounded-lg font-bold text-xs sm:text-sm transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap shrink-0 h-8"
                             title="Save patient and print slip (Ctrl+S)"
                         >
-                            <Printer size={16} />
+                            <Printer size={15} />
                             <span>Save & Print</span>
-                            <kbd className="text-[11px] font-mono bg-white/20 px-1.5 py-0.5 rounded text-white/90 border border-white/20">Ctrl+S</kbd>
                         </button>
                     </div>
                 </div>
@@ -3246,6 +3293,11 @@ const Registration = () => {
                     documentTitle={`Registration Slip - ${activePrintPatient.name} (${activePrintPatient.id})`}
                 />
             )}
+            {/* Patient Flow & Room Allocation Configuration Modal */}
+            <PatientFlowAdminModal
+                isOpen={showFlowAdminModal}
+                onClose={() => setShowFlowAdminModal(false)}
+            />
         </div >
     );
 };
