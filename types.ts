@@ -84,6 +84,7 @@ export interface Patient {
   status: 'OPD' | 'IPD' | 'Discharged';
   assignedDoctor?: string;
   assignedRoom?: string;
+  vatRoom?: string;
 
   // Regional & Admin Fields
   paymentCategory: 'Pay' | 'Free';

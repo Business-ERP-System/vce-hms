@@ -60,14 +60,14 @@ const Dashboard: React.FC = () => {
   const opdCount = patients.filter(p => p.status === 'OPD').length;
   const ipdCount = patients.filter(p => p.status === 'IPD').length;
   const dischargedCount = patients.filter(p => p.status === 'Discharged').length;
-  
+
   const totalBeds = beds.length || 24;
   const activeAdmissions = beds.filter(b => b.status === 'Occupied').length;
   const bedOccupancyRate = totalBeds > 0 ? Math.round((activeAdmissions / totalBeds) * 100) : 0;
-  
+
   const pendingLabs = labTests.filter(t => t.status === 'Pending').length;
   const completedLabs = labTests.filter(t => t.status === 'Completed').length;
-  
+
   const lowStockItems = inventory.filter(i => (i.totalStock || 0) <= (i.reorderLevel || 10));
   const lowStockCount = lowStockItems.length;
 
@@ -183,12 +183,12 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="bg-slate-50/60 min-h-screen p-3 sm:p-5 lg:p-8 space-y-6 max-w-[1750px] mx-auto text-slate-800 font-sans pb-24">
-      
+
       {/* ======================================================== */}
-      {/* 1. COMMAND CENTER MASTER HEADER                          */}
+      {/* 1. DASHBOARD MASTER HEADER                                */}
       {/* ======================================================== */}
       <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        
+
         {/* Left Branding & Live Telemetry Badge */}
         <div className="flex items-center gap-4">
           <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-900 flex items-center justify-center text-teal-300 shadow-md shadow-teal-700/20 flex-shrink-0 border border-teal-500/30">
@@ -197,7 +197,7 @@ const Dashboard: React.FC = () => {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                COMMAND CENTER
+                Dashboard
                 <span className="text-xs font-black uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/80">
                   VCE-HMS Enterprise
                 </span>
@@ -221,7 +221,7 @@ const Dashboard: React.FC = () => {
 
         {/* Right Action Controls & Timeframe Selector */}
         <div className="flex flex-wrap items-center gap-2.5 self-stretch xl:self-auto justify-start xl:justify-end">
-          
+
           {/* Timeframe Chips */}
           <div className="bg-slate-100/80 p-1 rounded-xl flex items-center border border-slate-200/80">
             {[
@@ -233,11 +233,10 @@ const Dashboard: React.FC = () => {
               <button
                 key={tf.id}
                 onClick={() => setTimeframe(tf.id as any)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  timeframe === tf.id
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${timeframe === tf.id
                     ? 'bg-white text-teal-800 shadow-sm font-black'
                     : 'text-slate-500 hover:text-slate-800'
-                }`}
+                  }`}
               >
                 {tf.label}
               </button>
@@ -291,18 +290,16 @@ const Dashboard: React.FC = () => {
             <button
               key={hub.id}
               onClick={() => setActiveHub(hub.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                isActive
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${isActive
                   ? 'bg-gradient-to-r from-teal-700 to-teal-800 text-white shadow-md shadow-teal-800/20 ring-1 ring-teal-700'
                   : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-teal-50/70 hover:text-teal-800 hover:border-teal-300'
-              }`}
+                }`}
             >
               <Icon size={14} className={isActive ? 'text-teal-200' : 'text-slate-400'} />
               <span>{hub.label}</span>
               {hub.count !== null && (
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                  isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
                   {hub.count}
                 </span>
               )}
@@ -315,7 +312,7 @@ const Dashboard: React.FC = () => {
       {/* 3. EXECUTIVE KPI METRICS (5 High-Density Cards)           */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        
+
         {/* Card 1: Patient Census */}
         <div
           onClick={() => navigate('/patients')}
@@ -466,12 +463,12 @@ const Dashboard: React.FC = () => {
       {/* ======================================================== */}
       {activeHub === 'overview' && (
         <div className="space-y-6">
-          
+
           <div className="grid grid-cols-12 gap-6">
-            
+
             {/* 4A. Financial Momentum Chart (8 cols) */}
             <div className="col-span-12 lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-              
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -489,17 +486,15 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold border border-slate-200">
                     <button
                       onClick={() => setRevenueMetric('revenue')}
-                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                        revenueMetric === 'revenue' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-                      }`}
+                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${revenueMetric === 'revenue' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                        }`}
                     >
                       Revenue
                     </button>
                     <button
                       onClick={() => setRevenueMetric('volume')}
-                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                        revenueMetric === 'volume' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-                      }`}
+                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${revenueMetric === 'volume' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                        }`}
                     >
                       Patient Vol.
                     </button>
@@ -612,7 +607,7 @@ const Dashboard: React.FC = () => {
 
             {/* 4B. Clinical Modality & Speciality Mix (4 cols) */}
             <div className="col-span-12 lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-              
+
               <div>
                 <div className="flex justify-between items-start mb-1">
                   <div>
@@ -654,7 +649,7 @@ const Dashboard: React.FC = () => {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  
+
                   {/* Center Text */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <span className="text-xl font-black text-slate-900 leading-none">{totalPatients}</span>
@@ -694,7 +689,7 @@ const Dashboard: React.FC = () => {
           {/* 5. OPERATIONAL VELOCITY ROW (4 KPI Action Cards)         */}
           {/* ======================================================== */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            
+
             <div
               onClick={() => navigate('/opd')}
               className="bg-white border border-slate-200/80 rounded-2xl p-4 hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group flex items-center justify-between"
@@ -777,17 +772,17 @@ const Dashboard: React.FC = () => {
           {/* 6. DEEP OPERATIONS: Live Patient Roster & AI Directives   */}
           {/* ======================================================== */}
           <div className="grid grid-cols-12 gap-6">
-            
+
             {/* 6A. Live Patient Inflow & Clinical Queue (7 cols) */}
             <div className="col-span-12 lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-              
+
               <div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                   <div>
                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Live Patient Inflow</h3>
                     <p className="text-xs text-slate-400 font-medium">Recent registrations & triage assignment</p>
                   </div>
-                  
+
                   {/* Search Filter */}
                   <div className="relative w-full sm:w-48">
                     <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -846,13 +841,12 @@ const Dashboard: React.FC = () => {
                               </span>
                             </td>
                             <td className="py-2.5">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                p.status === 'OPD'
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${p.status === 'OPD'
                                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                   : p.status === 'IPD'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}>
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}>
                                 {p.status}
                               </span>
                             </td>
@@ -887,13 +881,13 @@ const Dashboard: React.FC = () => {
 
             {/* 6B. AI Directives & Synchronized Intelligence (5 cols) */}
             <div className="col-span-12 lg:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white rounded-2xl p-6 shadow-xl border border-teal-900/40 relative flex flex-col justify-between overflow-hidden">
-              
+
               {/* Background ambient lighting */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[90px] rounded-full pointer-events-none"></div>
               <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none"></div>
 
               <div className="relative z-10 space-y-4">
-                
+
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div className="flex items-center gap-2.5">
@@ -961,11 +955,11 @@ const Dashboard: React.FC = () => {
       {activeHub === 'clinical' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="grid grid-cols-12 gap-6">
-            
+
             <div className="col-span-12 lg:col-span-8 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Patient Triage & Consultation Density</h3>
               <p className="text-xs text-slate-400 mb-4">Comparative breakdown of Outpatient vs Inpatient throughput</p>
-              
+
               <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueTrendData}>
@@ -981,7 +975,7 @@ const Dashboard: React.FC = () => {
 
             <div className="col-span-12 lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Clinical Roster & Duty</h3>
-              
+
               <div className="space-y-3">
                 {[
                   { name: 'Dr. Shafiqul Alam', role: 'Chief Retinal Specialist', room: '101', status: 'In Consultation' },
@@ -1011,11 +1005,11 @@ const Dashboard: React.FC = () => {
       {activeHub === 'medical' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="grid grid-cols-12 gap-6">
-            
+
             <div className="col-span-12 lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Diagnostic Laboratory Turnaround</h3>
               <p className="text-xs text-slate-400 mb-4">Throughput by department: Completed vs Pending Verification</p>
-              
+
               <div className="h-[260px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={[
@@ -1044,21 +1038,19 @@ const Dashboard: React.FC = () => {
                   <div key={idx} className="space-y-1.5">
                     <div className="flex justify-between items-center text-xs">
                       <span className="font-bold text-slate-700">{item.name}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                        item.status === 'Critical' ? 'bg-rose-50 text-rose-600' :
-                        item.status === 'Warning' ? 'bg-amber-50 text-amber-600' :
-                        'bg-emerald-50 text-emerald-600'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${item.status === 'Critical' ? 'bg-rose-50 text-rose-600' :
+                          item.status === 'Warning' ? 'bg-amber-50 text-amber-600' :
+                            'bg-emerald-50 text-emerald-600'
+                        }`}>
                         {item.current} {item.unit} ({item.status})
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${
-                          item.status === 'Critical' ? 'bg-rose-500' :
-                          item.status === 'Warning' ? 'bg-amber-500' :
-                          'bg-emerald-500'
-                        }`}
+                        className={`h-full rounded-full ${item.status === 'Critical' ? 'bg-rose-500' :
+                            item.status === 'Warning' ? 'bg-amber-500' :
+                              'bg-emerald-500'
+                          }`}
                         style={{ width: `${Math.min(100, (item.current / (item.threshold * 2)) * 100)}%` }}
                       ></div>
                     </div>
@@ -1080,7 +1072,7 @@ const Dashboard: React.FC = () => {
             <div className="col-span-12 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Quarterly Revenue Projections & Margin</h3>
               <p className="text-xs text-slate-400 mb-4">Detailed fiscal audit showing gross collections, operating expenses, and net profit</p>
-              
+
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={revenueTrendData}>
@@ -1104,7 +1096,7 @@ const Dashboard: React.FC = () => {
       {activeHub === 'assets' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="grid grid-cols-12 gap-6">
-            
+
             <div className="col-span-12 lg:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-2">Operation Theatre Suites</h3>
               <p className="text-xs text-slate-400 mb-4">Sterility status, ventilation, and live surgery schedule</p>
@@ -1168,7 +1160,7 @@ const Dashboard: React.FC = () => {
       {/* 11. STRATEGIC COMPLIANCE & AUDIT FOOTER BAR              */}
       {/* ======================================================== */}
       <div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-        
+
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
             <ShieldCheck size={20} />
