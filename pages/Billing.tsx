@@ -22,7 +22,8 @@ const Billing = () => {
         patients, invoices, billingItems, addBillingItem, updateBillingItem, deleteBillingItem,
         addInvoice, updateInvoice, deleteInvoice, addPatient, addAppointment,
         updateBed, beds, formatCurrency, currency, hasPermission, admissions, updateAdmission, updatePatient,
-        addLabTest, labTestDefinitions } = useData();
+        addLabTest, labTestDefinitions,
+        getNextRefractionRoom, getInvestigationRoomsForTests, progressPatientFlow, flowConfig } = useData();
 
     const canAdd = hasPermission('Billing & POS', 'add');
     const canEdit = hasPermission('Billing & POS', 'edit');
@@ -64,6 +65,7 @@ const Billing = () => {
     const [paymentGateway, setPaymentGateway] = useState<Invoice['paymentGateway']>('SSL Commerz');
     const [transactionId, setTransactionId] = useState('');
     const [deliveryTiming, setDeliveryTiming] = useState('24 Hours');
+    const [lastAllocationNotice, setLastAllocationNotice] = useState<{ refraction?: string; investigations?: string[] } | null>(null);
 
     const paperConfigs = {
         A4: { w: '210mm', minH: '297mm' },
@@ -249,6 +251,42 @@ const Billing = () => {
             if (activeAdmission) {
                 updateAdmission(activeAdmission.id, { status: 'Discharged', actualDischargeDate: new Date().toISOString().split('T')[0] });
                 updateBed(activeAdmission.bedId, { status: 'Cleaning', patientId: undefined, admissionId: undefined });
+            }
+        }
+
+        // Eye Hospital Patient Flow: Automatic Refraction (Round-Robin) & Investigation Room Allocation
+        if (selectedPatient) {
+            let allocatedRefraction: string | undefined = undefined;
+            let allocatedInvestigations: string[] = [];
+
+            const hasRefraction = billItems.some(item => 
+                item.description.toLowerCase().includes('refraction') || 
+                item.id.toLowerCase().includes('refraction') ||
+                item.description.toLowerCase().includes('glass')
+            );
+            if (hasRefraction) {
+                allocatedRefraction = getNextRefractionRoom();
+            }
+
+            const itemDescriptions = billItems.map(i => i.description);
+            const invRooms = getInvestigationRoomsForTests(itemDescriptions);
+            if (invRooms.length > 0) {
+                allocatedInvestigations = invRooms;
+            }
+
+            if (allocatedRefraction || allocatedInvestigations.length > 0) {
+                const nextStage = allocatedRefraction ? 'Refraction' : 'Investigation';
+                const nextRoom = allocatedRefraction || allocatedInvestigations[0];
+                progressPatientFlow(selectedPatient.id, nextStage, nextRoom, {
+                    refractionRoom: allocatedRefraction,
+                    investigationRooms: allocatedInvestigations.length > 0 ? allocatedInvestigations : undefined
+                });
+                setLastAllocationNotice({
+                    refraction: allocatedRefraction,
+                    investigations: allocatedInvestigations
+                });
+            } else {
+                setLastAllocationNotice(null);
             }
         }
 
@@ -449,7 +487,28 @@ const Billing = () => {
                     }}
                 >
                     <div className="flex justify-between items-start mb-10"><div className="flex items-center gap-3"><div className="p-3 bg-teal-600 rounded-2xl text-white shadow-lg"><Eye size={32} /></div><div><h1 className="text-2xl font-bold text-slate-900 uppercase">Visionary Care</h1><p className="text-xs text-slate-500">Specialist Eye Hospital</p></div></div><div className="text-right font-bold text-slate-800 font-mono">#{viewInvoice.id}</div></div>
-                    <div className="grid grid-cols-2 gap-10 mb-10 p-6 bg-slate-50 rounded-2xl"><div><p className="text-xs font-black uppercase text-slate-400 mb-2">Patient Details</p><p className="font-bold text-slate-900">{viewInvoice.patientName}</p><p className="text-xs text-slate-500 font-mono">UHID: {viewInvoice.patientId}</p></div><div className="text-right"> <p className="text-xs font-black uppercase text-slate-400 mb-2">Invoice Info</p><p className="text-sm font-bold">Date: {viewInvoice.date}</p><p className="text-xs font-bold text-teal-600">{viewInvoice.department} Dept</p></div></div>
+                    <div className="grid grid-cols-2 gap-10 mb-6 p-6 bg-slate-50 rounded-2xl"><div><p className="text-xs font-black uppercase text-slate-400 mb-2">Patient Details</p><p className="font-bold text-slate-900">{viewInvoice.patientName}</p><p className="text-xs text-slate-500 font-mono">UHID: {viewInvoice.patientId}</p></div><div className="text-right"> <p className="text-xs font-black uppercase text-slate-400 mb-2">Invoice Info</p><p className="text-sm font-bold">Date: {viewInvoice.date}</p><p className="text-xs font-bold text-teal-600">{viewInvoice.department} Dept</p></div></div>
+                    {(lastAllocationNotice?.refraction || (lastAllocationNotice?.investigations && lastAllocationNotice.investigations.length > 0)) && (
+                        <div className="mb-6 p-4 bg-teal-50 border-2 border-teal-200 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-teal-600 text-white rounded-xl">
+                                    <CheckCircle size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black uppercase tracking-wider text-teal-900">Automatic Clinical Room Allocation</p>
+                                    <div className="text-xs text-teal-800 font-semibold mt-0.5 flex flex-wrap gap-3">
+                                        {lastAllocationNotice.refraction && (
+                                            <span>👓 Refraction Room: <span className="font-mono bg-white px-2 py-0.5 rounded border border-teal-300 font-bold text-teal-950">Room {lastAllocationNotice.refraction}</span> (Round-Robin)</span>
+                                        )}
+                                        {lastAllocationNotice.investigations && lastAllocationNotice.investigations.length > 0 && (
+                                            <span>🔬 Diagnostic Room: <span className="font-mono bg-white px-2 py-0.5 rounded border border-teal-300 font-bold text-teal-950">Room {lastAllocationNotice.investigations.join(', ')}</span></span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-teal-100 text-teal-700 px-2.5 py-1 rounded-full border border-teal-200">Auto Routed</span>
+                        </div>
+                    )}
                     <table className="w-full text-left mb-10"><thead className="border-b-2 border-slate-100"><tr><th className="py-4 text-xs font-bold text-slate-400 uppercase">Service</th><th className="py-4 text-xs font-bold text-slate-400 uppercase text-center">Qty</th><th className="py-4 text-xs font-bold text-slate-400 uppercase text-right">Price</th><th className="py-4 text-xs font-bold text-slate-400 uppercase text-right">Total</th></tr></thead><tbody className="divide-y divide-slate-50">{viewInvoice.items.map((item, idx) => (<tr key={idx}><td className="py-5 font-bold text-slate-800 text-sm">{item.description}</td><td className="py-5 text-center text-sm">{item.qty}</td><td className="py-5 text-right text-sm">{formatCurrency(item.price)}</td><td className="py-5 text-right font-bold text-slate-900 text-sm">{formatCurrency(item.price * item.qty)}</td></tr>))}</tbody></table>
                     <div className="flex justify-end"><div className="w-64 space-y-2 border-t-2 border-slate-100 pt-4"><div className="flex justify-between text-sm text-slate-500 font-bold"><span>Subtotal</span><span>{formatCurrency(viewInvoice.subtotal)}</span></div><div className="flex justify-between items-center bg-slate-900 text-white p-4 rounded-xl mt-4"><span className="text-xs font-black uppercase">Grand Total</span><span className="text-xl font-black">{formatCurrency(viewInvoice.totalAmount)}</span></div></div></div>
                 </div>

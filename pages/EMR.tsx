@@ -8,7 +8,7 @@ import {
     Sparkles, BrainCircuit, Activity, ChevronRight, PenTool,
     Search, Users, Thermometer, HeartPulse, Scale, UserCheck,
     ClipboardList, Clock, CheckCircle, Stethoscope, X, Camera, Scan,
-    RefreshCw, Zap, Download, Mail, Glasses
+    RefreshCw, Zap, Download, Mail, Glasses, ArrowRightLeft, Receipt, Check
 } from 'lucide-react';
 import { downloadPDF, shareToWhatsApp } from '../services/exportService';
 import { GoogleGenAI } from "@google/genai";
@@ -16,7 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { extractVitalsFromImage } from '../services/geminiService';
 
 const EMR = () => {
-    const { patients, updatePatient, addPrescription, appointments, updateAppointment, admissions, addAdmissionItem, billingItems, formatCurrency } = useData();
+    const { patients, updatePatient, addPrescription, appointments, updateAppointment, admissions, addAdmissionItem, billingItems, formatCurrency, progressPatientFlow, getSpecializedClinicRoom, getBillingCounter, flowConfig } = useData();
     const { role } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
@@ -86,6 +86,34 @@ const EMR = () => {
     const [advice, setAdvice] = useState('');
     const [medicines, setMedicines] = useState<PrescribedMedicine[]>([]);
     const [newMed, setNewMed] = useState<PrescribedMedicine>({ name: '', dosage: '', duration: '', instruction: '' });
+
+    // Patient Flow & Referral Modals
+    const [showClinicReferModal, setShowClinicReferModal] = useState(false);
+    const [showBillingDispatchModal, setShowBillingDispatchModal] = useState(false);
+    const [selectedClinic, setSelectedClinic] = useState<string>('Cataract Clinic');
+    const [prescribedServicesSelection, setPrescribedServicesSelection] = useState<string[]>(['Refraction']);
+
+    const handleReferToClinic = (clinicName: string) => {
+        if (!patient) return;
+        const targetRoom = getSpecializedClinicRoom(clinicName);
+        progressPatientFlow(patient.id, 'Specialized Clinic', targetRoom, {
+            referredClinic: clinicName
+        });
+        alert(`Patient ${patient.name} has been referred to ${clinicName} in Room ${targetRoom}. Queue updated.`);
+        setShowClinicReferModal(false);
+        navigate('/opd');
+    };
+
+    const handleSendToBillingCounter = () => {
+        if (!patient || prescribedServicesSelection.length === 0) return;
+        const billingCounterRoom = getBillingCounter();
+        progressPatientFlow(patient.id, 'Billing', billingCounterRoom, {
+            prescribedServices: prescribedServicesSelection
+        });
+        alert(`Prescribed services [${prescribedServicesSelection.join(', ')}] recorded. Patient directed to Billing Counter Room ${billingCounterRoom}.`);
+        setShowBillingDispatchModal(false);
+        navigate('/billing');
+    };
 
     useEffect(() => {
         if (location.state?.patient) {
@@ -471,6 +499,22 @@ const EMR = () => {
                         >
                             <ClipboardList size={16} className="text-indigo-600" /> View Clinical Summary
                         </button>
+                        {role !== 'Nurse' && (
+                            <>
+                                <button
+                                    onClick={() => setShowClinicReferModal(true)}
+                                    className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-sm font-bold hover:bg-purple-100 shadow-sm flex items-center gap-2"
+                                >
+                                    <ArrowRightLeft size={16} /> Refer to Clinic
+                                </button>
+                                <button
+                                    onClick={() => setShowBillingDispatchModal(true)}
+                                    className="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-bold hover:bg-amber-100 shadow-sm flex items-center gap-2"
+                                >
+                                    <Receipt size={16} /> Prescribe & Billing
+                                </button>
+                            </>
+                        )}
                         {role === 'Nurse' ? (
                             <button onClick={handleNursingSubmit} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-sm flex items-center gap-2">
                                 <CheckCircle size={16} /> Finish Workup
@@ -961,6 +1005,170 @@ const EMR = () => {
                                 className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg"
                             >
                                 Close Summary
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Specialized Clinic Referral Modal (Requirement 3) */}
+            {showClinicReferModal && patient && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100">
+                        <div className="p-6 bg-purple-900 text-white flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white/10 rounded-xl">
+                                    <ArrowRightLeft size={20} className="text-purple-300" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-lg">Specialized Clinic Referral</h3>
+                                    <p className="text-xs text-purple-200">Transfer {patient.name} ({patient.id}) to sub-specialty</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowClinicReferModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Select Designated Specialized Clinic:</p>
+                            <div className="grid grid-cols-1 gap-2.5">
+                                {[
+                                    { name: 'Cataract Clinic', defaultRoom: '22', desc: 'Phacoemulsification, IOL evaluation & anterior segment' },
+                                    { name: 'Retina Clinic', defaultRoom: '27', desc: 'Vitreoretinal disorders, diabetic retinopathy, ARMD' },
+                                    { name: 'Glaucoma Clinic', defaultRoom: '21', desc: 'IOP management, disc assessment, field evaluation' },
+                                    { name: 'Cornea Clinic', defaultRoom: '15', desc: 'Keratoconus, corneal ulcers, refractive surgery' }
+                                ].map((clinic) => {
+                                    const actualRoom = getSpecializedClinicRoom(clinic.name);
+                                    const isSelected = selectedClinic === clinic.name;
+                                    return (
+                                        <button
+                                            key={clinic.name}
+                                            type="button"
+                                            onClick={() => setSelectedClinic(clinic.name)}
+                                            className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                                                isSelected
+                                                    ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-500/20 shadow-sm'
+                                                    : 'border-slate-200 hover:border-purple-300 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <div>
+                                                <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                                    {clinic.name}
+                                                    {isSelected && <span className="p-0.5 bg-purple-600 text-white rounded-full"><Check size={12} /></span>}
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-0.5">{clinic.desc}</p>
+                                            </div>
+                                            <div className="text-right pl-3 shrink-0">
+                                                <span className="text-[10px] font-black uppercase text-purple-700 block">Allocated Room</span>
+                                                <span className="font-mono font-black text-sm text-purple-900 bg-white px-2.5 py-1 rounded-lg border border-purple-200 shadow-sm">
+                                                    Room {actualRoom}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowClinicReferModal(false)}
+                                className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleReferToClinic(selectedClinic)}
+                                className="px-6 py-2.5 bg-purple-700 text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-purple-800 transition-all shadow-md flex items-center gap-2"
+                            >
+                                <ArrowRightLeft size={14} /> Transfer to Clinic Queue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Prescribe Refraction & Investigations -> Billing Counter Modal (Requirement 5) */}
+            {showBillingDispatchModal && patient && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-xl rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100">
+                        <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
+                                    <Receipt size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-lg">Prescribe Services & Direct to Billing</h3>
+                                    <p className="text-xs text-slate-400">Direct {patient.name} to Billing Counter (Room 08 / 26)</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowBillingDispatchModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between">
+                                <div>
+                                    <span className="font-bold">Designated Billing Counters:</span> Room 08 & Room 26
+                                </div>
+                                <span className="font-mono bg-white px-2 py-0.5 rounded font-bold border border-amber-300">Next Counter: Room {getBillingCounter()}</span>
+                            </div>
+
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Select Prescribed Services to be Billed:</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                {[
+                                    { name: 'Refraction', category: 'Refraction (Rotational Rooms 36, 37, 21-1, 21-2)' },
+                                    { name: 'OCT Scan', category: 'Investigation (Room 16)' },
+                                    { name: 'Fluorescein Angiography (FFA)', category: 'Investigation (Room 16)' },
+                                    { name: 'Visual Field Test', category: 'Investigation (Room 24)' },
+                                    { name: 'Applanation Tonometry', category: 'Investigation (Room 24)' },
+                                    { name: 'Biometry & A-Scan', category: 'Investigation (Room 39)' },
+                                    { name: 'Corneal Topography', category: 'Investigation (Room 39)' },
+                                    { name: 'B-Scan Ultrasonography', category: 'Investigation (Room 35)' },
+                                    { name: 'YAG Laser Capsulotomy', category: 'Investigation (Room 35)' }
+                                ].map((svc) => {
+                                    const isChecked = prescribedServicesSelection.includes(svc.name);
+                                    return (
+                                        <label
+                                            key={svc.name}
+                                            className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${
+                                                isChecked
+                                                    ? 'border-amber-500 bg-amber-50/50 ring-1 ring-amber-400'
+                                                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setPrescribedServicesSelection([...prescribedServicesSelection, svc.name]);
+                                                    } else {
+                                                        setPrescribedServicesSelection(prescribedServicesSelection.filter(s => s !== svc.name));
+                                                    }
+                                                }}
+                                                className="mt-0.5 accent-amber-600 rounded"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="font-bold text-xs text-slate-900">{svc.name}</div>
+                                                <div className="text-[10px] text-slate-500 font-medium">{svc.category}</div>
+                                            </div>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowBillingDispatchModal(false)}
+                                className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-white transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                disabled={prescribedServicesSelection.length === 0}
+                                onClick={handleSendToBillingCounter}
+                                className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition-all shadow-md flex items-center gap-2"
+                            >
+                                <Receipt size={14} /> Send to Billing Counter (Room {getBillingCounter()})
                             </button>
                         </div>
                     </div>

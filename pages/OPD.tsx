@@ -1,25 +1,38 @@
 
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Patient, Vitals } from '../types';
+import { Patient, Vitals, PatientFlowStage } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
     Search, Clock, FileText, Printer, Save, Plus, Trash2, Eye,
     Thermometer, Activity, User, ChevronRight, HeartPulse,
     AlertCircle, CheckCircle, Phone, MapPin, AlertTriangle,
     Grid, List, Stethoscope, Edit, MoreHorizontal, ArrowLeft, Download,
-    // Fix: Added missing 'Info' icon to imports
-    RefreshCw, ArrowRightLeft, BedDouble, Scissors, Users, X, Heart, Info
+    RefreshCw, ArrowRightLeft, BedDouble, Scissors, Users, X, Heart, Info,
+    Settings, Compass, Check
 } from 'lucide-react';
 import { MOCK_EMPLOYEES } from '../constants';
+import { PatientFlowAdminModal } from '../components/PatientFlowAdminModal';
 
 const OPD = () => {
-    const { patients, updatePatient, deletePatient, beds, updateBed } = useData();
+    const {
+        patients, updatePatient, deletePatient, beds, updateBed,
+        progressPatientFlow, getGeneralConsultationRoom, getSpecializedClinicRoom,
+        getBillingCounter, getNextRefractionRoom, flowConfig, rooms
+    } = useData();
     const navigate = useNavigate();
 
     // View State
     const [viewMode, setViewMode] = useState<'list' | 'tiles'>('list');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
+    // Patient Flow & Admin Controls
+    const [showFlowAdminModal, setShowFlowAdminModal] = useState(false);
+    const [selectedFlowStage, setSelectedFlowStage] = useState<string>('All');
+    const [showReassignModal, setShowReassignModal] = useState(false);
+    const [reassignPatient, setReassignPatient] = useState<Patient | null>(null);
+    const [reassignStage, setReassignStage] = useState<PatientFlowStage>('General Consultation');
+    const [reassignRoom, setReassignRoom] = useState<string>('9-A');
 
     // Action Modal States
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -38,6 +51,46 @@ const OPD = () => {
     const opdPatients = patients.filter(p => p.status === 'OPD');
     const doctors = MOCK_EMPLOYEES.filter(e => e.role === 'Doctor' || e.role === 'Chief Ophthalmologist');
     const availableBeds = beds.filter(b => b.status === 'Available');
+
+    // Flow stages tabs
+    const FLOW_STAGES = [
+        { id: 'All', label: 'All Queues', count: opdPatients.length },
+        { id: 'VAT', label: 'VAT (40 / 41)', count: opdPatients.filter(p => p.flowStage === 'VAT' || (p.vatRoom && !p.flowStage)).length },
+        { id: 'General Consultation', label: 'General Doctors', count: opdPatients.filter(p => p.flowStage === 'General Consultation').length },
+        { id: 'Specialized Clinic', label: 'Specialized Clinics', count: opdPatients.filter(p => p.flowStage === 'Specialized Clinic').length },
+        { id: 'Post-Op Follow-up', label: 'Post-Op Follow-up', count: opdPatients.filter(p => p.flowStage === 'Post-Op Follow-up').length },
+        { id: 'Billing', label: 'Billing Counters', count: opdPatients.filter(p => p.flowStage === 'Billing').length },
+        { id: 'Refraction', label: 'Refraction (36, 37...)', count: opdPatients.filter(p => p.flowStage === 'Refraction').length },
+        { id: 'Investigation', label: 'Diagnostics', count: opdPatients.filter(p => p.flowStage === 'Investigation').length },
+    ];
+
+    const filteredPatients = opdPatients.filter(p => {
+        if (selectedFlowStage === 'All') return true;
+        if (selectedFlowStage === 'VAT') return p.flowStage === 'VAT' || (p.vatRoom && (!p.flowStage || p.flowStage === 'VAT'));
+        return p.flowStage === selectedFlowStage;
+    });
+
+    const handleQuickVatComplete = (p: Patient) => {
+        const nextRoom = getGeneralConsultationRoom();
+        progressPatientFlow(p.id, 'General Consultation', nextRoom);
+        alert(`VAT completed for ${p.name}. Patient directed to General Doctor Consultation in Room ${nextRoom}.`);
+    };
+
+    const handleOpenReassignModal = (e: React.MouseEvent, p: Patient) => {
+        e.stopPropagation();
+        setReassignPatient(p);
+        setReassignStage(p.flowStage || 'General Consultation');
+        setReassignRoom(p.currentRoom || p.assignedRoom || '9-A');
+        setShowReassignModal(true);
+    };
+
+    const handleConfirmReassign = () => {
+        if (!reassignPatient || !reassignRoom) return;
+        progressPatientFlow(reassignPatient.id, reassignStage, reassignRoom);
+        alert(`Patient ${reassignPatient.name} reassigned to ${reassignStage} in Room ${reassignRoom}.`);
+        setShowReassignModal(false);
+        setReassignPatient(null);
+    };
 
     // Stats
     const stats = {
@@ -148,6 +201,9 @@ const OPD = () => {
                     <p className="text-sm text-slate-500">Manage daily outpatient visits and consultations.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button onClick={() => setShowFlowAdminModal(true)} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 flex items-center gap-2 shadow-sm transition-all">
+                        <Settings size={15} className="text-teal-400" /> Room Master & Flow Rules
+                    </button>
                     <div className="bg-white border border-slate-200 p-1 rounded-lg flex gap-1">
                         <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-teal-50 text-teal-700' : 'text-slate-400 hover:text-slate-600'}`}><List size={18} /></button>
                         <button onClick={() => setViewMode('tiles')} className={`p-2 rounded-md ${viewMode === 'tiles' ? 'bg-teal-50 text-teal-700' : 'text-slate-400 hover:text-slate-600'}`}><Grid size={18} /></button>
@@ -156,6 +212,31 @@ const OPD = () => {
                         <Plus size={16} /> Register Patient
                     </button>
                 </div>
+            </div>
+
+            {/* Eye Hospital Flow Stage Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
+                {FLOW_STAGES.map((stage) => {
+                    const isActive = selectedFlowStage === stage.id;
+                    return (
+                        <button
+                            key={stage.id}
+                            onClick={() => setSelectedFlowStage(stage.id)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
+                                isActive
+                                    ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
+                                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                            }`}
+                        >
+                            <span>{stage.label}</span>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                                isActive ? 'bg-teal-800 text-teal-100' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                                {stage.count}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -185,83 +266,118 @@ const OPD = () => {
                                 <tr>
                                     <th className="px-6 py-4">Queue No</th>
                                     <th className="px-6 py-4">Patient</th>
-                                    <th className="px-6 py-4">Triage Status</th>
+                                    <th className="px-6 py-4">Allocated Room & Stage</th>
+                                    <th className="px-6 py-4">Triage / VA</th>
                                     <th className="px-6 py-4">Assigned Doctor</th>
                                     <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {opdPatients.map((patient, idx) => (
-                                    <tr key={patient.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="px-6 py-4 font-mono font-medium text-slate-600">#{idx + 1}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-500">{patient.name.charAt(0)}</div>
-                                                <div>
-                                                    <div className="font-medium text-slate-900">{patient.name}</div>
-                                                    <div className="text-xs text-slate-400">{patient.id}</div>
+                                {filteredPatients.map((patient, idx) => {
+                                    const currentStage = patient.flowStage || (patient.vatRoom ? 'VAT' : 'General Consultation');
+                                    const activeRoom = patient.currentRoom || patient.vatRoom || patient.assignedRoom || '40';
+                                    const isVatStage = currentStage === 'VAT';
+
+                                    return (
+                                        <tr key={patient.id} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="px-6 py-4 font-mono font-medium text-slate-600">#{idx + 1}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-500">{patient.name.charAt(0)}</div>
+                                                    <div>
+                                                        <div className="font-medium text-slate-900">{patient.name}</div>
+                                                        <div className="text-xs text-slate-400">{patient.id} • {patient.age}Y/{patient.gender}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {patient.currentVitals ? (
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 uppercase"><CheckCircle size={10} /> Vitals Recorded</span>
-                                                    <span className="text-xs text-slate-400 font-mono">BP: {patient.currentVitals.bp} | VA: {patient.currentVitals.vaRight}/{patient.currentVitals.vaLeft}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col gap-1 items-start">
+                                                    <span className="font-mono font-bold text-xs bg-slate-900 text-white px-2.5 py-0.5 rounded-md shadow-sm">
+                                                        Room {activeRoom}
+                                                    </span>
+                                                    <span className="text-[11px] font-black uppercase tracking-wider text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">
+                                                        {patient.referredClinic || currentStage}
+                                                    </span>
                                                 </div>
-                                            ) : (
-                                                <span className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1"><AlertCircle size={10} /> Vitals Pending</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">{patient.assignedDoctor || 'Unassigned'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                                                Waiting
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <button
-                                                    onClick={(e) => openTriageModal(e, patient)}
-                                                    className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                                    title="Triage / Vitals"
-                                                >
-                                                    <HeartPulse size={16} />
-                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {patient.currentVitals ? (
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 uppercase"><CheckCircle size={10} /> Vitals Recorded</span>
+                                                        <span className="text-xs text-slate-400 font-mono">BP: {patient.currentVitals.bp} | VA: {patient.currentVitals.vaRight}/{patient.currentVitals.vaLeft}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1"><AlertCircle size={10} /> Vitals Pending</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">{patient.assignedDoctor || 'General Pool'}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                                    In Queue
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {isVatStage && (
+                                                        <button
+                                                            onClick={() => handleQuickVatComplete(patient)}
+                                                            className="px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm mr-1"
+                                                            title="Complete VAT & Route to Doctor Room"
+                                                        >
+                                                            <Stethoscope size={13} /> VAT Done &rarr; Doctor
+                                                        </button>
+                                                    )}
 
-                                                <button
-                                                    onClick={() => handleStartConsultation(patient)}
-                                                    className="p-2 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg transition-colors"
-                                                    title="Start Consultation (EMR)"
-                                                >
-                                                    <Stethoscope size={16} />
-                                                </button>
+                                                    <button
+                                                        onClick={(e) => handleOpenReassignModal(e, patient)}
+                                                        className="p-2 text-slate-500 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors"
+                                                        title="Reassign Room or Flow Stage"
+                                                    >
+                                                        <Compass size={16} />
+                                                    </button>
 
-                                                <button onClick={(e) => openStatusModal(e, patient)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Update Status">
-                                                    <RefreshCw size={16} />
-                                                </button>
+                                                    <button
+                                                        onClick={(e) => openTriageModal(e, patient)}
+                                                        className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                                        title="Triage / Vitals"
+                                                    >
+                                                        <HeartPulse size={16} />
+                                                    </button>
 
-                                                <button onClick={(e) => openTransferModal(e, patient, 'Doctor')} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Refer/Transfer">
-                                                    <ArrowRightLeft size={16} />
-                                                </button>
+                                                    <button
+                                                        onClick={() => handleStartConsultation(patient)}
+                                                        className="p-2 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-lg transition-colors"
+                                                        title="Start Consultation (EMR)"
+                                                    >
+                                                        <Stethoscope size={16} />
+                                                    </button>
 
-                                                <button onClick={(e) => handleViewRx(e, patient)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Prescription">
-                                                    <FileText size={16} />
-                                                </button>
+                                                    <button onClick={(e) => openStatusModal(e, patient)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Update Status">
+                                                        <RefreshCw size={16} />
+                                                    </button>
 
-                                                <button onClick={(e) => { e.stopPropagation(); navigate('/patients/register', { state: { patient } }) }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit Info">
-                                                    <Edit size={16} />
-                                                </button>
+                                                    <button onClick={(e) => openTransferModal(e, patient, 'Doctor')} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Refer/Transfer">
+                                                        <ArrowRightLeft size={16} />
+                                                    </button>
 
-                                                <button onClick={(e) => handleDelete(e, patient.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {opdPatients.length === 0 && <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-400 italic">No patients in queue.</td></tr>}
+                                                    <button onClick={(e) => handleViewRx(e, patient)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Prescription">
+                                                        <FileText size={16} />
+                                                    </button>
+
+                                                    <button onClick={(e) => { e.stopPropagation(); navigate('/patients/register', { state: { patient } }) }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit Info">
+                                                        <Edit size={16} />
+                                                    </button>
+
+                                                    <button onClick={(e) => handleDelete(e, patient.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {filteredPatients.length === 0 && <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-400 italic">No patients in this queue stage.</td></tr>}
                             </tbody>
                         </table>
                     </div>
@@ -270,7 +386,7 @@ const OPD = () => {
 
             {viewMode === 'tiles' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {opdPatients.map((patient, idx) => (
+                    {filteredPatients.map((patient, idx) => (
                         <div key={patient.id} className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow group relative">
                             <div className="absolute top-4 right-4 text-slate-300 font-mono text-xs">#{idx + 1}</div>
                             <div className="flex items-center gap-3 mb-4">
@@ -284,8 +400,16 @@ const OPD = () => {
                             </div>
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">ID</span>
-                                    <span className="font-mono text-slate-700">{patient.id}</span>
+                                    <span className="text-slate-500">Allocated Room</span>
+                                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                                        Room {patient.currentRoom || patient.vatRoom || patient.assignedRoom || '40'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-500">Stage</span>
+                                    <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100">
+                                        {patient.referredClinic || patient.flowStage || 'VAT'}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-500">Triage</span>
@@ -295,6 +419,13 @@ const OPD = () => {
                                 </div>
                             </div>
                             <div className="flex gap-2">
+                                <button
+                                    onClick={(e) => handleOpenReassignModal(e, patient)}
+                                    className="p-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
+                                    title="Reassign Room"
+                                >
+                                    <Compass size={16} />
+                                </button>
                                 <button
                                     onClick={(e) => openTriageModal(e, patient)}
                                     className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 shadow-sm transition-colors"
@@ -477,6 +608,91 @@ const OPD = () => {
                     </div>
                 </div>
             )}
+
+            {/* Manual Room Reassignment Modal (Requirement 8) */}
+            {showReassignModal && reassignPatient && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-slate-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center gap-2">
+                                <Compass className="text-teal-600" size={20} />
+                                <h3 className="font-black text-lg text-slate-900">Manual Room Reassignment</h3>
+                            </div>
+                            <button onClick={() => setShowReassignModal(false)}><X size={20} className="text-slate-400" /></button>
+                        </div>
+
+                        <p className="text-xs text-slate-500 mb-4">
+                            Reassigning patient <strong className="text-slate-800">{reassignPatient.name}</strong> ({reassignPatient.id})
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Target Flow Stage</label>
+                                <select
+                                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50"
+                                    value={reassignStage}
+                                    onChange={(e) => {
+                                        const newStg = e.target.value as PatientFlowStage;
+                                        setReassignStage(newStg);
+                                        // Pick appropriate default room for selected stage
+                                        if (newStg === 'VAT') setReassignRoom(reassignPatient.gender === 'Female' ? '41' : '40');
+                                        else if (newStg === 'General Consultation') setReassignRoom('9-A');
+                                        else if (newStg === 'Specialized Clinic') setReassignRoom('22');
+                                        else if (newStg === 'Post-Op Follow-up') setReassignRoom('14');
+                                        else if (newStg === 'Billing') setReassignRoom('08');
+                                        else if (newStg === 'Refraction') setReassignRoom('36');
+                                        else if (newStg === 'Investigation') setReassignRoom('16');
+                                    }}
+                                >
+                                    <option value="VAT">VAT (Visual Acuity Test)</option>
+                                    <option value="General Consultation">General Doctor Consultation</option>
+                                    <option value="Specialized Clinic">Specialized Clinic</option>
+                                    <option value="Post-Op Follow-up">Post-Op Follow-up</option>
+                                    <option value="Billing">Billing Counter</option>
+                                    <option value="Refraction">Refraction</option>
+                                    <option value="Investigation">Diagnostic / Investigation</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Select Room Number</label>
+                                <select
+                                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 font-mono"
+                                    value={reassignRoom}
+                                    onChange={(e) => setReassignRoom(e.target.value)}
+                                >
+                                    {rooms.filter(r => r.isActive !== false).map((r) => (
+                                        <option key={r.id} value={r.number}>
+                                            Room {r.number} - {r.name} ({r.category})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => setShowReassignModal(false)}
+                                className="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmReassign}
+                                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-1.5"
+                            >
+                                <Check size={14} /> Confirm Reassignment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Admin Patient Flow & Room Configuration Modal (Requirement 8) */}
+            <PatientFlowAdminModal
+                isOpen={showFlowAdminModal}
+                onClose={() => setShowFlowAdminModal(false)}
+            />
         </div>
     );
 };
